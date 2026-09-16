@@ -4,7 +4,7 @@
 движения — в минутах, расстояния — в километрах.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import math
 import re
@@ -12,27 +12,36 @@ from typing import Iterable, Mapping
 
 
 class Skill(str, Enum):
-    """Разрешённые навыки инженеров и заявок."""
+    """Фиксированный справочник квалификаций инженеров и типов работ."""
 
-    LOCAL_WORKS = "LOCAL_WORKS"
-    CONNECTION_AND_UPSELL = "CONNECTION_AND_UPSELL"
-    EMERGENCY_WORKS = "EMERGENCY_WORKS"
+    LOCAL_WORKS = "LOCAL_WORKS"  # Локальные монтажные и ремонтные работы.
+    CONNECTION_AND_UPSELL = "CONNECTION_AND_UPSELL"  # Подключение и продажа услуг.
+    EMERGENCY_WORKS = "EMERGENCY_WORKS"  # Аварийные работы.
 
 
 class VehicleType(str, Enum):
     """Разрешённые типы транспорта."""
 
-    CAR = "CAR"
-    WALK = "WALK"
-    BICYCLE = "BICYCLE"
-    PUBLIC_TRANSPORT = "PUBLIC_TRANSPORT"
+    CAR = "CAR"  # Личный или служебный автомобиль.
+    WALK = "WALK"  # Передвижение пешком.
+    BICYCLE = "BICYCLE"  # Велосипед.
+    PUBLIC_TRANSPORT = "PUBLIC_TRANSPORT"  # Общественный транспорт.
 
 
 class Priority(str, Enum):
     """Разрешённые приоритеты заявки."""
 
-    NORMAL = "NORMAL"
-    URGENT = "URGENT"
+    NORMAL = "NORMAL"  # Обычный приоритет.
+    URGENT = "URGENT"  # Срочная заявка; её неназначение дороже.
+
+
+class TaskStatus(str, Enum):
+    """Статус заявки, необходимый для корректной проверки контрольного плана."""
+
+    SENT = "SENT"  # Заявка отправлена и должна учитываться в плане.
+    IN_PROGRESS = "IN_PROGRESS"  # Работа выполняется и должна учитываться в плане.
+    COMPLETED = "COMPLETED"  # Работа выполнена и учитывается в контрольном графике.
+    CANCELLED = "CANCELLED"  # Заявка отменена и не занимает время инженера.
 
 
 def hhmm_to_minutes(value: str) -> int:
@@ -52,25 +61,13 @@ def minutes_to_hhmm(minutes: int) -> str:
     return f"{minutes // 60:02d}:{minutes % 60:02d}"
 
 
-def _enum_value(value: str | Enum, enum_type: type[Enum], field_name: str) -> Enum:
-    """Преобразует строку или enum в значение заданного справочника."""
-    if isinstance(value, enum_type):
-        return value
-    if isinstance(value, str):
-        normalized = value.strip().upper()
-        try:
-            return enum_type(normalized)
-        except ValueError as exc:
-            allowed = ", ".join(member.value for member in enum_type)
-            raise ValueError(
-                f"{field_name} должен иметь одно из значений: {allowed}"
-            ) from exc
-    raise ValueError(f"{field_name} должен быть строкой или enum")
-
-
-def _normalise_skills(values: Iterable[str | Skill]) -> frozenset[Skill]:
-    """Преобразует набор навыков в значения фиксированного справочника."""
-    return frozenset(_enum_value(value, Skill, "Навык") for value in values)
+def _normalise_skills(values: Iterable[Skill]) -> frozenset[Skill]:
+    """Проверяет набор квалификаций, уже преобразованных в ``Skill``."""
+    skills = frozenset(values)
+    if any(not isinstance(skill, Skill) for skill in skills):
+        allowed = ", ".join(skill.value for skill in Skill)
+        raise ValueError(f"Квалификации должны быть значениями Skill: {allowed}")
+    return skills
 
 
 def _validate_coordinates(
@@ -99,16 +96,16 @@ def _validate_coordinates(
 class Engineer:
     """Инженер с одним типом транспорта и одним-тремя навыками."""
 
-    id: str
-    name: str
-    qualifications: frozenset[Skill]
-    start_location_id: str
-    vehicle_type: VehicleType | str
-    available_equipment: frozenset[str] = frozenset()
-    equipment_resource_ids: frozenset[str] = frozenset()
-    vehicle_resource_id: str | None = None
-    start_latitude: float | None = None
-    start_longitude: float | None = None
+    id: str  # Уникальный идентификатор инженера.
+    name: str  # Отображаемое имя инженера.
+    qualifications: frozenset[Skill]  # Навыки, которыми владеет инженер.
+    start_location_id: str  # Локация, откуда начинается его маршрут.
+    vehicle_type: VehicleType  # Единственный тип транспорта из фиксированного справочника.
+    available_equipment: frozenset[str] = frozenset()  # Оборудование, доступное инженеру постоянно.
+    equipment_resource_ids: frozenset[str] = frozenset()  # ID отдельных экземпляров оборудования из problem.
+    vehicle_resource_id: str | None = None  # ID закреплённого экземпляра транспорта, если он моделируется.
+    start_latitude: float | None = None  # Широта стартовой точки в градусах WGS84.
+    start_longitude: float | None = None  # Долгота стартовой точки в градусах WGS84.
 
     def __post_init__(self) -> None:
         """Нормализует справочники и проверяет ограничения модели."""
@@ -119,9 +116,8 @@ class Engineer:
             self.start_latitude, self.start_longitude
         )
         object.__setattr__(self, "qualifications", qualifications)
-        object.__setattr__(self, "vehicle_type", _enum_value(
-            self.vehicle_type, VehicleType, "vehicle_type"
-        ))
+        if not isinstance(self.vehicle_type, VehicleType):
+            raise ValueError("vehicle_type должен быть значением VehicleType")
         object.__setattr__(
             self,
             "available_equipment",
@@ -140,31 +136,30 @@ class Engineer:
 class EquipmentResource:
     """Отдельный экземпляр оборудования ограниченного количества."""
 
-    id: str
-    equipment_type: str
+    id: str  # Уникальный идентификатор конкретного экземпляра.
+    equipment_type: str  # Вид оборудования, например "multimeter".
 
 
 @dataclass(frozen=True, slots=True)
 class VehicleResource:
     """Отдельный экземпляр транспорта определённого типа."""
 
-    id: str
-    vehicle_type: VehicleType | str
+    id: str  # Уникальный идентификатор конкретного транспортного средства.
+    vehicle_type: VehicleType  # Тип транспорта из фиксированного справочника.
 
     def __post_init__(self) -> None:
         """Проверяет тип транспорта по фиксированному справочнику."""
-        object.__setattr__(self, "vehicle_type", _enum_value(
-            self.vehicle_type, VehicleType, "vehicle_type"
-        ))
+        if not isinstance(self.vehicle_type, VehicleType):
+            raise ValueError("vehicle_type должен быть значением VehicleType")
 
 
 @dataclass(frozen=True, slots=True)
 class EngineerAvailability:
     """Рабочий интервал инженера в формате ``HH:MM``."""
 
-    engineer_id: str
-    available_from: str
-    available_until: str
+    engineer_id: str  # ID инженера, к которому относится рабочий интервал.
+    available_from: str  # Начало смены в формате HH:MM.
+    available_until: str  # Конец смены в формате HH:MM; работа должна завершиться до него.
 
     def __post_init__(self) -> None:
         """Проверяет и нормализует границы рабочей смены."""
@@ -178,19 +173,24 @@ class EngineerAvailability:
 
 @dataclass(frozen=True, slots=True)
 class Task:
-    """Заявка с одним навыком, длительностью и жёстким временным окном."""
+    """Заявка с требуемой квалификацией, длительностью и жёстким окном.
 
-    id: str
-    location_id: str
-    required_skills: frozenset[Skill]
-    duration_minutes: int
-    window_start: str
-    window_end: str
-    priority: Priority = Priority.NORMAL
-    required_equipment: frozenset[str] = frozenset()
-    required_vehicle_type: VehicleType | str | None = None
-    latitude: float | None = None
-    longitude: float | None = None
+    ``required_skills`` описывает квалификацию инженера, необходимую для
+    выполнения типа работ по заявке, а не отдельный навык самой заявки.
+    """
+
+    id: str  # Уникальный идентификатор заявки.
+    location_id: str  # Локация, которую нужно посетить.
+    required_skills: frozenset[Skill]  # Ровно одна требуемая квалификация инженера для типа работ.
+    duration_minutes: int  # Продолжительность обслуживания в целых минутах.
+    window_start: str  # Самое раннее допустимое начало работы, HH:MM.
+    window_end: str  # Самое позднее допустимое начало работы, HH:MM.
+    priority: Priority = Priority.NORMAL  # Приоритет для штрафа неназначения.
+    status: TaskStatus = TaskStatus.SENT  # Статус заявки; CANCELLED не занимает маршрутное время.
+    required_equipment: frozenset[str] = frozenset()  # Всё оборудование, необходимое на заявке.
+    required_vehicle_type: VehicleType | None = None  # Требуемый тип транспорта или отсутствие требования.
+    latitude: float | None = None  # Широта точки заявки в градусах WGS84.
+    longitude: float | None = None  # Долгота точки заявки в градусах WGS84.
 
     def __post_init__(self) -> None:
         """Нормализует справочники и проверяет временное окно заявки."""
@@ -206,17 +206,20 @@ class Task:
         if hhmm_to_minutes(window_end) <= hhmm_to_minutes(window_start):
             raise ValueError("window_end должен быть позже window_start")
         latitude, longitude = _validate_coordinates(self.latitude, self.longitude)
-        vehicle_type = (
-            None
-            if self.required_vehicle_type is None
-            else _enum_value(self.required_vehicle_type, VehicleType, "required_vehicle_type")
-        )
+        if self.required_vehicle_type is not None and not isinstance(
+            self.required_vehicle_type, VehicleType
+        ):
+            raise ValueError(
+                "required_vehicle_type должен быть значением VehicleType или None"
+            )
         object.__setattr__(self, "required_skills", skills)
         object.__setattr__(self, "window_start", window_start)
         object.__setattr__(self, "window_end", window_end)
-        object.__setattr__(self, "priority", _enum_value(self.priority, Priority, "priority"))
+        if not isinstance(self.priority, Priority):
+            raise ValueError("priority должен быть значением Priority")
+        if not isinstance(self.status, TaskStatus):
+            raise ValueError("status должен быть значением TaskStatus")
         object.__setattr__(self, "required_equipment", frozenset(self.required_equipment))
-        object.__setattr__(self, "required_vehicle_type", vehicle_type)
         object.__setattr__(self, "latitude", latitude)
         object.__setattr__(self, "longitude", longitude)
 
@@ -230,13 +233,19 @@ class OptimizationProblem:
     описывать один и тот же набор локаций.
     """
 
-    engineers: tuple[Engineer, ...]
-    availabilities: tuple[EngineerAvailability, ...]
-    tasks: tuple[Task, ...]
-    travel_time_matrix: Mapping[str, Mapping[str, int]]
-    travel_distance_matrix: Mapping[str, Mapping[str, float]]
-    equipment_resources: tuple[EquipmentResource, ...] = ()
-    vehicle_resources: tuple[VehicleResource, ...] = ()
+    engineers: tuple[Engineer, ...]  # Все инженеры, между которыми выбирается назначение.
+    availabilities: tuple[EngineerAvailability, ...]  # Рабочее время каждого инженера.
+    tasks: tuple[Task, ...]  # Заявки в порядке их поступления.
+    travel_time_matrix: Mapping[str, Mapping[str, int]]  # [откуда][куда]: время движения в минутах.
+    travel_distance_matrix: Mapping[str, Mapping[str, float]]  # [откуда][куда]: расстояние в километрах.
+    travel_time_matrices_by_vehicle: Mapping[
+        VehicleType, Mapping[str, Mapping[str, int]]
+    ] = field(default_factory=dict)  # Необязательные матрицы времени по профилям транспорта.
+    travel_distance_matrices_by_vehicle: Mapping[
+        VehicleType, Mapping[str, Mapping[str, float]]
+    ] = field(default_factory=dict)  # Необязательные матрицы расстояний по профилям транспорта.
+    equipment_resources: tuple[EquipmentResource, ...] = ()  # Необязательные отдельные экземпляры оборудования.
+    vehicle_resources: tuple[VehicleResource, ...] = ()  # Необязательные отдельные экземпляры транспорта.
 
     def __post_init__(self) -> None:
         """Проверяет идентификаторы, ресурсы и полноту внешних матриц."""
@@ -253,6 +262,20 @@ class OptimizationProblem:
             source: dict(destinations)
             for source, destinations in self.travel_distance_matrix.items()
         }
+        time_matrices_by_vehicle = {
+            vehicle_type: {
+                source: dict(destinations)
+                for source, destinations in matrix.items()
+            }
+            for vehicle_type, matrix in self.travel_time_matrices_by_vehicle.items()
+        }
+        distance_matrices_by_vehicle = {
+            vehicle_type: {
+                source: dict(destinations)
+                for source, destinations in matrix.items()
+            }
+            for vehicle_type, matrix in self.travel_distance_matrices_by_vehicle.items()
+        }
         object.__setattr__(self, "engineers", engineers)
         object.__setattr__(self, "availabilities", availabilities)
         object.__setattr__(self, "tasks", tasks)
@@ -260,6 +283,8 @@ class OptimizationProblem:
         object.__setattr__(self, "vehicle_resources", vehicle_resources)
         object.__setattr__(self, "travel_time_matrix", matrix)
         object.__setattr__(self, "travel_distance_matrix", distance_matrix)
+        object.__setattr__(self, "travel_time_matrices_by_vehicle", time_matrices_by_vehicle)
+        object.__setattr__(self, "travel_distance_matrices_by_vehicle", distance_matrices_by_vehicle)
 
         if not engineers:
             raise ValueError("В задаче должен быть хотя бы один инженер")
@@ -309,6 +334,50 @@ class OptimizationProblem:
         } | {task.location_id for task in tasks}
         self._validate_matrix(matrix, location_ids, "Время движения", integer=True)
         self._validate_matrix(distance_matrix, location_ids, "Расстояние", integer=False)
+        for vehicle_type, vehicle_matrix in time_matrices_by_vehicle.items():
+            if not isinstance(vehicle_type, VehicleType):
+                raise ValueError("Ключ матрицы времени должен быть значением VehicleType")
+            self._validate_matrix(
+                vehicle_matrix,
+                location_ids,
+                f"Время движения для {vehicle_type.value}",
+                integer=True,
+            )
+        for vehicle_type, vehicle_matrix in distance_matrices_by_vehicle.items():
+            if not isinstance(vehicle_type, VehicleType):
+                raise ValueError("Ключ матрицы расстояний должен быть значением VehicleType")
+            self._validate_matrix(
+                vehicle_matrix,
+                location_ids,
+                f"Расстояние для {vehicle_type.value}",
+                integer=False,
+            )
+        if set(time_matrices_by_vehicle) != set(distance_matrices_by_vehicle):
+            raise ValueError("Для каждого транспортного профиля нужны обе матрицы")
+
+    def travel_time_between(
+        self,
+        from_location: str,
+        to_location: str,
+        vehicle_type: VehicleType,
+    ) -> int:
+        """Возвращает время движения из матрицы профиля инженера."""
+        matrix = self.travel_time_matrices_by_vehicle.get(
+            vehicle_type, self.travel_time_matrix
+        )
+        return matrix[from_location][to_location]
+
+    def travel_distance_between(
+        self,
+        from_location: str,
+        to_location: str,
+        vehicle_type: VehicleType,
+    ) -> float:
+        """Возвращает расстояние из матрицы профиля инженера."""
+        matrix = self.travel_distance_matrices_by_vehicle.get(
+            vehicle_type, self.travel_distance_matrix
+        )
+        return float(matrix[from_location][to_location])
 
     @staticmethod
     def _validate_matrix(
@@ -343,63 +412,64 @@ class OptimizationProblem:
 class RouteStop:
     """Результат посещения заявки; времена представлены как ``HH:MM``."""
 
-    task_id: str
-    arrival_time: str
-    service_start_time: str
-    service_end_time: str
-    travel_time_from_previous: int
-    distance_from_previous_km: float = 0.0
+    task_id: str  # ID обслуженной заявки.
+    arrival_time: str  # Фактическое прибытие на локацию, HH:MM.
+    service_start_time: str  # Фактическое начало работы, HH:MM.
+    service_end_time: str  # Окончание работы, HH:MM.
+    travel_time_from_previous: int  # Время движения от базы или предыдущей заявки, минуты.
+    distance_from_previous_km: float = 0.0  # Расстояние от базы или предыдущей заявки, километры.
 
 
 @dataclass(frozen=True, slots=True)
 class EngineerRoute:
     """Упорядоченный маршрут инженера в доменных единицах."""
 
-    engineer_id: str
-    stops: tuple[RouteStop, ...]
-    total_travel_minutes: int
-    total_service_minutes: int
-    total_distance_km: float = 0.0
+    engineer_id: str  # ID инженера-владельца маршрута.
+    stops: tuple[RouteStop, ...]  # Заявки в фактическом порядке посещения.
+    total_travel_minutes: int  # Суммарное время движения по маршруту, минуты.
+    total_service_minutes: int  # Суммарное время обслуживания, минуты.
+    total_distance_km: float = 0.0  # Суммарное расстояние маршрута, километры.
 
 
 class UnassignedReasonCode(str, Enum):
     """Коды причин, по которым заявка не попала в маршруты."""
 
-    MISSING_QUALIFICATION = "missing_qualification"
-    MISSING_EQUIPMENT = "missing_equipment"
-    MISSING_VEHICLE_TYPE = "missing_vehicle_type"
-    IMPOSSIBLE_TIME_WINDOW = "impossible_time_window"
-    OUTSIDE_WORKING_HOURS = "outside_working_hours"
+    MISSING_QUALIFICATION = "missing_qualification"  # Нет подходящего навыка.
+    MISSING_EQUIPMENT = "missing_equipment"  # Не хватает хотя бы одного устройства.
+    MISSING_VEHICLE_TYPE = "missing_vehicle_type"  # Нет подходящего типа транспорта.
+    IMPOSSIBLE_TIME_WINDOW = "impossible_time_window"  # Нельзя начать работу в окне.
+    OUTSIDE_WORKING_HOURS = "outside_working_hours"  # Работа не помещается в смену.
+    RESOURCE_CONFLICT = "resource_conflict"  # Один экземпляр ресурса уже занят.
 
 
 @dataclass(frozen=True, slots=True)
 class UnassignedReason:
     """Структурированное объяснение неназначения заявки."""
 
-    code: UnassignedReasonCode
-    message: str
+    code: UnassignedReasonCode  # Машиночитаемый код причины.
+    message: str  # Пояснение для пользователя или последующего XAI-слоя.
 
 
 @dataclass(frozen=True, slots=True)
 class OptimizationResult:
     """Маршруты, неназначенные заявки и разложение целевой функции."""
 
-    routes: Mapping[str, EngineerRoute]
-    unassigned_task_ids: tuple[str, ...]
-    unassigned_reasons: Mapping[str, UnassignedReason]
-    distance_by_engineer: Mapping[str, float]
-    total_distance: float
-    travel_time_by_engineer: Mapping[str, int]
-    total_travel_time: int
-    used_engineers_count: int
-    assigned_task_count: int
-    unassigned_task_count: int
-    total_objective: int
-    total_service_minutes: int = 0
-    unassigned_penalty: int = 0
-    used_engineers_penalty: int = 0
-    distance_penalty: int = 0
-    travel_time_penalty: int = 0
+    routes: Mapping[str, EngineerRoute]  # Маршрут каждого инженера, включая пустые маршруты.
+    unassigned_task_ids: tuple[str, ...]  # ID заявок, которым не нашлось допустимого места.
+    unassigned_reasons: Mapping[str, UnassignedReason]  # Причина для каждого ID из unassigned_task_ids.
+    distance_by_engineer: Mapping[str, float]  # Пробег каждого инженера, километры.
+    total_distance: float  # Суммарный пробег всех маршрутов, километры.
+    travel_time_by_engineer: Mapping[str, int]  # Время движения каждого инженера, минуты.
+    total_travel_time: int  # Суммарное время движения всех маршрутов, минуты.
+    used_engineers_count: int  # Число инженеров, у которых есть хотя бы одна заявка.
+    assigned_task_count: int  # Число заявок во всех непустых маршрутах.
+    unassigned_task_count: int  # Число заявок без маршрута.
+    total_objective: int  # Итоговая стоимость по четырём компонентам ниже.
+    total_service_minutes: int = 0  # Суммарная длительность обслуживания, минуты.
+    unassigned_penalty: int = 0  # Штраф за неназначенные заявки с учётом приоритета.
+    used_engineers_penalty: int = 0  # Штраф за количество задействованных инженеров.
+    distance_penalty: int = 0  # Взвешенный штраф за общий пробег.
+    travel_time_penalty: int = 0  # Взвешенный штраф за общее время движения.
 
     def __post_init__(self) -> None:
         """Проверяет метрики маршрутов и сумму компонентов objective."""

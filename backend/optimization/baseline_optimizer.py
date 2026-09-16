@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 from .config import OptimizerConfig
 from .constraints import (
@@ -24,6 +25,17 @@ from .models import (
     hhmm_to_minutes,
     minutes_to_hhmm,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class _ScheduledStop:
+    """Промежуточное расписание заявки до преобразования в RouteStop."""
+
+    task: Task  # Заявка, для которой рассчитан этот элемент расписания.
+    arrival_time: int  # Время прибытия в минутах от начала суток.
+    service_start_time: int  # Время начала работы в минутах от начала суток.
+    service_end_time: int  # Время окончания работы в минутах от начала суток.
+    distance_from_previous_km: float  # Пробег от предыдущей точки в километрах.
 
 
 class GreedyBaselineOptimizer(RouteOptimizer):
@@ -51,6 +63,8 @@ class GreedyBaselineOptimizer(RouteOptimizer):
         unassigned_reasons: dict[str, UnassignedReason] = {}
 
         for task in problem.tasks:
+            # Этот двойной цикл и есть baseline: порядок задач и инженеров
+            # полностью определяется входными кортежами, без перестановки.
             for engineer in problem.engineers:
                 if not engineer_can_execute_task(problem, engineer, task):
                     continue
@@ -68,18 +82,24 @@ class GreedyBaselineOptimizer(RouteOptimizer):
                     problem,
                     engineer,
                     task,
-                    candidate_stop[2],
-                    candidate_stop[3],
+                    candidate_stop.service_start_time,
+                    candidate_stop.service_end_time,
                     resource_intervals,
                 ):
                     continue
 
                 tasks_by_engineer[engineer.id].append(task)
+                # Запоминаем сервисный интервал каждого ограниченного экземпляра,
+                # чтобы следующий инженер не получил его одновременно.
                 for resource_id in resource_ids_used_for_task(
                     problem, engineer, task
                 ):
                     resource_intervals.setdefault(resource_id, []).append(
-                        (engineer.id, candidate_stop[2], candidate_stop[3])
+                        (
+                            engineer.id,
+                            candidate_stop.service_start_time,
+                            candidate_stop.service_end_time,
+                        )
                     )
                 break
             else:
@@ -168,17 +188,19 @@ class GreedyBaselineOptimizer(RouteOptimizer):
         engineer: Engineer,
         availability: EngineerAvailability,
         tasks: list[Task],
-    ) -> list[tuple[Task, int, int, int, float]] | None:
+    ) -> list[_ScheduledStop] | None:
         """Проверяет последовательный маршрут и возвращает его расписание."""
         # Тип availability намеренно читается через атрибуты модели: метод не
         # меняет domain-модель и использует только её публичные поля.
         current_time = hhmm_to_minutes(availability.available_from)
         previous_location = engineer.start_location_id
-        schedule: list[tuple[Task, int, int, int, float]] = []
+        schedule: list[_ScheduledStop] = []
         for task in tasks:
-            travel_time = problem.travel_time_matrix[previous_location][
-                task.location_id
-            ]
+            travel_time = problem.travel_time_between(
+                previous_location,
+                task.location_id,
+                engineer.vehicle_type,
+            )
             arrival_time = current_time + travel_time
             service_start = max(arrival_time, hhmm_to_minutes(task.window_start))
             service_end = service_start + task.duration_minutes
@@ -186,11 +208,19 @@ class GreedyBaselineOptimizer(RouteOptimizer):
                 return None
             if service_end > hhmm_to_minutes(availability.available_until):
                 return None
-            distance = float(
-                problem.travel_distance_matrix[previous_location][task.location_id]
+            distance = problem.travel_distance_between(
+                previous_location,
+                task.location_id,
+                engineer.vehicle_type,
             )
             schedule.append(
-                (task, arrival_time, service_start, service_end, distance)
+                _ScheduledStop(
+                    task=task,
+                    arrival_time=arrival_time,
+                    service_start_time=service_start,
+                    service_end_time=service_end,
+                    distance_from_previous_km=distance,
+                )
             )
             current_time = service_end
             previous_location = task.location_id
@@ -254,9 +284,11 @@ class GreedyBaselineOptimizer(RouteOptimizer):
             if not engineer_can_execute_task(problem, engineer, task):
                 continue
             availability = availability_by_engineer[engineer.id]
-            arrival_time = hhmm_to_minutes(availability.available_from) + problem.travel_time_matrix[
-                engineer.start_location_id
-            ][task.location_id]
+            arrival_time = hhmm_to_minutes(availability.available_from) + problem.travel_time_between(
+                engineer.start_location_id,
+                task.location_id,
+                engineer.vehicle_type,
+            )
             service_start = max(arrival_time, hhmm_to_minutes(task.window_start))
             if service_start > hhmm_to_minutes(task.window_end):
                 continue
@@ -280,7 +312,7 @@ class GreedyBaselineOptimizer(RouteOptimizer):
     @staticmethod
     def _build_route(
         engineer: Engineer,
-        schedule: list[tuple[Task, int, int, int, float]],
+        schedule: list[_ScheduledStop],
         problem: OptimizationProblem,
     ) -> EngineerRoute:
         """Преобразует последовательное расписание в доменный маршрут."""
@@ -289,22 +321,29 @@ class GreedyBaselineOptimizer(RouteOptimizer):
         total_distance = 0.0
         total_service = 0
         stops: list[RouteStop] = []
-        for task, arrival_time, service_start, service_end, distance in schedule:
-            travel_time = problem.travel_time_matrix[previous_location][
-                task.location_id
-            ]
+        for scheduled_stop in schedule:
+            task = scheduled_stop.task
+            travel_time = problem.travel_time_between(
+                previous_location,
+                task.location_id,
+                engineer.vehicle_type,
+            )
             stops.append(
                 RouteStop(
                     task_id=task.id,
-                    arrival_time=minutes_to_hhmm(arrival_time),
-                    service_start_time=minutes_to_hhmm(service_start),
-                    service_end_time=minutes_to_hhmm(service_end),
+                    arrival_time=minutes_to_hhmm(scheduled_stop.arrival_time),
+                    service_start_time=minutes_to_hhmm(
+                        scheduled_stop.service_start_time
+                    ),
+                    service_end_time=minutes_to_hhmm(
+                        scheduled_stop.service_end_time
+                    ),
                     travel_time_from_previous=travel_time,
-                    distance_from_previous_km=distance,
+                    distance_from_previous_km=scheduled_stop.distance_from_previous_km,
                 )
             )
             total_travel += travel_time
-            total_distance += distance
+            total_distance += scheduled_stop.distance_from_previous_km
             total_service += task.duration_minutes
             previous_location = task.location_id
         return EngineerRoute(

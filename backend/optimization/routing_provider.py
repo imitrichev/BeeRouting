@@ -1,38 +1,61 @@
 """Интерфейс внешнего источника матрицы времени движения."""
 
-from dataclasses import dataclass
-from typing import Iterable, Mapping, Protocol, runtime_checkable
+from dataclasses import dataclass, field
+import math
+import json
+from typing import Any, Iterable, Mapping, Protocol, runtime_checkable
+from urllib import error as urllib_error
+from urllib import parse as urllib_parse
+from urllib import request as urllib_request
+
+from .models import VehicleType
 
 
 @runtime_checkable
 class RoutingProvider(Protocol):
-    """Контракт получения готовых матриц времени и расстояния."""
+    """Контракт получения готовых матриц времени и расстояния.
+
+    Провайдер только поставляет данные маршрутизации. Он не назначает заявки
+    и не строит маршруты: это делает выбранная реализация ``RouteOptimizer``.
+    """
 
     def get_travel_time_matrix(
         self,
-        location_ids: Iterable[str],
+        location_ids: Iterable[str],  # Локации, для которых нужна подматрица.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Тип транспорта для профиля маршрутизации.
     ) -> Mapping[str, Mapping[str, int]]:
-        """Возвращает travel-time matrix для переданных локаций."""
+        """Возвращает время движения между переданными локациями в минутах."""
 
     def get_distance_matrix(
         self,
-        location_ids: Iterable[str],
+        location_ids: Iterable[str],  # Те же локации, что и для времени движения.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Тип транспорта для профиля маршрутизации.
     ) -> Mapping[str, Mapping[str, float]]:
-        """Возвращает distance matrix в километрах для переданных локаций."""
+        """Возвращает расстояние между переданными локациями в километрах."""
+
+    def get_route_geometry(
+        self,
+        location_ids: Iterable[str],  # Упорядоченные точки маршрута, включая старт.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Тип транспорта для профиля маршрута.
+    ) -> Mapping[str, Any] | None:
+        """Возвращает GeoJSON geometry маршрута или ``None``."""
 
 
 @dataclass(frozen=True, slots=True)
 class InMemoryRoutingProvider:
-    """Детерминированный provider с двумя заранее заданными матрицами."""
+    """Детерминированный провайдер с двумя заранее заданными матрицами."""
 
-    travel_time_matrix: Mapping[str, Mapping[str, int]]
-    distance_matrix: Mapping[str, Mapping[str, float]]
+    travel_time_matrix: Mapping[str, Mapping[str, int]]  # [откуда][куда]: время движения в минутах.
+    distance_matrix: Mapping[str, Mapping[str, float]]  # [откуда][куда]: расстояние в километрах.
 
     def get_travel_time_matrix(
         self,
-        location_ids: Iterable[str],
+        location_ids: Iterable[str],  # Упорядоченный набор запрашиваемых локаций.
+        vehicle_type: VehicleType = VehicleType.CAR,  # In-memory provider этот параметр не использует.
     ) -> Mapping[str, Mapping[str, int]]:
-        """Возвращает копию подматрицы и проверяет наличие всех локаций."""
+        """Возвращает копию подматрицы времени и проверяет её полноту."""
+        # dict.fromkeys сохраняет порядок входных локаций и одновременно
+        # убирает повторы, чтобы в результате получить квадратную подматрицу.
         requested_locations = tuple(dict.fromkeys(location_ids))
         matrix = {
             from_location: dict(to_locations)
@@ -63,9 +86,12 @@ class InMemoryRoutingProvider:
 
     def get_distance_matrix(
         self,
-        location_ids: Iterable[str],
+        location_ids: Iterable[str],  # Упорядоченный набор запрашиваемых локаций.
+        vehicle_type: VehicleType = VehicleType.CAR,  # In-memory provider этот параметр не использует.
     ) -> Mapping[str, Mapping[str, float]]:
-        """Возвращает копию подматрицы расстояний в километрах."""
+        """Возвращает копию подматрицы расстояний и проверяет её полноту."""
+        # Подматрица строится тем же способом, что и для времени: обе матрицы
+        # должны описывать одинаковые строки и столбцы.
         requested_locations = tuple(dict.fromkeys(location_ids))
         matrix = {
             from_location: dict(to_locations)
@@ -93,3 +119,304 @@ class InMemoryRoutingProvider:
             }
             for from_location in requested_locations
         }
+
+    def get_route_geometry(
+        self,
+        location_ids: Iterable[str],  # Упорядоченные точки маршрута.
+        vehicle_type: VehicleType = VehicleType.CAR,  # In-memory provider не строит geometry без координат.
+    ) -> Mapping[str, Any] | None:
+        """Возвращает ``None``: у матриц нет координат для построения линии."""
+        return None
+
+
+@dataclass(frozen=True, slots=True)
+class CoordinateRoutingProvider:
+    """Детерминированный provider для демо без внешнего картографического API.
+
+    Расстояние считается по координатам, а время — по средней скорости.
+    Класс нужен для локального MVP и тестового набора; реальный сетевой
+    провайдер можно позже подключить через тот же ``RoutingProvider``.
+    """
+
+    coordinates: Mapping[str, tuple[float, float]]  # Координаты локаций: latitude, longitude.
+    speed_km_per_hour: float = 30.0  # Условная скорость для расчёта демонстрационного travel time.
+    public_transport_time_multiplier: float = 2.0  # Дополнительный коэффициент времени общественного транспорта.
+
+    def get_travel_time_matrix(
+        self,
+        location_ids: Iterable[str],  # Упорядоченный набор локаций для подматрицы.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Координатный provider использует одну скорость для демо.
+    ) -> Mapping[str, Mapping[str, int]]:
+        """Возвращает детерминированное время движения в минутах."""
+        _, travel_time_matrix = self._build_matrices(location_ids, vehicle_type)
+        return travel_time_matrix
+
+    def get_distance_matrix(
+        self,
+        location_ids: Iterable[str],  # Тот же набор локаций, что и для времени.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Координатный provider использует одну скорость для демо.
+    ) -> Mapping[str, Mapping[str, float]]:
+        """Возвращает расстояние между локациями в километрах."""
+        distance_matrix, _ = self._build_matrices(location_ids, vehicle_type)
+        return distance_matrix
+
+    def get_route_geometry(
+        self,
+        location_ids: Iterable[str],  # Упорядоченные точки маршрута, включая старт.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Тип транспорта не меняет демонстрационную геометрию.
+    ) -> Mapping[str, Any] | None:
+        """Возвращает прямую GeoJSON-линию между переданными координатами."""
+        requested_locations = tuple(dict.fromkeys(location_ids))
+        missing_locations = set(requested_locations) - self.coordinates.keys()
+        if missing_locations:
+            raise ValueError(
+                f"Отсутствуют координаты локаций: {sorted(missing_locations)}"
+            )
+        return {
+            "type": "LineString",
+            "coordinates": [
+                [self.coordinates[location][1], self.coordinates[location][0]]
+                for location in requested_locations
+            ],
+        }
+
+    def _build_matrices(
+        self,
+        location_ids: Iterable[str],
+        vehicle_type: VehicleType,
+    ) -> tuple[dict[str, dict[str, float]], dict[str, dict[str, int]]]:
+        """Строит обе матрицы для запрошенного набора координат."""
+        if self.speed_km_per_hour <= 0:
+            raise ValueError("speed_km_per_hour должен быть положительным")
+        if self.public_transport_time_multiplier <= 0:
+            raise ValueError("public_transport_time_multiplier должен быть положительным")
+        requested_locations = tuple(dict.fromkeys(location_ids))
+        missing_locations = set(requested_locations) - self.coordinates.keys()
+        if missing_locations:
+            raise ValueError(
+                f"Отсутствуют координаты локаций: {sorted(missing_locations)}"
+            )
+        distance_matrix: dict[str, dict[str, float]] = {}
+        travel_time_matrix: dict[str, dict[str, int]] = {}
+        for source in requested_locations:
+            distance_matrix[source] = {}
+            travel_time_matrix[source] = {}
+            for destination in requested_locations:
+                distance = _haversine_km(
+                    *self.coordinates[source],
+                    *self.coordinates[destination],
+                )
+                distance_matrix[source][destination] = distance
+                base_minutes = distance / self.speed_km_per_hour * 60
+                multiplier = (
+                    self.public_transport_time_multiplier
+                    if vehicle_type == VehicleType.PUBLIC_TRANSPORT
+                    else 1.0
+                )
+                travel_time_matrix[source][destination] = (
+                    0 if distance == 0 else max(1, math.ceil(base_minutes * multiplier))
+                )
+        return distance_matrix, travel_time_matrix
+
+
+def _haversine_km(
+    source_latitude: float,
+    source_longitude: float,
+    destination_latitude: float,
+    destination_longitude: float,
+) -> float:
+    """Вычисляет расстояние по поверхности Земли между координатами."""
+    earth_radius_km = 6_371.0
+    latitude_1 = math.radians(source_latitude)
+    latitude_2 = math.radians(destination_latitude)
+    delta_latitude = math.radians(destination_latitude - source_latitude)
+    delta_longitude = math.radians(destination_longitude - source_longitude)
+    haversine = (
+        math.sin(delta_latitude / 2) ** 2
+        + math.cos(latitude_1)
+        * math.cos(latitude_2)
+        * math.sin(delta_longitude / 2) ** 2
+    )
+    return 2 * earth_radius_km * math.asin(math.sqrt(haversine))
+
+
+@dataclass(frozen=True, slots=True)
+class OSRMRoutingProvider:
+    """Получает матрицы и GeoJSON geometry из OSRM HTTP API.
+
+    OSRM использует профили маршрутизации. По умолчанию ``CAR`` использует
+    ``driving``, ``BICYCLE`` — ``cycling``, ``WALK`` — ``walking``. Профиль
+    ``PUBLIC_TRANSPORT`` заменяется на ``driving`` и получает коэффициент
+    времени 2.0: стандартный OSRM не моделирует расписания и пересадки
+    общественного транспорта. Это явное приближение; при наличии собственного
+    профиля его можно передать через ``profiles``.
+    """
+
+    coordinates: Mapping[str, tuple[float, float]]  # Координаты локаций: latitude, longitude.
+    base_url: str = "https://router.project-osrm.org"  # Адрес OSRM HTTP API без завершающего слеша.
+    request_timeout_seconds: float = 15.0  # Тайм-аут одного HTTP-запроса к OSRM.
+    public_transport_time_multiplier: float = 2.0  # Во сколько раз увеличивать время public относительно профиля OSRM.
+    profiles: Mapping[VehicleType, str] = field(
+        default_factory=lambda: {
+            VehicleType.CAR: "driving",
+            VehicleType.WALK: "walking",
+            VehicleType.BICYCLE: "cycling",
+            VehicleType.PUBLIC_TRANSPORT: "driving",
+        }
+    )  # Профиль OSRM для каждого доменного типа транспорта.
+    _cache: dict[str, Mapping[str, Any]] = field(
+        default_factory=dict,
+        init=False,
+        repr=False,
+        compare=False,
+    )  # Простое in-memory кэширование ответов по полному URL запроса.
+
+    def get_travel_time_matrix(
+        self,
+        location_ids: Iterable[str],  # Локации, для которых нужна матрица.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Выбирает профиль OSRM.
+    ) -> Mapping[str, Mapping[str, int]]:
+        """Получает таблицу времени OSRM и переводит секунды в минуты."""
+        durations, _ = self._get_table(location_ids, vehicle_type)
+        return durations
+
+    def get_distance_matrix(
+        self,
+        location_ids: Iterable[str],  # Те же локации, что и для времени.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Выбирает профиль OSRM.
+    ) -> Mapping[str, Mapping[str, float]]:
+        """Получает таблицу расстояний OSRM и переводит метры в километры."""
+        _, distances = self._get_table(location_ids, vehicle_type)
+        return distances
+
+    def get_route_geometry(
+        self,
+        location_ids: Iterable[str],  # Упорядоченные точки маршрута, включая старт.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Выбирает профиль OSRM.
+    ) -> Mapping[str, Any] | None:
+        """Получает полную geometry маршрута в формате GeoJSON."""
+        requested_locations = tuple(location_ids)
+        if len(requested_locations) < 2:
+            return None
+        url = self._url(
+            service="route",
+            profile=self._profile(vehicle_type),
+            location_ids=requested_locations,
+            query={"overview": "full", "geometries": "geojson", "steps": "false"},
+        )
+        payload = self._get_json(url)
+        routes = payload.get("routes")
+        if payload.get("code") != "Ok" or not routes:
+            raise RoutingProviderError(
+                f"OSRM route не построил маршрут: {payload.get('code', 'Unknown')}"
+            )
+        geometry = routes[0].get("geometry")
+        if not isinstance(geometry, dict):
+            raise RoutingProviderError("OSRM не вернул GeoJSON geometry маршрута")
+        return geometry
+
+    def _get_table(
+        self,
+        location_ids: Iterable[str],
+        vehicle_type: VehicleType,
+    ) -> tuple[dict[str, dict[str, int]], dict[str, dict[str, float]]]:
+        """Запрашивает одну OSRM table и преобразует обе её матрицы."""
+        requested_locations = tuple(location_ids)
+        if not requested_locations:
+            return {}, {}
+        if self.public_transport_time_multiplier <= 0:
+            raise RoutingProviderError(
+                "public_transport_time_multiplier должен быть положительным"
+            )
+        url = self._url(
+            service="table",
+            profile=self._profile(vehicle_type),
+            location_ids=requested_locations,
+            query={"annotations": "duration,distance"},
+        )
+        payload = self._get_json(url)
+        durations = payload.get("durations")
+        distances = payload.get("distances")
+        if payload.get("code") != "Ok" or not isinstance(durations, list) or not isinstance(distances, list):
+            raise RoutingProviderError(
+                f"OSRM table не построил матрицы: {payload.get('code', 'Unknown')}"
+            )
+        if len(durations) != len(requested_locations) or len(distances) != len(requested_locations):
+            raise RoutingProviderError("OSRM вернул матрицы неправильного размера")
+
+        time_matrix: dict[str, dict[str, int]] = {}
+        distance_matrix: dict[str, dict[str, float]] = {}
+        for row_index, source in enumerate(requested_locations):
+            if not isinstance(durations[row_index], list) or not isinstance(distances[row_index], list):
+                raise RoutingProviderError("OSRM вернул некорректную строку матрицы")
+            time_matrix[source] = {}
+            distance_matrix[source] = {}
+            for column_index, destination in enumerate(requested_locations):
+                duration_seconds = durations[row_index][column_index]
+                distance_meters = distances[row_index][column_index]
+                if duration_seconds is None or distance_meters is None:
+                    raise RoutingProviderError(
+                        f"OSRM не нашёл маршрут из {source} в {destination}"
+                    )
+                multiplier = (
+                    self.public_transport_time_multiplier
+                    if vehicle_type == VehicleType.PUBLIC_TRANSPORT
+                    else 1.0
+                )
+                time_matrix[source][destination] = (
+                    0
+                    if duration_seconds == 0
+                    else max(1, math.ceil(duration_seconds / 60 * multiplier))
+                )
+                distance_matrix[source][destination] = float(distance_meters) / 1000
+        return time_matrix, distance_matrix
+
+    def _profile(self, vehicle_type: VehicleType) -> str:
+        """Возвращает профиль OSRM для фиксированного типа транспорта."""
+        try:
+            return self.profiles[vehicle_type]
+        except KeyError as exc:
+            raise RoutingProviderError(
+                f"Для транспорта {vehicle_type.value} не задан профиль OSRM"
+            ) from exc
+
+    def _url(
+        self,
+        service: str,
+        profile: str,
+        location_ids: tuple[str, ...],
+        query: Mapping[str, str],
+    ) -> str:
+        """Собирает URL OSRM из координат и параметров запроса."""
+        try:
+            coordinates = ";".join(
+                # OSRM принимает порядок longitude,latitude, тогда как domain
+                # хранит координаты в привычном для API порядке latitude,longitude.
+                f"{self.coordinates[location][1]},{self.coordinates[location][0]}"
+                for location in location_ids
+            )
+        except KeyError as exc:
+            raise RoutingProviderError(
+                f"Для OSRM отсутствуют координаты локации {exc.args[0]}"
+            ) from exc
+        encoded_coordinates = urllib_parse.quote(coordinates, safe=";,.-")
+        encoded_query = urllib_parse.urlencode(query)
+        return f"{self.base_url.rstrip('/')}/{service}/v1/{profile}/{encoded_coordinates}?{encoded_query}"
+
+    def _get_json(self, url: str) -> Mapping[str, Any]:
+        """Возвращает JSON по URL, используя кэш одинаковых запросов."""
+        cached = self._cache.get(url)
+        if cached is not None:
+            return cached
+        try:
+            with urllib_request.urlopen(url, timeout=self.request_timeout_seconds) as response:
+                payload = json.load(response)
+        except (OSError, urllib_error.URLError, json.JSONDecodeError) as exc:
+            raise RoutingProviderError(f"Ошибка запроса к OSRM: {exc}") from exc
+        if not isinstance(payload, dict):
+            raise RoutingProviderError("OSRM вернул JSON не в виде объекта")
+        self._cache[url] = payload
+        return payload
+
+class RoutingProviderError(RuntimeError):
+    """Ошибка получения матрицы или geometry от routing provider."""

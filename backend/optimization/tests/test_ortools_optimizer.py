@@ -147,6 +147,26 @@ def test_solver_assigns_all_tasks_and_returns_minutes_and_hhmm() -> None:
             assert len(stop.service_start_time.split(":")) == 2
 
 
+def test_solver_allows_multiple_tasks_in_one_window_when_they_fit() -> None:
+    """OR-Tools не запрещает несколько последовательных работ в одном окне."""
+    locations = ("base", "customer-1", "customer-2")
+    result = ORToolsOptimizer().optimize(
+        OptimizationProblem(
+            engineers=(make_engineer(),),
+            availabilities=(EngineerAvailability("e1", "09:00", "12:00"),),
+            tasks=(
+                make_task("t1", location_id="customer-1", duration_minutes=45, window_start="09:00", window_end="11:00"),
+                make_task("t2", location_id="customer-2", duration_minutes=45, window_start="09:00", window_end="11:00"),
+            ),
+            travel_time_matrix=full_matrix(locations, 0),
+            travel_distance_matrix=full_distance_matrix(locations, 0.0),
+        )
+    )
+
+    assert result.assigned_task_count == 2
+    assert result.unassigned_task_ids == ()
+
+
 def test_skill_catalog_accepts_three_engineer_skills_and_one_task_skill() -> None:
     """Справочник содержит три навыка, инженер может иметь все три."""
     engineer = make_engineer(
@@ -485,8 +505,8 @@ def test_urgent_unassigned_penalty_is_greater_than_normal() -> None:
     assert result.unassigned_penalty == 100 + 100 * config.urgent_unassigned_multiplier
 
 
-def test_priority_is_part_of_the_domain_but_sla_is_absent() -> None:
-    """Приоритет допускается, а задача не содержит SLA-поля."""
+def test_priority_is_part_of_the_domain_objective() -> None:
+    """Приоритет заявки учитывается в штрафе за её неназначение."""
     task = make_task(priority=Priority.URGENT)
     problem = OptimizationProblem(
         engineers=(make_engineer(),),

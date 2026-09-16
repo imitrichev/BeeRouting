@@ -1,0 +1,42 @@
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #f7f9fb;
+}
+
+.file-input {
+  max-width: 260px;
+  min-width: 220px;
+}
+
+.map-card {
+  overflow: hidden;
+}
+
+.map-container {
+  height: 520px;
+  min-height: 520px;
+  width: 100%;
+}
+
+.metric-label {
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 0.8rem;
+  margin-bottom: 4px;
+}
+
+.engineer-color-dot {
+  border-radius: 50%;
+  display: inline-block;
+  height: 12px;
+  width: 12px;
+}
+
+strong {
+  font-size: 1.35rem;
+}

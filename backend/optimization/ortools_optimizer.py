@@ -6,6 +6,8 @@ from datetime import timedelta
 import math
 from typing import Any
 
+# pywrapcp — Python-обёртка над C++ API constraint_solver из OR-Tools.
+# routing_enums_pb2 содержит перечисления стратегий поиска, например PATH_CHEAPEST_ARC.
 from ortools.constraint_solver import pywrapcp, routing_enums_pb2
 
 from .config import OptimizerConfig
@@ -19,6 +21,7 @@ from .models import (
     Task,
     UnassignedReason,
     UnassignedReasonCode,
+    VehicleType,
     hhmm_to_minutes,
     minutes_to_hhmm,
 )
@@ -29,6 +32,7 @@ class ORToolsOptimizer(RouteOptimizer):
 
     def __init__(self, config: OptimizerConfig | None = None) -> None:
         """Создаёт решатель с переданной или стандартной конфигурацией."""
+        # Конфигурация хранит лимит поиска и все веса objective в одном месте.
         self.config = config or OptimizerConfig()
 
     def optimize(self, problem: OptimizationProblem) -> OptimizationResult:
@@ -36,6 +40,10 @@ class ORToolsOptimizer(RouteOptimizer):
         eligible_tasks: list[Task] = []
         unassigned_reasons: dict[str, UnassignedReason] = {}
         for task in problem.tasks:
+            # На этом этапе отбрасываем только заявки без единого инженера,
+            # подходящего по skill/equipment/vehicle. Временные ограничения не
+            # проверяем здесь: их должен совместно рассмотреть OR-Tools вместе
+            # с выбором инженера и порядка заявок.
             if self._has_eligible_engineer(problem, task):
                 eligible_tasks.append(task)
             else:
@@ -52,88 +60,141 @@ class ORToolsOptimizer(RouteOptimizer):
                 total_distance_km=0.0,
             )
 
+        # В OR-Tools каждый маршрут называется vehicle. Здесь vehicle — это
+        # именно маршрут инженера, а не отдельная модель автомобиля. Поэтому
+        # число vehicle равно числу инженеров, участвующих в планировании.
         engineer_count = len(problem.engineers)
+
+        # Переводим наши ID локаций в последовательность логических узлов
+        # OR-Tools. Это не список маршрута, а общий каталог узлов модели.
+        # Сначала идут стартовые точки инженеров, затем точки заявок:
+        #   node 0..engineer_count-1 -> старт соответствующего инженера;
+        #   остальные node -> одна заявка из eligible_tasks.
+        # Например, при 3 инженерах и 5 заявках список содержит 8 элементов:
+        # первые 3 — базы, последние 5 — заявки. Индекс узла сохраняется
+        # отдельно от location_id: одинаковые ID локаций всё равно могут быть
+        # разными узлами (две заявки в одном месте), а OR-Tools затем создаёт
+        # ещё один слой собственных внутренних индексов.
         node_location_ids = [
             engineer.start_location_id for engineer in problem.engineers
         ] + [task.location_id for task in eligible_tasks]
+
+        # Связываем логический номер узла с объектом Task. Стартовые узлы в
+        # этом словаре отсутствуют, поэтому callback понимает, где находится
+        # заявка, а где начинается маршрут инженера.
         task_by_node = {
             engineer_count + task_index: task
             for task_index, task in enumerate(eligible_tasks)
         }
+        # Обратное отображение нужно после решения: по ID заявки быстро найти
+        # индекс узла и прочитать ActiveVar(task_index).
         task_node_by_id = {
             task.id: task_node for task_node, task in task_by_node.items()
         }
+
+        # Для каждого маршрута номер стартового логического узла совпадает с
+        # порядком инженера в problem.engineers: vehicle 0 начинается в starts[0]
+        # и принадлежит инженеру problem.engineers[0], и так далее.
         starts = list(range(engineer_count))
-        # OR-Tools называет каждый маршрут vehicle. В нашем домене один такой
-        # маршрут соответствует одному инженеру; это не физический автомобиль.
         manager = pywrapcp.RoutingIndexManager(
-            len(node_location_ids),
-            engineer_count,
-            starts,
-            starts,
+            len(node_location_ids),  # number_of_nodes: сколько узлов в общем каталоге.
+            engineer_count,  # number_of_vehicles: сколько маршрутов строится одновременно.
+            starts,  # starts: логический старт каждого маршрута по индексу vehicle.
+            starts,  # ends: логический конец каждого маршрута; здесь тот же индекс технически.
         )
+        # RoutingIndexManager — встроенный класс OR-Tools. Он переводит наши
+        # логические номера узлов в внутренние индексы RoutingModel. Параметр
+        # starts передан дважды потому, что API отдельно требует массивы
+        # стартов и концов. Возврат на базу не моделируется: переход в
+        # технический End получает нулевую стоимость и не попадает в метрики.
+        # RoutingModel создаёт саму VRP-модель поверх менеджера индексов:
+        # переменные NextVar, VehicleVar, ActiveVar и целевую функцию.
         routing = pywrapcp.RoutingModel(manager)
 
-        def travel_time_callback(from_index: int, to_index: int) -> int:
-            """Возвращает время движения между узлами в минутах."""
-            # Конечный индекс маршрута нужен OR-Tools для завершения vehicle.
-            # В предметной модели это не поездка обратно: последняя заявка
-            # является конечной точкой маршрута.
-            if routing.IsEnd(to_index):
-                return 0
-            from_node = manager.IndexToNode(from_index)
-            to_node = manager.IndexToNode(to_index)
-            from_location = node_location_ids[from_node]
-            to_location = node_location_ids[to_node]
-            return problem.travel_time_matrix[from_location][to_location]
+        def make_schedule_callback(vehicle_index: int):
+            """Создаёт callback расписания для конкретного профиля транспорта."""
+            engineer = problem.engineers[vehicle_index]
 
-        transit_callback_index = routing.RegisterTransitCallback(
-            travel_time_callback
-        )
-        def schedule_time_callback(from_index: int, to_index: int) -> int:
-            """Возвращает движение плюс работу в исходной заявке, в минутах."""
-            from_node = manager.IndexToNode(from_index)
-            from_location = node_location_ids[from_node]
-            task_at_from = task_by_node.get(from_node)
-            service_duration = (
-                task_at_from.duration_minutes if task_at_from is not None else 0
+            def schedule_time_callback(from_index: int, to_index: int) -> int:
+                """Возвращает движение плюс обслуживание в минутах."""
+                # OR-Tools передаёт внутренние индексы маршрута, а не наши
+                # строковые location_id. Сначала преобразуем индекс узла.
+                from_node = manager.IndexToNode(from_index)
+                from_location = node_location_ids[from_node]
+                task_at_from = task_by_node.get(from_node)
+                service_duration = (
+                    task_at_from.duration_minutes if task_at_from is not None else 0
+                )
+                if routing.IsEnd(to_index):
+                    return service_duration
+                to_node = manager.IndexToNode(to_index)
+                to_location = node_location_ids[to_node]
+                return problem.travel_time_between(
+                    from_location,
+                    to_location,
+                    engineer.vehicle_type,
+                ) + service_duration
+
+            return schedule_time_callback
+
+        schedule_callback_indices = [
+            routing.RegisterTransitCallback(make_schedule_callback(vehicle_index))
+            for vehicle_index in range(engineer_count)
+        ]
+        # Для каждого vehicle регистрируется отдельная функция, потому что
+        # OSRM может дать разное время для driving, walking и cycling.
+
+        def make_objective_callback(vehicle_index: int):
+            """Создаёт callback стоимости дуги для транспорта инженера."""
+            engineer = problem.engineers[vehicle_index]
+
+            def objective_callback(from_index: int, to_index: int) -> int:
+                """Возвращает взвешенную стоимость движения по дуге."""
+                # Целевая функция OR-Tools должна быть целочисленной. Расстояние
+                # переводим из километров в целую стоимость, время уже в минутах.
+                if routing.IsEnd(to_index):
+                    return 0
+                from_node = manager.IndexToNode(from_index)
+                to_node = manager.IndexToNode(to_index)
+                from_location = node_location_ids[from_node]
+                to_location = node_location_ids[to_node]
+                travel_time = problem.travel_time_between(
+                    from_location,
+                    to_location,
+                    engineer.vehicle_type,
+                )
+                distance = problem.travel_distance_between(
+                    from_location,
+                    to_location,
+                    engineer.vehicle_type,
+                )
+                return (
+                    travel_time * self.config.travel_time_penalty_per_minute
+                    + int(round(distance * self.config.distance_penalty_per_km))
+                )
+
+            return objective_callback
+
+        objective_callback_indices = [
+            routing.RegisterTransitCallback(make_objective_callback(vehicle_index))
+            for vehicle_index in range(engineer_count)
+        ]
+        # Основная стоимость дуги включает только движение. Длительность
+        # обслуживания нужна для расписания, но не является travel time.
+        for vehicle_index, callback_index in enumerate(objective_callback_indices):
+            routing.SetArcCostEvaluatorOfVehicle(
+                callback_index,  # evaluator_index: функция стоимости дуги.
+                vehicle_index,  # vehicle: маршрут конкретного инженера.
             )
-            if routing.IsEnd(to_index):
-                return service_duration
-            to_node = manager.IndexToNode(to_index)
-            to_location = node_location_ids[to_node]
-            return (
-                problem.travel_time_matrix[from_location][to_location]
-                + service_duration
-            )
-
-        schedule_callback_index = routing.RegisterTransitCallback(
-            schedule_time_callback
-        )
-
-        def objective_callback(from_index: int, to_index: int) -> int:
-            """Возвращает стоимость дуги: расстояние и время движения."""
-            if routing.IsEnd(to_index):
-                return 0
-            from_node = manager.IndexToNode(from_index)
-            to_node = manager.IndexToNode(to_index)
-            from_location = node_location_ids[from_node]
-            to_location = node_location_ids[to_node]
-            travel_time = problem.travel_time_matrix[from_location][to_location]
-            distance = problem.travel_distance_matrix[from_location][to_location]
-            return (
-                travel_time * self.config.travel_time_penalty_per_minute
-                + int(round(distance * self.config.distance_penalty_per_km))
-            )
-
-        objective_callback_index = routing.RegisterTransitCallback(
-            objective_callback
-        )
-        routing.SetArcCostEvaluatorOfAllVehicles(objective_callback_index)
         availability_by_engineer = {
             availability.engineer_id: availability
             for availability in problem.availabilities
         }
+        # Словарь позволяет получить смену по ID инженера, не меняя порядок
+        # инженеров в problem.engineers — этот порядок связан с vehicle index.
+        # Временное измерение работает с абсолютными минутами от полуночи.
+        # Горизонт должен включать конец самой поздней смены и конец самого
+        # позднего окна; slack внутри измерения представляет ожидание.
         max_available_until = max(
             hhmm_to_minutes(availability.available_until)
             for availability in problem.availabilities
@@ -142,50 +203,69 @@ class ORToolsOptimizer(RouteOptimizer):
             max_available_until,
             max(hhmm_to_minutes(task.window_end) for task in eligible_tasks),
         )
-        routing.AddDimension(
-            schedule_callback_index,
-            time_horizon,
-            time_horizon,
-            False,
-            "Time",
+        time_dimension_name = "Time"  # Имя временного измерения в модели.
+        routing.AddDimensionWithVehicleTransits(
+            schedule_callback_indices,  # evaluator_indices: callback времени каждого инженера.
+            time_horizon,  # slack_max: максимум ожидания перед следующим узлом.
+            time_horizon,  # capacity: верхняя граница накопленного времени.
+            False,  # fix_start_cumul_to_zero: начало смены не обязано быть 00:00.
+            time_dimension_name,  # dimension_name: имя измерения для GetDimensionOrDie.
         )
-        time_dimension = routing.GetDimensionOrDie("Time")
+        # Получаем созданное измерение, чтобы задавать окна и смены через его
+        # накопленные временные переменные CumulVar.
+        time_dimension = routing.GetDimensionOrDie(time_dimension_name)
 
         for vehicle_index, engineer in enumerate(problem.engineers):
             routing.SetFixedCostOfVehicle(
-                self.config.used_engineers_penalty,
-                vehicle_index,
+                self.config.used_engineers_penalty,  # fixed_cost: цена использования маршрута.
+                vehicle_index,  # vehicle: номер инженера/маршрута.
             )
             availability = availability_by_engineer[engineer.id]
+            shift_start = hhmm_to_minutes(availability.available_from)
+            shift_end = hhmm_to_minutes(availability.available_until)
+            # Start/End возвращают специальные внутренние индексы маршрута,
+            # а CumulVar — переменную накопленного времени в этом индексе.
             start_index = routing.Start(vehicle_index)
             end_index = routing.End(vehicle_index)
             time_dimension.CumulVar(start_index).SetRange(
-                hhmm_to_minutes(availability.available_from),
-                hhmm_to_minutes(availability.available_from),
+                shift_start,  # minimum: инженер начинает не раньше начала смены.
+                shift_start,  # maximum: инженер начинает ровно в начале смены.
             )
             # Конечная cumul-переменная означает завершение последней работы.
             # Обратная поездка в стартовую точку в эту модель не входит.
             time_dimension.CumulVar(end_index).SetRange(
-                hhmm_to_minutes(availability.available_from),
-                hhmm_to_minutes(availability.available_until),
+                shift_start,  # minimum: конец не может быть раньше начала смены.
+                shift_end,  # maximum: последняя работа должна закончиться в смену.
             )
 
         for task_node, task in task_by_node.items():
+            # NodeToIndex переводит логический node в индекс, который принимает
+            # RoutingModel. Это значение используется во всех ограничениях узла.
             task_index = manager.NodeToIndex(task_node)
+            window_start = hhmm_to_minutes(task.window_start)
+            window_end = hhmm_to_minutes(task.window_end)
             time_dimension.CumulVar(task_index).SetRange(
-                hhmm_to_minutes(task.window_start),
-                hhmm_to_minutes(task.window_end),
+                window_start,  # minimum: самое раннее начало обслуживания.
+                window_end,  # maximum: самое позднее начало обслуживания.
             )
             routing.AddDisjunction(
-                [task_index],
+                [task_index],  # indices: узел заявки, который можно пропустить.
                 self.config.unassigned_penalty
-                * self._priority_multiplier(task),
+                * self._priority_multiplier(task),  # penalty: цена пропуска заявки.
             )
+            # AddDisjunction разрешает OR-Tools оставить заявку вне маршрута.
+            # Если заявка пропущена, solver платит penalty; hard constraints
+            # при этом по-прежнему запрещают недопустимые назначения.
             for vehicle_index, engineer in enumerate(problem.engineers):
                 if not self._engineer_can_execute_task(problem, engineer, task):
+                    # VehicleVar хранит номер маршрута, которому может
+                    # принадлежать узел. RemoveValue оставляет заявку в модели,
+                    # но запрещает конкретного несовместимого инженера.
                     routing.VehicleVar(task_index).RemoveValue(vehicle_index)
 
         self._add_resource_constraints(
+            # Добавляет дополнительные hard constraints для отдельных
+            # экземпляров оборудования и транспорта, если они заданы.
             problem=problem,
             routing=routing,
             manager=manager,
@@ -193,14 +273,24 @@ class ORToolsOptimizer(RouteOptimizer):
             task_by_node=task_by_node,
         )
 
+        # Создаём объект RoutingSearchParameters — набор настроек алгоритма
+        # поиска OR-Tools. Здесь меняем только стратегию первого решения и
+        # ограничение времени, остальные параметры оставляем стандартными.
         search_parameters = pywrapcp.DefaultRoutingSearchParameters()
         search_parameters.first_solution_strategy = (
+            # PATH_CHEAPEST_ARC строит первое решение, выбирая очередную
+            # доступную дугу с минимальной стоимостью objective callback.
             routing_enums_pb2.FirstSolutionStrategy.PATH_CHEAPEST_ARC
         )
+        # time_limit задаётся объектом Duration. В domain всё время в минутах;
+        # timedelta только переводит настроенный лимит в тип, который ожидает
+        # API OR-Tools.
         search_parameters.time_limit.FromTimedelta(
             timedelta(minutes=self.config.time_limit_minutes)
         )
 
+        # SolveWithParameters запускает поиск и возвращает Assignment — набор
+        # найденных значений NextVar, ActiveVar, VehicleVar и CumulVar.
         solution = routing.SolveWithParameters(search_parameters)
         if solution is None:
             raise ValueError("OR-Tools не смог построить решение")
@@ -214,21 +304,34 @@ class ORToolsOptimizer(RouteOptimizer):
             route_travel_minutes = 0
             route_distance_km = 0.0
 
+            # Идём по цепочке NextVar от технического Start до End. Дуга в End
+            # нужна OR-Tools для завершения маршрута, но в нашем домене она
+            # имеет нулевые travel time и distance и не добавляется в метрики.
             while not routing.IsEnd(index):
                 from_node = manager.IndexToNode(index)
+                # NextVar(index) — переменная OR-Tools со следующим узлом
+                # маршрута. Assignment хранит выбранное значение этой
+                # переменной, которое читается через solution.Value(...).
                 next_index = solution.Value(routing.NextVar(index))
                 to_node = manager.IndexToNode(next_index)
                 if not routing.IsEnd(next_index):
                     from_location = node_location_ids[from_node]
                     to_location = node_location_ids[to_node]
-                    route_travel_minutes += problem.travel_time_matrix[from_location][
-                        to_location
-                    ]
+                    route_travel_minutes += problem.travel_time_between(
+                        from_location,
+                        to_location,
+                        engineer.vehicle_type,
+                    )
                     route_distance_km += self._distance(
-                        problem, from_location, to_location
+                        problem,
+                        from_location,
+                        to_location,
+                        engineer.vehicle_type,
                     )
                 task = task_by_node.get(to_node)
                 if task is not None:
+                    # CumulVar заявки — это начало обслуживания: callback уже
+                    # добавил дорогу и, если нужно, OR-Tools добавил ожидание.
                     service_start_time = solution.Value(
                         time_dimension.CumulVar(next_index)
                     )
@@ -238,6 +341,7 @@ class ORToolsOptimizer(RouteOptimizer):
             route = self._build_engineer_route(
                 engineer_id=engineer.id,
                 start_location_id=engineer.start_location_id,
+                vehicle_type=engineer.vehicle_type,
                 tasks=route_tasks,
                 availability_from=hhmm_to_minutes(
                     availability_by_engineer[engineer.id].available_from
@@ -282,12 +386,15 @@ class ORToolsOptimizer(RouteOptimizer):
         total_distance_km: float,
         unassigned_task_ids: tuple[str, ...] | None = None,
     ) -> OptimizationResult:
-        """Собирает результат с разложением objective без SLA."""
+        """Собирает метрики и четыре компонента целевой функции."""
         if unassigned_task_ids is None:
             unassigned_task_ids = tuple(
                 task.id for task in problem.tasks if task.id in unassigned_reasons
             )
         used_engineers_count = sum(bool(route.stops) for route in routes.values())
+        # Сначала задача штрафуется за неназначение, затем за число маршрутов,
+        # расстояние и travel time. Эти четыре суммы должны совпасть с
+        # total_objective; hard constraints сюда не попадают.
         distance_penalty = int(
             round(total_distance_km * self.config.distance_penalty_per_km)
         )
@@ -361,9 +468,14 @@ class ORToolsOptimizer(RouteOptimizer):
         problem: OptimizationProblem,
         from_location: str,
         to_location: str,
+        vehicle_type: VehicleType,
     ) -> float:
         """Возвращает расстояние дуги в километрах."""
-        return float(problem.travel_distance_matrix[from_location][to_location])
+        return problem.travel_distance_between(
+            from_location,
+            to_location,
+            vehicle_type,
+        )
 
     @staticmethod
     def _has_eligible_engineer(problem: OptimizationProblem, task: Task) -> bool:
@@ -379,7 +491,13 @@ class ORToolsOptimizer(RouteOptimizer):
         engineer: Engineer,
         task: Task,
     ) -> bool:
-        """Проверяет навыки, оборудование и транспорт как жёсткие ограничения."""
+        """Проверяет навыки, оборудование и транспорт как жёсткие ограничения.
+
+        ``available_equipment`` содержит типы оборудования напрямую. Если
+        включена модель отдельных ресурсов, их типы добавляются из
+        ``equipment_resource_ids``; это позволяет сохранить простой сценарий
+        без бронирования ресурсов.
+        """
         equipment_by_id = {
             resource.id: resource for resource in problem.equipment_resources
         }
@@ -454,6 +572,9 @@ class ORToolsOptimizer(RouteOptimizer):
         task_by_node: dict[int, Task],
     ) -> None:
         """Запрещает пересечение сервисных интервалов одного ресурса."""
+        # routing.solver() возвращает низкоуровневый CP-SAT/constraint_solver
+        # объект, через который создаются дополнительные булевы переменные и
+        # логические ограничения поверх RoutingModel.
         solver = routing.solver()
         usages_by_resource: dict[str, list[tuple[Any, int, Any]]] = {}
 
@@ -468,11 +589,15 @@ class ORToolsOptimizer(RouteOptimizer):
                 if not resource_ids:
                     continue
                 assigned_to_engineer = solver.IsEqualCstVar(
-                    routing.VehicleVar(task_index), vehicle_index
+                    routing.VehicleVar(task_index),  # кому назначен узел.
+                    vehicle_index,  # константа: номер проверяемого инженера.
                 )
                 use_resource = solver.BoolVar(
-                    f"use_resource_{task.id}_{vehicle_index}"
+                    f"use_resource_{task.id}_{vehicle_index}"  # имя диагностической переменной.
                 )
+                # use_resource истинна только тогда, когда заявка активна и
+                # назначена именно этому инженеру: три неравенства ниже
+                # кодируют логическое AND через линейные ограничения.
                 solver.Add(use_resource <= routing.ActiveVar(task_index))
                 solver.Add(use_resource <= assigned_to_engineer)
                 solver.Add(
@@ -504,14 +629,17 @@ class ORToolsOptimizer(RouteOptimizer):
                 for right_index in range(left_index + 1, len(usages)):
                     right_start, right_duration, right_use = usages[right_index]
                     both_use = solver.BoolVar(
-                        f"both_use_{resource_id}_{left_index}_{right_index}"
+                        f"both_use_{resource_id}_{left_index}_{right_index}"  # имя AND-переменной.
                     )
                     solver.Add(both_use <= left_use)
                     solver.Add(both_use <= right_use)
                     solver.Add(both_use >= left_use + right_use - 1)
                     left_before_right = solver.BoolVar(
-                        f"resource_order_{resource_id}_{left_index}_{right_index}"
+                        f"resource_order_{resource_id}_{left_index}_{right_index}"  # порядок двух интервалов.
                     )
+                    # Big-M отключает эти два ограничения, когда хотя бы одна
+                    # заявка не использует ресурс. Если используют обе, одна
+                    # из заявок обязана полностью закончиться до другой.
                     solver.Add(
                         left_start + left_duration
                         <= right_start
@@ -575,9 +703,11 @@ class ORToolsOptimizer(RouteOptimizer):
             ):
                 continue
             availability = availability_by_engineer[engineer.id]
-            arrival_time = hhmm_to_minutes(availability.available_from) + problem.travel_time_matrix[
-                engineer.start_location_id
-            ][task.location_id]
+            arrival_time = hhmm_to_minutes(availability.available_from) + problem.travel_time_between(
+                engineer.start_location_id,
+                task.location_id,
+                engineer.vehicle_type,
+            )
             service_start = max(arrival_time, hhmm_to_minutes(task.window_start))
             if service_start > hhmm_to_minutes(task.window_end):
                 continue
@@ -605,6 +735,7 @@ class ORToolsOptimizer(RouteOptimizer):
     def _build_engineer_route(
         engineer_id: str,
         start_location_id: str,
+        vehicle_type: VehicleType,
         tasks: list[tuple[Task, int]],
         availability_from: int,
         problem: OptimizationProblem,
@@ -618,13 +749,18 @@ class ORToolsOptimizer(RouteOptimizer):
         stops: list[RouteStop] = []
 
         for task, service_start_time in tasks:
-            travel_time = problem.travel_time_matrix[previous_location_id][
-                task.location_id
-            ]
+            travel_time = problem.travel_time_between(
+                previous_location_id,
+                task.location_id,
+                vehicle_type,
+            )
             arrival_time = current_time + travel_time
             service_end_time = service_start_time + task.duration_minutes
             distance = ORToolsOptimizer._distance(
-                problem, previous_location_id, task.location_id
+                problem,
+                previous_location_id,
+                task.location_id,
+                vehicle_type,
             )
             stops.append(
                 RouteStop(

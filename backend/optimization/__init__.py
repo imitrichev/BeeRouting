@@ -14,6 +14,7 @@ from .models import (
     Priority,
     Skill,
     Task,
+    TaskStatus,
     UnassignedReason,
     UnassignedReasonCode,
     VehicleResource,
@@ -22,7 +23,29 @@ from .models import (
     minutes_to_hhmm,
 )
 from .ortools_optimizer import ORToolsOptimizer
-from .routing_provider import InMemoryRoutingProvider, RoutingProvider
+from .manual_planner import (
+    ControlDataset,
+    ManualAssignment,
+    ManualAssignmentError,
+    ManualAssignmentPlan,
+    ManualAssignmentPlanner,
+    ManualAssignmentValidation,
+    ManualAssignmentViolation,
+    load_control_dataset,
+)
+from .routing_provider import (
+    CoordinateRoutingProvider,
+    InMemoryRoutingProvider,
+    OSRMRoutingProvider,
+    RoutingProviderError,
+    RoutingProvider,
+)
+from .json_import import (
+    JsonScenario,
+    load_json_scenario,
+    load_json_scenario_data,
+    load_problem_from_json,
+)
 
 __all__ = [
     "Engineer",
@@ -34,11 +57,23 @@ __all__ = [
     "OptimizationProblem",
     "OptimizationResult",
     "ORToolsOptimizer",
+    "ControlDataset",
+    "ManualAssignment",
+    "ManualAssignmentError",
+    "ManualAssignmentPlan",
+    "ManualAssignmentPlanner",
+    "ManualAssignmentValidation",
+    "ManualAssignmentViolation",
+    "load_control_dataset",
     "RouteOptimizer",
     "RouteStop",
     "InMemoryRoutingProvider",
+    "CoordinateRoutingProvider",
+    "OSRMRoutingProvider",
+    "RoutingProviderError",
     "RoutingProvider",
     "Task",
+    "TaskStatus",
     "Priority",
     "Skill",
     "UnassignedReason",
@@ -47,4 +82,8 @@ __all__ = [
     "VehicleType",
     "hhmm_to_minutes",
     "minutes_to_hhmm",
+    "JsonScenario",
+    "load_json_scenario",
+    "load_json_scenario_data",
+    "load_problem_from_json",
 ]
