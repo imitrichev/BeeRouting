@@ -15,7 +15,7 @@ HybridOptimizer
 
 * ICO
 В проекте допускается и приветствуется использование кастомной метаэвристической оптимизации ICO:
-https://github.com/Krash13/IcoCEC/blob/testing/cec2017/countries_algorithm_v2.hpp
+https://github.com/Krash13/IcoCEC/blob/island_DE/cec2017/countries_algorithm_v2.hpp
 
 ICO является экспериментальным/исследовательским solver'ом и потенциальным конкурентным преимуществом проекта.
 
