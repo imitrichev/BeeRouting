@@ -15,7 +15,6 @@ import math
 from typing import Any, Annotated, Iterable
 
 from .config import OptimizerConfig
-from .baseline_optimizer import GreedyBaselineOptimizer
 from .constraints import engineer_can_execute_task, resource_ids_used_for_task
 from .interfaces import RouteOptimizer
 from .models import (
@@ -113,7 +112,11 @@ def _load_timefold_api() -> _TimefoldApi:
     )
 
 
-def _build_timefold_model(api: _TimefoldApi, config: OptimizerConfig) -> tuple[Any, Any, Any, Any]:
+def _build_timefold_model(
+    api: _TimefoldApi,
+    config: OptimizerConfig,
+    include_resource_constraints: bool = True,
+) -> tuple[Any, Any, Any, Any]:
     """Создаёт внутренние Timefold-классы для одного запуска.
 
     Классы создаются динамически, потому что импорт Timefold необязателен для
@@ -121,17 +124,28 @@ def _build_timefold_model(api: _TimefoldApi, config: OptimizerConfig) -> tuple[A
     навыки, оборудование и транспорт берутся из текущего ``OptimizationProblem``.
     """
 
-    @dataclass(frozen=True, slots=True)
+    @dataclass
     class PlanningTask:
         """Значение списка Timefold, ссылающееся на domain Task."""
 
-        task_id: str
+        # PlanningId нужен Timefold для однозначного сопоставления planning
+        # value при переносе заявки между списками и при клонировании решения.
+        # Старый timef_solver.py это поле имел; в текущем адаптере его не было.
+        task_id: Annotated[str, api.PlanningId]
         location_id: str
         window_start_minutes: int
         window_end_minutes: int
         duration_minutes: int
         priority_multiplier: int
         task: Task
+
+        def __hash__(self) -> int:
+            """Даёт Timefold стабильный ключ planning value при клонировании."""
+            return hash(self.task_id)
+
+        def __eq__(self, other: object) -> bool:
+            """Считает две planning value одной заявкой по её идентификатору."""
+            return isinstance(other, PlanningTask) and self.task_id == other.task_id
 
     @api.planning_entity
     @dataclass
@@ -277,7 +291,7 @@ def _build_timefold_model(api: _TimefoldApi, config: OptimizerConfig) -> tuple[A
             # текущему штрафу: постоянная сумма всех возможных заявок не меняет
             # порядок планов, а срочная заявка получает вес из OptimizerConfig.
             factory.for_each(PlanningEngineer)
-            .filter(lambda engineer: bool(engineer.tasks))
+            .filter(lambda engineer: len(engineer.tasks) > 0)
             .reward(
                 medium_score,
                 lambda engineer: sum(
@@ -287,11 +301,11 @@ def _build_timefold_model(api: _TimefoldApi, config: OptimizerConfig) -> tuple[A
             )
             .as_constraint("Assigned task priority"),
             factory.for_each(PlanningEngineer)
-            .filter(lambda engineer: bool(engineer.tasks))
+            .filter(lambda engineer: len(engineer.tasks) > 0)
             .penalize(soft_score, lambda engineer: config.used_engineers_penalty)
             .as_constraint("Used engineers"),
             factory.for_each(PlanningEngineer)
-            .filter(lambda engineer: bool(engineer.tasks))
+            .filter(lambda engineer: len(engineer.tasks) > 0)
             .penalize(
                 soft_score,
                 lambda engineer: int(
@@ -303,7 +317,7 @@ def _build_timefold_model(api: _TimefoldApi, config: OptimizerConfig) -> tuple[A
             )
             .as_constraint("Route distance"),
             factory.for_each(PlanningEngineer)
-            .filter(lambda engineer: bool(engineer.tasks))
+            .filter(lambda engineer: len(engineer.tasks) > 0)
             .penalize(
                 soft_score,
                 lambda engineer: engineer.route_travel_time()
@@ -316,20 +330,21 @@ def _build_timefold_model(api: _TimefoldApi, config: OptimizerConfig) -> tuple[A
         # оборудования или транспорта нельзя занять одновременно в двух
         # маршрутах. Простое available_equipment по-прежнему не создаёт
         # искусственного конфликта.
-        resource_constraint = (
-            factory.for_each(PlanningEngineer)
-            .join(PlanningEngineer)
-            .filter(
-                lambda left, right: left.engineer_id < right.engineer_id
-                and left.resource_conflict_count(right) > 0
+        if include_resource_constraints:
+            resource_constraint = (
+                factory.for_each(PlanningEngineer)
+                .join(PlanningEngineer)
+                .filter(
+                    lambda left, right: left.engineer_id < right.engineer_id
+                    and left.resource_conflict_count(right) > 0
+                )
+                .penalize(
+                    hard_score,
+                    lambda left, right: left.resource_conflict_count(right),
+                )
+                .as_constraint("Shared resource overlap")
             )
-            .penalize(
-                hard_score,
-                lambda left, right: left.resource_conflict_count(right),
-            )
-            .as_constraint("Shared resource overlap")
-        )
-        constraints_list.append(resource_constraint)
+            constraints_list.append(resource_constraint)
         return constraints_list
 
     decorated_constraints = api.constraint_provider(constraints)
@@ -369,8 +384,15 @@ class TimefoldOptimizer(RouteOptimizer):
 
         api = _load_timefold_api()
         try:
+            has_limited_resources = any(
+                resource_ids_used_for_task(problem, engineer, task)
+                for engineer in problem.engineers
+                for task in problem.tasks
+            )
             PlanningTask, PlanningEngineer, PlanningSolution, constraints = _build_timefold_model(
-                api, self.config
+                api,
+                self.config,
+                include_resource_constraints=has_limited_resources,
             )
         except Exception as exc:
             raise TimefoldUnavailableError(
@@ -435,24 +457,34 @@ class TimefoldOptimizer(RouteOptimizer):
             )
             for engineer in problem.engineers
         ]
-        # Warm start берём из уже существующего baseline. Это только начальное
-        # допустимое решение: Timefold всё равно может перераспределить заявки
-        # и изменить порядок. Так мы используем полезную идею reference-файла,
-        # не создавая вторую предметную модель или второй расчёт ограничений.
-        baseline_result = GreedyBaselineOptimizer(self.config).optimize(problem)
         planning_task_by_id = {
             planning_task.task.id: planning_task for planning_task in planning_tasks
         }
         entity_by_id = {entity.engineer_id: entity for entity in entities}
-        for engineer_id, route in baseline_result.routes.items():
-            entity = entity_by_id[engineer_id]
-            entity.tasks.extend(
-                planning_task_by_id[stop.task_id] for stop in route.stops
-            )
+        self._build_initial_solution(problem, entities, planning_task_by_id)
         initial_solution = PlanningSolution(entities, planning_tasks)
+
+        # Входной план уже заполнен допустимыми маршрутами. Timefold запускает
+        # свою стандартную construction heuristic и сразу завершает её с
+        # step count (0), что является нормальным для полностью инициализиро-
+        # ванного planning list variable. После этого штатный Local Search
+        # использует list moves так же, как в проверенном старом timef_solver.py.
+        # Late Acceptance позволяет принять временно худший допустимый ход и
+        # выйти из локального минимума, когда объединение маршрутов требует
+        # нескольких последовательных перестановок.
+        solver_xml = """
+        <solver xmlns="https://timefold.ai/xsd/solver">
+          <localSearch>
+            <acceptor>
+              <lateAcceptanceSize>200</lateAcceptanceSize>
+            </acceptor>
+          </localSearch>
+        </solver>
+        """
         solver_config = api.SolverConfig(
             solution_class=PlanningSolution,
             entity_class_list=[PlanningEngineer],
+            xml_source_text=solver_xml,
             score_director_factory_config=api.ScoreDirectorFactoryConfig(
                 constraint_provider_function=constraints
             ),
@@ -469,6 +501,72 @@ class TimefoldOptimizer(RouteOptimizer):
                 "с доступной переменной JAVA_HOME."
             ) from exc
         return self._build_result(problem, solved)
+
+    @staticmethod
+    def _build_initial_solution(
+        problem: OptimizationProblem,
+        entities: list[Any],
+        planning_task_by_id: dict[str, Any],
+    ) -> None:
+        """Строит допустимый warm start по стратегии старого Timefold solver.
+
+        Заявки сначала идут по приоритету и началу окна. Для каждой заявки
+        выбирается маршрут с наименьшим числом остановок, затем — с меньшим
+        пробегом. Это только стартовая точка поиска; явные list move selectors
+        после этого могут менять и исполнителя, и порядок.
+        """
+        resource_intervals: dict[str, list[tuple[str, int, int]]] = {}
+        for task in sorted(
+            problem.tasks,
+            key=lambda item: (
+                item.priority.value != "URGENT",
+                hhmm_to_minutes(item.window_start),
+                hhmm_to_minutes(item.window_end),
+                item.id,
+            ),
+        ):
+            candidates: list[tuple[int, float, str, Any, _ScheduledStop]] = []
+            for entity in entities:
+                if task.id not in entity.compatible_task_ids:
+                    continue
+                current_tasks = [item.task for item in entity.tasks]
+                schedule = _schedule_tasks(
+                    problem,
+                    entity.engineer,
+                    entity.availability,
+                    current_tasks + [task],
+                )
+                if schedule is None:
+                    continue
+                candidate_stop = schedule[-1]
+                if not _resources_are_available(
+                    problem,
+                    entity.engineer,
+                    task,
+                    candidate_stop,
+                    resource_intervals,
+                ):
+                    continue
+                distance = math.fsum(stop.distance_from_previous_km for stop in schedule)
+                candidates.append(
+                    (len(entity.tasks), distance, entity.engineer_id, entity, candidate_stop)
+                )
+            if not candidates:
+                continue
+            _, _, _, selected_entity, selected_stop = min(
+                candidates, key=lambda value: value[:3]
+            )
+            selected_entity.tasks.append(planning_task_by_id[task.id])
+            for resource_id in resource_ids_used_for_task(
+                problem, selected_entity.engineer, task
+            ):
+                resource_intervals.setdefault(resource_id, []).append(
+                    (
+                        selected_entity.engineer.id,
+                        selected_stop.service_start_time,
+                        selected_stop.service_end_time,
+                    )
+                )
 
     def _build_result(
         self,
