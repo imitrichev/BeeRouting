@@ -15,6 +15,7 @@ from backend.optimization import (
     OptimizerConfig,
     ORToolsOptimizer,
     OSRMRoutingProvider,
+    create_osrm_provider_from_environment,
     RoutingProvider,
     load_json_scenario,
     load_json_scenario_data,
@@ -93,11 +94,8 @@ class OptimizationWebService:
         if self.routing_provider is not None:
             provider = self.routing_provider
         elif self.use_osrm:
-            provider = OSRMRoutingProvider(
+            provider = create_osrm_provider_from_environment(
                 coordinates=scenario.location_coordinates,
-                base_url=os.getenv(
-                    "OSRM_BASE_URL", "https://router.project-osrm.org"
-                ),
                 request_timeout_seconds=float(
                     os.getenv("OSRM_TIMEOUT_SECONDS", "15")
                 ),

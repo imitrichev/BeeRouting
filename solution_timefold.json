@@ -1,0 +1,647 @@
+{
+  "scenario": "yugo_tsentr_day",
+  "routing": {
+    "provider": "osrm",
+    "scope": "all_points_to_jobs_only",
+    "block_size": 50,
+    "pair_cache": "osrm_pair_cache.sqlite",
+    "max_air_distance_km": null,
+    "public_transport": {
+      "model": "moscow_weighted_proxy_v2",
+      "weights": {
+        "car": 0.55,
+        "bicycle": 0.3,
+        "foot": 0.15
+      },
+      "wait_min": 0.0,
+      "effective_speed_kph": 15.686
+    }
+  },
+  "objective": {
+    "score": "0hard/1055medium/-42982soft",
+    "urgent_unassigned": 0,
+    "unassigned": 0,
+    "engineers_used": 11,
+    "total_distance_km": 370.61
+  },
+  "per_engineer": [
+    {
+      "engineer_id": "yugo_tsentr-E01",
+      "name": "Бахарев Андрей",
+      "vehicle_type": "car",
+      "assigned_count": 4,
+      "route_distance_km": 26.22,
+      "route_travel_min": 37.1,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305868762",
+          "dist_km": 10.03,
+          "travel_min": 12.3,
+          "arrive": "09:12",
+          "start": "10:00",
+          "finish": "10:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305915645",
+          "dist_km": 8.05,
+          "travel_min": 12.3,
+          "arrive": "10:57",
+          "start": "14:00",
+          "finish": "14:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305896115",
+          "dist_km": 2.95,
+          "travel_min": 4.8,
+          "arrive": "14:50",
+          "start": "16:00",
+          "finish": "16:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305887469",
+          "dist_km": 5.19,
+          "travel_min": 7.7,
+          "arrive": "16:53",
+          "start": "20:00",
+          "finish": "20:45"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E02",
+      "name": "Брюзгин Ярослав",
+      "vehicle_type": "foot",
+      "assigned_count": 5,
+      "route_distance_km": 25.08,
+      "route_travel_min": 334.7,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305848336",
+          "dist_km": 8.93,
+          "travel_min": 119.3,
+          "arrive": "10:59",
+          "start": "10:59",
+          "finish": "11:44"
+        },
+        {
+          "job_id": "yugo_tsentr-J305896271",
+          "dist_km": 6.94,
+          "travel_min": 92.5,
+          "arrive": "13:17",
+          "start": "13:17",
+          "finish": "14:02"
+        },
+        {
+          "job_id": "yugo_tsentr-J305893337",
+          "dist_km": 6.94,
+          "travel_min": 92.5,
+          "arrive": "15:34",
+          "start": "16:00",
+          "finish": "16:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305887153",
+          "dist_km": 1.86,
+          "travel_min": 24.8,
+          "arrive": "17:10",
+          "start": "18:00",
+          "finish": "18:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305914018",
+          "dist_km": 0.42,
+          "travel_min": 5.6,
+          "arrive": "18:51",
+          "start": "20:00",
+          "finish": "20:45"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E03",
+      "name": "Выговский Сергей",
+      "vehicle_type": "car",
+      "assigned_count": 7,
+      "route_distance_km": 36.43,
+      "route_travel_min": 59.7,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305816952",
+          "dist_km": 11.86,
+          "travel_min": 16.2,
+          "arrive": "09:16",
+          "start": "14:00",
+          "finish": "14:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305826867",
+          "dist_km": 3.5,
+          "travel_min": 7.8,
+          "arrive": "14:53",
+          "start": "14:53",
+          "finish": "15:38"
+        },
+        {
+          "job_id": "yugo_tsentr-J305820725",
+          "dist_km": 7.39,
+          "travel_min": 11.0,
+          "arrive": "15:49",
+          "start": "15:49",
+          "finish": "16:34"
+        },
+        {
+          "job_id": "yugo_tsentr-J305924262",
+          "dist_km": 4.5,
+          "travel_min": 7.6,
+          "arrive": "16:41",
+          "start": "16:41",
+          "finish": "17:26"
+        },
+        {
+          "job_id": "yugo_tsentr-J305845228",
+          "dist_km": 2.01,
+          "travel_min": 3.2,
+          "arrive": "17:30",
+          "start": "18:00",
+          "finish": "18:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305894566",
+          "dist_km": 3.67,
+          "travel_min": 7.3,
+          "arrive": "18:52",
+          "start": "18:52",
+          "finish": "19:37"
+        },
+        {
+          "job_id": "yugo_tsentr-J305923871",
+          "dist_km": 3.49,
+          "travel_min": 6.6,
+          "arrive": "19:44",
+          "start": "19:44",
+          "finish": "20:29"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E04",
+      "name": "Данилов Даниил",
+      "vehicle_type": "public_transport",
+      "assigned_count": 4,
+      "route_distance_km": 35.44,
+      "route_travel_min": 135.2,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305893538",
+          "dist_km": 15.44,
+          "travel_min": 58.4,
+          "arrive": "09:58",
+          "start": "10:00",
+          "finish": "10:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305888542",
+          "dist_km": 2.4,
+          "travel_min": 11.6,
+          "arrive": "10:57",
+          "start": "12:00",
+          "finish": "12:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305888827",
+          "dist_km": 4.89,
+          "travel_min": 16.1,
+          "arrive": "13:01",
+          "start": "16:00",
+          "finish": "16:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305911433",
+          "dist_km": 12.71,
+          "travel_min": 49.1,
+          "arrive": "17:34",
+          "start": "18:00",
+          "finish": "18:45"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E05",
+      "name": "Ионов Геннадий",
+      "vehicle_type": "car",
+      "assigned_count": 5,
+      "route_distance_km": 36.97,
+      "route_travel_min": 55.1,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305853788",
+          "dist_km": 9.62,
+          "travel_min": 12.8,
+          "arrive": "09:13",
+          "start": "12:00",
+          "finish": "12:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305862599",
+          "dist_km": 9.26,
+          "travel_min": 13.8,
+          "arrive": "12:59",
+          "start": "16:00",
+          "finish": "16:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J304468627",
+          "dist_km": 8.79,
+          "travel_min": 12.6,
+          "arrive": "16:58",
+          "start": "18:00",
+          "finish": "18:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305927115",
+          "dist_km": 2.94,
+          "travel_min": 5.7,
+          "arrive": "18:51",
+          "start": "18:51",
+          "finish": "19:36"
+        },
+        {
+          "job_id": "yugo_tsentr-J305857442",
+          "dist_km": 6.35,
+          "travel_min": 10.2,
+          "arrive": "19:46",
+          "start": "19:46",
+          "finish": "20:31"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E06",
+      "name": "Исхаков Денис",
+      "vehicle_type": "foot",
+      "assigned_count": 4,
+      "route_distance_km": 22.23,
+      "route_travel_min": 296.3,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305832359",
+          "dist_km": 9.29,
+          "travel_min": 123.8,
+          "arrive": "11:04",
+          "start": "11:04",
+          "finish": "11:49"
+        },
+        {
+          "job_id": "yugo_tsentr-J305886379",
+          "dist_km": 4.82,
+          "travel_min": 64.3,
+          "arrive": "12:53",
+          "start": "12:53",
+          "finish": "13:38"
+        },
+        {
+          "job_id": "yugo_tsentr-J305892707",
+          "dist_km": 5.6,
+          "travel_min": 74.6,
+          "arrive": "14:53",
+          "start": "16:00",
+          "finish": "16:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305866081",
+          "dist_km": 2.52,
+          "travel_min": 33.6,
+          "arrive": "17:19",
+          "start": "20:00",
+          "finish": "20:45"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E07",
+      "name": "Капитанчук Александр",
+      "vehicle_type": "bicycle",
+      "assigned_count": 5,
+      "route_distance_km": 40.41,
+      "route_travel_min": 188.6,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305885170",
+          "dist_km": 16.49,
+          "travel_min": 70.3,
+          "arrive": "10:10",
+          "start": "10:10",
+          "finish": "10:55"
+        },
+        {
+          "job_id": "yugo_tsentr-J305889051",
+          "dist_km": 8.83,
+          "travel_min": 40.3,
+          "arrive": "11:36",
+          "start": "12:00",
+          "finish": "12:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305910621",
+          "dist_km": 5.62,
+          "travel_min": 31.9,
+          "arrive": "13:17",
+          "start": "13:17",
+          "finish": "14:02"
+        },
+        {
+          "job_id": "yugo_tsentr-J305920660",
+          "dist_km": 3.57,
+          "travel_min": 18.6,
+          "arrive": "14:20",
+          "start": "16:00",
+          "finish": "16:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305897880",
+          "dist_km": 5.92,
+          "travel_min": 27.5,
+          "arrive": "17:12",
+          "start": "20:00",
+          "finish": "20:45"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E08",
+      "name": "Переладов Алексей",
+      "vehicle_type": "public_transport",
+      "assigned_count": 5,
+      "route_distance_km": 50.19,
+      "route_travel_min": 186.7,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305889212",
+          "dist_km": 17.11,
+          "travel_min": 61.6,
+          "arrive": "10:02",
+          "start": "10:02",
+          "finish": "10:47"
+        },
+        {
+          "job_id": "yugo_tsentr-J305836042",
+          "dist_km": 10.9,
+          "travel_min": 38.3,
+          "arrive": "11:25",
+          "start": "11:25",
+          "finish": "12:10"
+        },
+        {
+          "job_id": "yugo_tsentr-J305897647",
+          "dist_km": 5.51,
+          "travel_min": 19.9,
+          "arrive": "12:30",
+          "start": "12:30",
+          "finish": "13:15"
+        },
+        {
+          "job_id": "yugo_tsentr-J305897498",
+          "dist_km": 9.18,
+          "travel_min": 36.0,
+          "arrive": "13:51",
+          "start": "14:00",
+          "finish": "14:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305924398",
+          "dist_km": 7.49,
+          "travel_min": 30.9,
+          "arrive": "15:16",
+          "start": "18:00",
+          "finish": "18:45"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E09",
+      "name": "Прокопенко Вячеслав",
+      "vehicle_type": "car",
+      "assigned_count": 7,
+      "route_distance_km": 40.84,
+      "route_travel_min": 73.9,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305856351",
+          "dist_km": 12.78,
+          "travel_min": 18.3,
+          "arrive": "09:18",
+          "start": "10:00",
+          "finish": "10:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305866266",
+          "dist_km": 7.58,
+          "travel_min": 12.2,
+          "arrive": "10:57",
+          "start": "10:57",
+          "finish": "11:42"
+        },
+        {
+          "job_id": "yugo_tsentr-J305885500",
+          "dist_km": 2.82,
+          "travel_min": 5.6,
+          "arrive": "11:48",
+          "start": "16:00",
+          "finish": "16:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305922446",
+          "dist_km": 4.77,
+          "travel_min": 9.3,
+          "arrive": "16:54",
+          "start": "16:54",
+          "finish": "17:39"
+        },
+        {
+          "job_id": "yugo_tsentr-J305892304",
+          "dist_km": 1.39,
+          "travel_min": 3.9,
+          "arrive": "17:43",
+          "start": "18:00",
+          "finish": "18:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305773274",
+          "dist_km": 9.22,
+          "travel_min": 15.1,
+          "arrive": "19:00",
+          "start": "20:00",
+          "finish": "20:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305886206",
+          "dist_km": 2.28,
+          "travel_min": 9.5,
+          "arrive": "20:55",
+          "start": "20:55",
+          "finish": "21:40"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E10",
+      "name": "Рыбалкин Егор",
+      "vehicle_type": "foot",
+      "assigned_count": 5,
+      "route_distance_km": 31.85,
+      "route_travel_min": 425.6,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305894946",
+          "dist_km": 10.62,
+          "travel_min": 141.9,
+          "arrive": "11:22",
+          "start": "11:22",
+          "finish": "12:07"
+        },
+        {
+          "job_id": "yugo_tsentr-J305857303",
+          "dist_km": 1.42,
+          "travel_min": 19.0,
+          "arrive": "12:26",
+          "start": "12:26",
+          "finish": "13:11"
+        },
+        {
+          "job_id": "yugo_tsentr-J305835850",
+          "dist_km": 6.16,
+          "travel_min": 82.2,
+          "arrive": "14:33",
+          "start": "14:33",
+          "finish": "15:18"
+        },
+        {
+          "job_id": "yugo_tsentr-J305889406",
+          "dist_km": 6.96,
+          "travel_min": 92.8,
+          "arrive": "16:51",
+          "start": "16:51",
+          "finish": "17:36"
+        },
+        {
+          "job_id": "yugo_tsentr-J305715188",
+          "dist_km": 6.69,
+          "travel_min": 89.7,
+          "arrive": "19:06",
+          "start": "20:00",
+          "finish": "20:45"
+        }
+      ]
+    },
+    {
+      "engineer_id": "yugo_tsentr-E11",
+      "name": "Сакур Тимофей",
+      "vehicle_type": "bicycle",
+      "assigned_count": 5,
+      "route_distance_km": 24.96,
+      "route_travel_min": 112.3,
+      "jobs": [
+        {
+          "job_id": "yugo_tsentr-J305597759",
+          "dist_km": 11.97,
+          "travel_min": 51.7,
+          "arrive": "09:52",
+          "start": "10:00",
+          "finish": "10:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305885689",
+          "dist_km": 6.11,
+          "travel_min": 26.6,
+          "arrive": "11:12",
+          "start": "12:00",
+          "finish": "12:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305865903",
+          "dist_km": 0.97,
+          "travel_min": 5.6,
+          "arrive": "12:51",
+          "start": "12:51",
+          "finish": "13:36"
+        },
+        {
+          "job_id": "yugo_tsentr-J305923588",
+          "dist_km": 3.04,
+          "travel_min": 15.2,
+          "arrive": "13:51",
+          "start": "16:00",
+          "finish": "16:45"
+        },
+        {
+          "job_id": "yugo_tsentr-J305848096",
+          "dist_km": 2.86,
+          "travel_min": 13.2,
+          "arrive": "16:58",
+          "start": "20:00",
+          "finish": "20:45"
+        }
+      ]
+    }
+  ],
+  "job_assignments": {
+    "yugo_tsentr-J305894566": "yugo_tsentr-E03",
+    "yugo_tsentr-J305923871": "yugo_tsentr-E03",
+    "yugo_tsentr-J305857442": "yugo_tsentr-E05",
+    "yugo_tsentr-J305848096": "yugo_tsentr-E11",
+    "yugo_tsentr-J305715188": "yugo_tsentr-E10",
+    "yugo_tsentr-J305885689": "yugo_tsentr-E11",
+    "yugo_tsentr-J305896115": "yugo_tsentr-E01",
+    "yugo_tsentr-J305826867": "yugo_tsentr-E03",
+    "yugo_tsentr-J305888827": "yugo_tsentr-E04",
+    "yugo_tsentr-J305923588": "yugo_tsentr-E11",
+    "yugo_tsentr-J305911433": "yugo_tsentr-E04",
+    "yugo_tsentr-J305885500": "yugo_tsentr-E09",
+    "yugo_tsentr-J305896271": "yugo_tsentr-E02",
+    "yugo_tsentr-J305862599": "yugo_tsentr-E05",
+    "yugo_tsentr-J305885170": "yugo_tsentr-E07",
+    "yugo_tsentr-J305894946": "yugo_tsentr-E10",
+    "yugo_tsentr-J305897647": "yugo_tsentr-E08",
+    "yugo_tsentr-J305848336": "yugo_tsentr-E02",
+    "yugo_tsentr-J305924398": "yugo_tsentr-E08",
+    "yugo_tsentr-J305597759": "yugo_tsentr-E11",
+    "yugo_tsentr-J305773274": "yugo_tsentr-E09",
+    "yugo_tsentr-J305892707": "yugo_tsentr-E06",
+    "yugo_tsentr-J305853788": "yugo_tsentr-E05",
+    "yugo_tsentr-J305865903": "yugo_tsentr-E11",
+    "yugo_tsentr-J305836042": "yugo_tsentr-E08",
+    "yugo_tsentr-J305857303": "yugo_tsentr-E10",
+    "yugo_tsentr-J305888542": "yugo_tsentr-E04",
+    "yugo_tsentr-J305893538": "yugo_tsentr-E04",
+    "yugo_tsentr-J305866081": "yugo_tsentr-E06",
+    "yugo_tsentr-J305914018": "yugo_tsentr-E02",
+    "yugo_tsentr-J305927115": "yugo_tsentr-E05",
+    "yugo_tsentr-J305897880": "yugo_tsentr-E07",
+    "yugo_tsentr-J305887153": "yugo_tsentr-E02",
+    "yugo_tsentr-J305887469": "yugo_tsentr-E01",
+    "yugo_tsentr-J305892304": "yugo_tsentr-E09",
+    "yugo_tsentr-J305866266": "yugo_tsentr-E09",
+    "yugo_tsentr-J305889051": "yugo_tsentr-E07",
+    "yugo_tsentr-J305889406": "yugo_tsentr-E10",
+    "yugo_tsentr-J305910621": "yugo_tsentr-E07",
+    "yugo_tsentr-J305868762": "yugo_tsentr-E01",
+    "yugo_tsentr-J305886206": "yugo_tsentr-E09",
+    "yugo_tsentr-J305835850": "yugo_tsentr-E10",
+    "yugo_tsentr-J305845228": "yugo_tsentr-E03",
+    "yugo_tsentr-J305886379": "yugo_tsentr-E06",
+    "yugo_tsentr-J305889212": "yugo_tsentr-E08",
+    "yugo_tsentr-J305920660": "yugo_tsentr-E07",
+    "yugo_tsentr-J305924262": "yugo_tsentr-E03",
+    "yugo_tsentr-J305856351": "yugo_tsentr-E09",
+    "yugo_tsentr-J305893337": "yugo_tsentr-E02",
+    "yugo_tsentr-J305897498": "yugo_tsentr-E08",
+    "yugo_tsentr-J304468627": "yugo_tsentr-E05",
+    "yugo_tsentr-J305820725": "yugo_tsentr-E03",
+    "yugo_tsentr-J305832359": "yugo_tsentr-E06",
+    "yugo_tsentr-J305922446": "yugo_tsentr-E09",
+    "yugo_tsentr-J305915645": "yugo_tsentr-E01",
+    "yugo_tsentr-J305816952": "yugo_tsentr-E03"
+  },
+  "unassigned_jobs": [],
+  "explanation": "Timefold оптимизирует порядок и распределение заявок. Время и расстояние берутся из предрассчитанных направленных OSRM-матриц; public_transport — статистический московский прокси, а не расписание ОТ."
+}

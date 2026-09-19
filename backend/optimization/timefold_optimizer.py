@@ -12,8 +12,6 @@
 from dataclasses import dataclass, field
 import importlib
 import math
-from pathlib import Path
-import sys
 from typing import Any, Annotated, Iterable
 
 from .config import OptimizerConfig
@@ -76,40 +74,23 @@ class _TimefoldApi:
 
 
 def _load_timefold_api() -> _TimefoldApi:
-    """Загружает Python API Timefold, обходя корневой ``timefold.py``.
+    """Лениво загружает установленный Python API Timefold.
 
-    В корне проекта находится одноимённый справочный скрипт команды. Python
-    выбрал бы его раньше установленного пакета и получил бы ошибку
-    ``timefold is not a package``. На время импорта убираем только корень
-    проекта из ``sys.path``; сам файл не меняем и не удаляем.
+    Импорт выполняется только при фактическом запуске Timefold, поэтому
+    основной OR-Tools solver не требует JVM. Корневой справочный файл команды
+    переименован и больше не затеняет установленный пакет ``timefold``.
     """
 
-    project_root = Path(__file__).resolve().parents[2]
-    old_module = sys.modules.pop("timefold", None)
-    old_path = list(sys.path)
     try:
-        filtered_path: list[str] = []
-        for entry in old_path:
-            try:
-                if Path(entry or ".").resolve() == project_root:
-                    continue
-            except OSError:
-                pass
-            filtered_path.append(entry)
-        sys.path[:] = filtered_path
         solver = importlib.import_module("timefold.solver")
         config = importlib.import_module("timefold.solver.config")
         domain = importlib.import_module("timefold.solver.domain")
         score = importlib.import_module("timefold.solver.score")
     except Exception as exc:
-        if old_module is not None:
-            sys.modules["timefold"] = old_module
         raise TimefoldUnavailableError(
             "Timefold не готов к запуску. Установите зависимости ядра и JDK 17+: "
             "pip install -r backend/optimization/requirements.txt"
         ) from exc
-    finally:
-        sys.path[:] = old_path
 
     return _TimefoldApi(
         SolverFactory=solver.SolverFactory,

@@ -5,7 +5,7 @@ from pathlib import Path
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from .services import optimization_service
+from backend.web_mvp.api.services import optimization_service
 
 
 class OptimizationApiTests(TestCase):

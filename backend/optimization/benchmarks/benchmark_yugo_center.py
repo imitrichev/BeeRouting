@@ -18,6 +18,7 @@ from backend.optimization import (
     OptimizerConfig,
     ORToolsOptimizer,
     OSRMRoutingProvider,
+    create_osrm_provider_from_environment,
     RouteOptimizer,
     load_control_dataset,
     load_json_scenario,
@@ -42,7 +43,7 @@ def build_provider(
             coordinates=scenario.location_coordinates,
             speed_km_per_hour=DEMO_TRAVEL_SPEED_KM_PER_HOUR,
         )
-    return OSRMRoutingProvider(
+    return create_osrm_provider_from_environment(
         coordinates=scenario.location_coordinates,
         request_timeout_seconds=osrm_timeout_seconds,
     )

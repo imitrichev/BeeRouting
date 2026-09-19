@@ -38,6 +38,7 @@ from .routing_provider import (
     CoordinateRoutingProvider,
     InMemoryRoutingProvider,
     OSRMRoutingProvider,
+    create_osrm_provider_from_environment,
     RoutingProviderError,
     RoutingProvider,
 )
@@ -73,6 +74,7 @@ __all__ = [
     "InMemoryRoutingProvider",
     "CoordinateRoutingProvider",
     "OSRMRoutingProvider",
+    "create_osrm_provider_from_environment",
     "RoutingProviderError",
     "RoutingProvider",
     "Task",
