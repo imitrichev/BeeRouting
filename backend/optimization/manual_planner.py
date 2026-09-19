@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import csv
+import io
 import math
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
@@ -490,6 +491,10 @@ def load_control_dataset(path: str | Path, scenario) -> ControlDataset:
     tasks_by_suffix = {
         task.id.rsplit("J", 1)[-1]: task for task in scenario.tasks
     }
+    tasks_by_control_id = {
+        control_id: next(task for task in scenario.tasks if task.id == task_id)
+        for task_id, control_id in scenario.control_request_id_by_task.items()
+    }
     engineers_by_name = {engineer.name: engineer for engineer in scenario.engineers}
     reference_by_task = scenario.reference_engineer_by_task
     status_by_task: dict[str, TaskStatus] = {}
@@ -497,50 +502,59 @@ def load_control_dataset(path: str | Path, scenario) -> ControlDataset:
     errors: list[str] = []
     seen_task_ids: set[str] = set()
 
-    with Path(path).open(encoding="utf-8-sig", newline="") as csv_file:
-        reader = csv.DictReader(csv_file, delimiter=";")
-        required_columns = {"Заявка", "Начало", "Окончание", "Бригада", "Статус BK"}
-        missing_columns = required_columns - set(reader.fieldnames or ())
-        if missing_columns:
-            raise ValueError(f"В контрольном CSV отсутствуют колонки: {sorted(missing_columns)}")
-        for row_number, row in enumerate(reader, start=2):
-            suffix = (row.get("Заявка") or "").strip()
-            task = tasks_by_suffix.get(suffix)
-            if task is None:
-                errors.append(f"Строка {row_number}: заявка {suffix!r} отсутствует в JSON.")
-                continue
-            task_id = task.id
-            seen_task_ids.add(task_id)
-            engineer_name = (row.get("Бригада") or "").strip()
-            engineer = engineers_by_name.get(engineer_name)
-            if engineer is None:
-                errors.append(f"Строка {row_number}: инженер {engineer_name!r} отсутствует в JSON.")
-                continue
-            raw_status = (row.get("Статус BK") or "").strip().lower()
-            status = _CSV_STATUS.get(raw_status)
-            if status is None:
-                errors.append(f"Строка {row_number}: неизвестный статус {raw_status!r}.")
-            else:
-                status_by_task[task_id] = status
-                if status != scenario.reference_status_by_task.get(task_id):
-                    errors.append(
-                        f"Строка {row_number}: статус заявки {task_id} не совпадает с JSON."
-                    )
-            csv_window = (
-                (row.get("Начало") or "").strip().split()[-1],
-                (row.get("Окончание") or "").strip().split()[-1],
-            )
-            if csv_window != (task.window_start, task.window_end):
+    raw_csv = Path(path).read_bytes()
+    decoded_csv: str | None = None
+    for encoding in ("utf-8-sig", "cp1251"):
+        try:
+            decoded_csv = raw_csv.decode(encoding)
+            break
+        except UnicodeDecodeError:
+            continue
+    if decoded_csv is None:
+        raise ValueError(f"Не удалось прочитать контрольный CSV {path}")
+    reader = csv.DictReader(io.StringIO(decoded_csv), delimiter=";")
+    required_columns = {"Заявка", "Начало", "Окончание", "Бригада", "Статус BK"}
+    missing_columns = required_columns - set(reader.fieldnames or ())
+    if missing_columns:
+        raise ValueError(f"В контрольном CSV отсутствуют колонки: {sorted(missing_columns)}")
+    for row_number, row in enumerate(reader, start=2):
+        suffix = (row.get("Заявка") or "").strip()
+        task = tasks_by_suffix.get(suffix) or tasks_by_control_id.get(suffix)
+        if task is None:
+            errors.append(f"Строка {row_number}: заявка {suffix!r} отсутствует в JSON.")
+            continue
+        task_id = task.id
+        seen_task_ids.add(task_id)
+        engineer_name = (row.get("Бригада") or "").strip()
+        engineer = engineers_by_name.get(engineer_name)
+        if engineer is None:
+            errors.append(f"Строка {row_number}: инженер {engineer_name!r} отсутствует в JSON.")
+            continue
+        raw_status = (row.get("Статус BK") or "").strip().lower()
+        status = _CSV_STATUS.get(raw_status)
+        if status is None:
+            errors.append(f"Строка {row_number}: неизвестный статус {raw_status!r}.")
+        else:
+            status_by_task[task_id] = status
+            if status != scenario.reference_status_by_task.get(task_id):
                 errors.append(
-                    f"Строка {row_number}: окно заявки {task_id} не совпадает с JSON."
+                    f"Строка {row_number}: статус заявки {task_id} не совпадает с JSON."
                 )
-            if engineer_name != reference_by_task.get(task_id):
-                errors.append(
-                    f"Строка {row_number}: исполнитель заявки {task_id} не совпадает с JSON."
-                )
-            assignments.append(
-                ManualAssignment(task_id, engineer.id, row_number)
+        csv_window = (
+            (row.get("Начало") or "").strip().split()[-1],
+            (row.get("Окончание") or "").strip().split()[-1],
+        )
+        if csv_window != (task.window_start, task.window_end):
+            errors.append(
+                f"Строка {row_number}: окно заявки {task_id} не совпадает с JSON."
             )
+        if engineer_name != reference_by_task.get(task_id):
+            errors.append(
+                f"Строка {row_number}: исполнитель заявки {task_id} не совпадает с JSON."
+            )
+        assignments.append(
+            ManualAssignment(task_id, engineer.id, row_number)
+        )
 
     missing_tasks = set(tasks_by_suffix.values()) - {
         task for task in scenario.tasks if task.id in seen_task_ids

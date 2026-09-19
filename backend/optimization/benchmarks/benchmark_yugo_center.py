@@ -28,8 +28,8 @@ from backend.optimization import (
 
 
 DEMO_TRAVEL_SPEED_KM_PER_HOUR = 30.0
-DEFAULT_JSON_PATH = Path("yugo_center.json")
-DEFAULT_CONTROL_CSV_PATH = Path("yugo_center.csv")
+DEFAULT_JSON_PATH = Path("Югоцентр.json")
+DEFAULT_CONTROL_CSV_PATH = Path("Югоцентр Контрольное распределение..csv")
 
 
 def build_provider(

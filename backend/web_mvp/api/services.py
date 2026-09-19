@@ -22,7 +22,7 @@ from backend.optimization import (
 )
 
 
-OFFICIAL_DATASET_PATH = Path(__file__).resolve().parents[3] / "yugo_center.json"
+OFFICIAL_DATASET_PATH = Path(__file__).resolve().parents[3] / "Югоцентр.json"
 
 
 class OptimizationWebService:

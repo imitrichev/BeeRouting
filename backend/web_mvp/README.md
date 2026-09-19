@@ -24,7 +24,7 @@ npm run dev
 
 ## API
 
-- `GET /api/dataset/official/` — открыть `yugo_center.json`;
+- `GET /api/dataset/official/` — открыть `Югоцентр.json`;
 - `POST /api/dataset/upload/` — загрузить JSON в поле `file`;
 - `POST /api/optimize/` — запустить OR-Tools для текущего dataset.
 
