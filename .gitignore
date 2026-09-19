@@ -45,9 +45,10 @@ pnpm-debug.log*
 *.swp
 *.swo
 
-# Локальные скриншоты и результаты ручной проверки UI
+# Screenshots and task
 1.png
 map-*.png
+13.pdf
 
 # Файлы операционной системы и IDE
 .DS_Store

@@ -24,6 +24,63 @@ body {
   width: 100%;
 }
 
+/* Внешний элемент оставляем без transform: MapLibre сам задаёт ему
+   позицию. Поворот выполняется на внутреннем элементе, чтобы получить форму
+   геометки и сохранить номер остановки ровным. */
+.task-marker {
+  align-items: center;
+  display: flex;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+.task-marker-shape {
+  align-items: center;
+  background: var(--marker-color);
+  border: 2px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 40%);
+  color: #fff;
+  display: flex;
+  font-size: 12px;
+  font-weight: 700;
+  height: 24px;
+  justify-content: center;
+  transform: rotate(-45deg);
+  width: 24px;
+}
+
+.task-marker-shape span {
+  transform: rotate(45deg);
+}
+
+.depot-marker {
+  align-items: center;
+  background: #fff;
+  border: 2px solid #37474f;
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 40%);
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  transform: rotate(-45deg);
+  width: 32px;
+}
+
+.depot-marker svg {
+  fill: #37474f;
+  height: 20px;
+  transform: rotate(45deg);
+  width: 20px;
+}
+
+.depot-marker .depot-door {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
 .metric-label {
   color: rgba(0, 0, 0, 0.62);
   font-size: 0.8rem;
