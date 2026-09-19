@@ -50,3 +50,4 @@ def optimize_view(request: Request) -> Response:
     except (ValueError, RoutingProviderError) as exc:
         return Response({"error": str(exc)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
     return Response(optimization_service.serialize_response(scenario, result))
+

@@ -20,6 +20,7 @@ from backend.optimization import (
     load_json_scenario,
     load_json_scenario_data,
 )
+from .serializers import OptimizationResultSerializer, DatasetSerializer
 
 
 OFFICIAL_DATASET_PATH = Path(__file__).resolve().parents[3] / "Югоцентр.json"
@@ -112,54 +113,15 @@ class OptimizationWebService:
         return scenario.to_problem(provider, vehicle_types=vehicle_types)
 
     def serialize_dataset(self, scenario: JsonScenario) -> dict[str, Any]:
-        """Преобразует dataset в JSON-ответ для таблиц Vue."""
-        return {
-            "source_name": self._source_name,
-            "scenario_name": scenario.scenario_name,
-            "engineers": [
-                {
-                    "id": engineer.id,
-                    "name": engineer.name,
-                    "qualifications": [skill.value for skill in engineer.qualifications],
-                    "vehicle_type": engineer.vehicle_type.value,
-                    "start_location_id": engineer.start_location_id,
-                    "start_latitude": engineer.start_latitude,
-                    "start_longitude": engineer.start_longitude,
-                    "available_from": next(
-                        item.available_from
-                        for item in scenario.availabilities
-                        if item.engineer_id == engineer.id
-                    ),
-                    "available_until": next(
-                        item.available_until
-                        for item in scenario.availabilities
-                        if item.engineer_id == engineer.id
-                    ),
-                }
-                for engineer in scenario.engineers
-            ],
-            "tasks": [self._serialize_task(task) for task in scenario.tasks],
-        }
+        """Сериализует dataset для Vue-таблиц и карты."""
+        serializer = DatasetSerializer(
+            instance=scenario,
+            context={
+                "source_name": self._source_name,
+            },
+        )
 
-    @staticmethod
-    def _serialize_task(task) -> dict[str, Any]:
-        """Преобразует одну domain-заявку в JSON для таблицы и карты."""
-        return {
-            "id": task.id,
-            "location_id": task.location_id,
-            "latitude": task.latitude,
-            "longitude": task.longitude,
-            "required_skill": next(iter(task.required_skills)).value,
-            "duration_minutes": task.duration_minutes,
-            "window_start": task.window_start,
-            "window_end": task.window_end,
-            "priority": task.priority.value,
-            "required_vehicle_type": (
-                None
-                if task.required_vehicle_type is None
-                else task.required_vehicle_type.value
-            ),
-        }
+        return dict(serializer.data)
 
     def serialize_response(
         self,
@@ -172,78 +134,94 @@ class OptimizationWebService:
             response["result"] = self._serialize_result(scenario, result)
         return response
 
+    # def _serialize_result(
+    #     self,
+    #     scenario: JsonScenario,
+    #     result: OptimizationResult,
+    # ) -> dict[str, Any]:
+    #     """Преобразует маршруты и метрики OptimizationResult в JSON."""
+    #     engineers_by_id = {engineer.id: engineer for engineer in scenario.engineers}
+    #     tasks_by_id = {task.id: task for task in scenario.tasks}
+    #     routes = []
+    #     for engineer_id, route in result.routes.items():
+    #         engineer = engineers_by_id[engineer_id]
+    #         route_location_ids = [engineer.start_location_id] + [
+    #             tasks_by_id[stop.task_id].location_id for stop in route.stops
+    #         ]
+    #         geometry = (
+    #             self.routing_provider.get_route_geometry(
+    #                 route_location_ids,
+    #                 engineer.vehicle_type,
+    #             )
+    #             if self.routing_provider is not None
+    #             else None
+    #         )
+    #         routes.append(
+    #             {
+    #                 "engineer_id": engineer_id,
+    #                 "engineer_name": engineer.name,
+    #                 "vehicle_type": engineer.vehicle_type.value,
+    #                 "start_latitude": engineer.start_latitude,
+    #                 "start_longitude": engineer.start_longitude,
+    #                 "total_distance_km": route.total_distance_km,
+    #                 "total_travel_minutes": route.total_travel_minutes,
+    #                 "geometry": geometry,
+    #                 "stops": [
+    #                     {
+    #                         "task_id": stop.task_id,
+    #                         "latitude": tasks_by_id[stop.task_id].latitude,
+    #                         "longitude": tasks_by_id[stop.task_id].longitude,
+    #                         "arrival_time": stop.arrival_time,
+    #                         "service_start_time": stop.service_start_time,
+    #                         "service_end_time": stop.service_end_time,
+    #                         "travel_time_from_previous": stop.travel_time_from_previous,
+    #                         "distance_from_previous_km": stop.distance_from_previous_km,
+    #                     }
+    #                     for stop in route.stops
+    #                 ],
+    #             }
+    #         )
+    #     return {
+    #         "metrics": {
+    #             "assigned_task_count": result.assigned_task_count,
+    #             "unassigned_task_count": result.unassigned_task_count,
+    #             "used_engineers_count": result.used_engineers_count,
+    #             "total_distance_km": result.total_distance,
+    #             "total_travel_minutes": result.total_travel_time,
+    #             "total_objective": result.total_objective,
+    #             "unassigned_penalty": result.unassigned_penalty,
+    #             "used_engineers_penalty": result.used_engineers_penalty,
+    #             "distance_penalty": result.distance_penalty,
+    #             "travel_time_penalty": result.travel_time_penalty,
+    #         },
+    #         "distance_by_engineer": result.distance_by_engineer,
+    #         "travel_time_by_engineer": result.travel_time_by_engineer,
+    #         "routes": routes,
+    #         "unassigned": [
+    #             {
+    #                 "task_id": task_id,
+    #                 "reason_code": reason.code.value,
+    #                 "message": reason.message,
+    #             }
+    #             for task_id, reason in result.unassigned_reasons.items()
+    #         ],
+    #     }
+
     def _serialize_result(
         self,
         scenario: JsonScenario,
         result: OptimizationResult,
     ) -> dict[str, Any]:
         """Преобразует маршруты и метрики OptimizationResult в JSON."""
-        engineers_by_id = {engineer.id: engineer for engineer in scenario.engineers}
-        tasks_by_id = {task.id: task for task in scenario.tasks}
-        routes = []
-        for engineer_id, route in result.routes.items():
-            engineer = engineers_by_id[engineer_id]
-            route_location_ids = [engineer.start_location_id] + [
-                tasks_by_id[stop.task_id].location_id for stop in route.stops
-            ]
-            geometry = (
-                self.routing_provider.get_route_geometry(
-                    route_location_ids,
-                    engineer.vehicle_type,
-                )
-                if self.routing_provider is not None
-                else None
-            )
-            routes.append(
-                {
-                    "engineer_id": engineer_id,
-                    "engineer_name": engineer.name,
-                    "vehicle_type": engineer.vehicle_type.value,
-                    "start_latitude": engineer.start_latitude,
-                    "start_longitude": engineer.start_longitude,
-                    "total_distance_km": route.total_distance_km,
-                    "total_travel_minutes": route.total_travel_minutes,
-                    "geometry": geometry,
-                    "stops": [
-                        {
-                            "task_id": stop.task_id,
-                            "latitude": tasks_by_id[stop.task_id].latitude,
-                            "longitude": tasks_by_id[stop.task_id].longitude,
-                            "arrival_time": stop.arrival_time,
-                            "service_start_time": stop.service_start_time,
-                            "service_end_time": stop.service_end_time,
-                            "travel_time_from_previous": stop.travel_time_from_previous,
-                            "distance_from_previous_km": stop.distance_from_previous_km,
-                        }
-                        for stop in route.stops
-                    ],
-                }
-            )
-        return {
-            "metrics": {
-                "assigned_task_count": result.assigned_task_count,
-                "unassigned_task_count": result.unassigned_task_count,
-                "used_engineers_count": result.used_engineers_count,
-                "total_distance_km": result.total_distance,
-                "total_travel_minutes": result.total_travel_time,
-                "total_objective": result.total_objective,
-                "unassigned_penalty": result.unassigned_penalty,
-                "used_engineers_penalty": result.used_engineers_penalty,
-                "distance_penalty": result.distance_penalty,
-                "travel_time_penalty": result.travel_time_penalty,
-            },
-            "distance_by_engineer": result.distance_by_engineer,
-            "travel_time_by_engineer": result.travel_time_by_engineer,
-            "routes": routes,
-            "unassigned": [
-                {
-                    "task_id": task_id,
-                    "reason_code": reason.code.value,
-                    "message": reason.message,
-                }
-                for task_id, reason in result.unassigned_reasons.items()
-            ],
-        }
+
+        serializer = OptimizationResultSerializer(
+            result,
+            context={
+                "scenario": scenario,
+                "routing_provider": self.routing_provider,
+            }
+        )
+        return serializer.data
 
 
 optimization_service = OptimizationWebService()
