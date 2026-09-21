@@ -1,7 +1,9 @@
+import type { SkillType } from '@/types/utils.ts'
+
 export type Engineer = {
   id: string
   name: string
-  qualifications: string[]
+  qualifications: SkillType[]
   vehicle_type: string
   start_location_id: string
   start_latitude: number | null

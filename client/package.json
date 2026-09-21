@@ -16,6 +16,7 @@
     "format": "prettier --write --experimental-cli src"
   },
   "dependencies": {
+    "maplibre-gl": "^6.10.0",
     "material-icons": "1.13.14",
     "pinia": "4.0.2",
     "sass-embedded": "^1.100.0",
