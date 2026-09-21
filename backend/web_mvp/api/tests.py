@@ -5,7 +5,7 @@ from pathlib import Path
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from .services import optimization_service
+from backend.web_mvp.api.services import optimization_service
 
 
 class OptimizationApiTests(TestCase):
@@ -17,7 +17,7 @@ class OptimizationApiTests(TestCase):
         optimization_service.use_osrm = False
         optimization_service.routing_provider = None
         self.client = APIClient()
-        self.dataset_path = Path(__file__).resolve().parents[3] / "yugo_center.json"
+        self.dataset_path = Path(__file__).resolve().parents[3] / "Югоцентр.json"
 
     def test_official_dataset_is_visible(self) -> None:
         """Официальный dataset доступен через API."""
@@ -37,7 +37,7 @@ class OptimizationApiTests(TestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["dataset"]["source_name"], "yugo_center.json")
+        self.assertEqual(response.data["dataset"]["source_name"], "Югоцентр.json")
 
     def test_optimize_returns_metrics_routes_and_unassigned_reasons(self) -> None:
         """Запуск OR-Tools возвращает маршрутный результат для dataset."""

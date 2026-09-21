@@ -1,6 +1,6 @@
 """Импорт сценария Optimization Engine из JSON-файла.
 
-Импортёр преобразует формат ``yugo_center.json`` в domain-модели. Матрицы
+Импортёр преобразует формат ``Югоцентр.json`` в domain-модели. Матрицы
 маршрутизации в файл не входят, поэтому их должен передать вызывающий код
 через ``RoutingProvider``.
 """
@@ -61,6 +61,7 @@ class JsonScenario:
     location_coordinates: dict[str, tuple[float, float]]  # Координаты каждой локации: latitude, longitude.
     reference_engineer_by_task: dict[str, str] = field(default_factory=dict)  # Ручной исполнитель из исходного JSON, если он указан.
     reference_status_by_task: dict[str, TaskStatus] = field(default_factory=dict)  # Исходный статус заявки для контрольного плана.
+    control_request_id_by_task: dict[str, str] = field(default_factory=dict)  # Номер заявки из контрольного CSV, если он отличается от синтетического номера.
 
     def to_problem(
         self,
@@ -187,6 +188,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
     tasks: list[Task] = []
     reference_engineer_by_task: dict[str, str] = {}
     reference_status_by_task: dict[str, TaskStatus] = {}
+    control_request_id_by_task: dict[str, str] = {}
     for item in _list(payload, "jobs"):
         job = _mapping_value(item, "job")
         task_id = _string(job, "job_id")
@@ -232,6 +234,8 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
         )
         reference_engineer_by_task[task_id] = _string(job, "reference_crew")
         reference_status_by_task[task_id] = tasks[-1].status
+        if job.get("control_request_id") is not None:
+            control_request_id_by_task[task_id] = str(job["control_request_id"])
 
     return JsonScenario(
         scenario_name=_string(payload, "scenario"),
@@ -241,6 +245,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
         location_coordinates=location_coordinates,
         reference_engineer_by_task=reference_engineer_by_task,
         reference_status_by_task=reference_status_by_task,
+        control_request_id_by_task=control_request_id_by_task,
     )
 
 

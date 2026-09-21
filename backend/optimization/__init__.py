@@ -23,6 +23,7 @@ from .models import (
     minutes_to_hhmm,
 )
 from .ortools_optimizer import ORToolsOptimizer
+from .timefold_optimizer import TimefoldOptimizer, TimefoldUnavailableError
 from .manual_planner import (
     ControlDataset,
     ManualAssignment,
@@ -37,6 +38,7 @@ from .routing_provider import (
     CoordinateRoutingProvider,
     InMemoryRoutingProvider,
     OSRMRoutingProvider,
+    create_osrm_provider_from_environment,
     RoutingProviderError,
     RoutingProvider,
 )
@@ -57,6 +59,8 @@ __all__ = [
     "OptimizationProblem",
     "OptimizationResult",
     "ORToolsOptimizer",
+    "TimefoldOptimizer",
+    "TimefoldUnavailableError",
     "ControlDataset",
     "ManualAssignment",
     "ManualAssignmentError",
@@ -70,6 +74,7 @@ __all__ = [
     "InMemoryRoutingProvider",
     "CoordinateRoutingProvider",
     "OSRMRoutingProvider",
+    "create_osrm_provider_from_environment",
     "RoutingProviderError",
     "RoutingProvider",
     "Task",

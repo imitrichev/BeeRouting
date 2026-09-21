@@ -17,6 +17,7 @@ const loading = ref(false)
 const optimizing = ref(false)
 const errorMessage = ref('')
 const selectedEngineerId = ref('')
+const selectedEngineerIds = ref<string[]>([])
 const mapContainer = ref<HTMLElement | null>(null)
 
 let map: MapLibreMap | null = null
@@ -28,6 +29,24 @@ const selectedRoute = computed<EngineerRoute | null>(() => {
     (route) => route.engineer_id === selectedEngineerId.value,
   ) ?? null
 })
+
+function setEngineerSelection(engineerId: string, selected: boolean): void {
+  if (selected) {
+    if (!selectedEngineerIds.value.includes(engineerId)) {
+      selectedEngineerIds.value = [...selectedEngineerIds.value, engineerId]
+    }
+    // Показываем таблицу маршрута последнего отмеченного инженера.
+    selectedEngineerId.value = engineerId
+    return
+  }
+
+  selectedEngineerIds.value = selectedEngineerIds.value.filter(
+    (id) => id !== engineerId,
+  )
+  if (selectedEngineerId.value === engineerId) {
+    selectedEngineerId.value = selectedEngineerIds.value[0] ?? ''
+  }
+}
 
 // Палитра рассчитана максимум на 15 инженеров из ТЗ. Цвет закрепляется за
 // позицией инженера в dataset, поэтому не меняется при построении маршрута.
@@ -44,6 +63,37 @@ function engineerColor(engineerId: string): string {
     (engineer) => engineer.id === engineerId,
   ) ?? -1
   return index >= 0 ? ENGINEER_COLORS[index % ENGINEER_COLORS.length] : '#757575'
+}
+
+// MapLibre поддерживает собственный HTMLElement через Marker({ element }).
+// Используем его, чтобы номер остановки был частью самой геометки.
+function createTaskMarkerElement(
+  orderNumber: number | undefined,
+  color: string,
+): HTMLElement {
+  const element = document.createElement('div')
+  element.className = 'task-marker'
+  element.style.setProperty('--marker-color', color)
+  element.setAttribute(
+    'aria-label',
+    orderNumber ? `Остановка ${orderNumber}` : 'Заявка',
+  )
+  element.innerHTML = `<span class="task-marker-shape"><span>${orderNumber ?? ''}</span></span>`
+  return element
+}
+
+// Домик показывает общее депо, откуда начинаются маршруты инженеров.
+function createDepotMarkerElement(): HTMLElement {
+  const element = document.createElement('div')
+  element.className = 'depot-marker'
+  element.setAttribute('aria-label', 'Депо')
+  element.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5v-9Z" />
+      <path class="depot-door" d="M9 21v-6h6v6" />
+    </svg>
+  `
+  return element
 }
 
 const assignedTaskIds = computed(() => {
@@ -81,6 +131,7 @@ async function loadOfficialDataset() {
     dataset.value = payload.dataset
     result.value = null
     selectedEngineerId.value = ''
+    selectedEngineerIds.value = []
     await refreshMap()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось загрузить dataset'
@@ -109,6 +160,7 @@ async function uploadDataset() {
     dataset.value = payload.dataset
     result.value = null
     selectedEngineerId.value = ''
+    selectedEngineerIds.value = []
     await refreshMap()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось загрузить dataset'
@@ -128,6 +180,7 @@ async function optimize() {
     // После расчёта не выбираем инженера автоматически: все заявки должны
     // остаться серыми, пока диспетчер сам не откроет нужный маршрут.
     selectedEngineerId.value = ''
+    selectedEngineerIds.value = []
     await refreshMap()
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось запустить оптимизацию'
@@ -154,11 +207,12 @@ function drawMap() {
   markers.forEach((marker) => marker.remove())
   markers = []
 
-  // На карте показываем только выбранный маршрут. Без выбора линии нет, а
-  // все заявки остаются нейтральными серыми маркерами.
-  const activeRoute = selectedRoute.value
   const allRoutes = result.value?.routes ?? []
-  const routes = activeRoute ? [activeRoute] : []
+  // Галочки управляют именно видимостью на карте. Можно одновременно
+  // выбрать несколько инженеров и увидеть их линии разными цветами.
+  const routes = allRoutes.filter((route) =>
+    selectedEngineerIds.value.includes(route.engineer_id),
+  )
   const activeRouteByTask = new globalThis.Map(
     routes.flatMap((route) =>
       route.stops.map((stop) => [stop.task_id, route] as const),
@@ -167,6 +221,11 @@ function drawMap() {
   const assignedRouteByTask = new globalThis.Map(
     allRoutes.flatMap((route) =>
       route.stops.map((stop) => [stop.task_id, route] as const),
+    ),
+  )
+  const orderByTask = new globalThis.Map(
+    routes.flatMap((route) =>
+      route.stops.map((stop, index) => [stop.task_id, index + 1] as const),
     ),
   )
   const features = routes
@@ -195,16 +254,28 @@ function drawMap() {
   }
   const source = map.getSource('routes') as maplibregl.GeoJSONSource | undefined
   if (source) source.setData(sourceData as never)
-  if (map.getLayer('route-lines')) {
-    map.setPaintProperty(
-      'route-lines',
-      'line-color',
-      activeRoute ? engineerColor(activeRoute.engineer_id) : '#9e9e9e',
-    )
+
+  // Общая начальная точка всех маршрутов обозначается домиком.
+  const depotEngineer = dataset.value?.engineers.find(
+    (engineer) => engineer.start_longitude !== null && engineer.start_latitude !== null,
+  )
+  if (
+    depotEngineer &&
+    depotEngineer.start_longitude !== null &&
+    depotEngineer.start_latitude !== null
+  ) {
+    const depotMarker = new maplibregl.Marker({
+      element: createDepotMarkerElement(),
+      anchor: 'bottom',
+    })
+      .setLngLat([depotEngineer.start_longitude, depotEngineer.start_latitude])
+      .setPopup(new maplibregl.Popup({ offset: 16 }).setText('Депо'))
+      .addTo(map as MapLibreMap)
+    markers.push(depotMarker)
   }
 
-  // Заявки показываются на карте уже после загрузки dataset. После запуска
-  // solver цвет маркера дополнительно показывает назначенного инженера.
+  // Заявки показываются уже после загрузки dataset. После выбора инженера
+  // только его маркеры получают цвет и номер остановки.
   dataset.value?.tasks.forEach((task) => {
     if (task.longitude === null || task.latitude === null) return
     const route = activeRouteByTask.get(task.id)
@@ -212,7 +283,11 @@ function drawMap() {
     const marker = new maplibregl.Marker({
       // После расчёта route содержит только выбранного инженера, поэтому
       // заявки остальных инженеров и неназначенные заявки остаются серыми.
-      color: route ? engineerColor(route.engineer_id) : '#757575',
+      element: createTaskMarkerElement(
+        orderByTask.get(task.id),
+        route ? engineerColor(route.engineer_id) : '#757575',
+      ),
+      anchor: 'bottom',
     })
       .setLngLat([task.longitude, task.latitude])
       .setPopup(
@@ -281,7 +356,9 @@ function createMap() {
       id: 'route-lines',
       type: 'line',
       source: 'routes',
-      paint: { 'line-color': '#1565c0', 'line-width': 3, 'line-opacity': 0.75 },
+      // Цвет берётся из свойства каждой GeoJSON-линии, поэтому несколько
+      // выбранных инженеров видны одновременно и не смешиваются.
+      paint: { 'line-color': ['get', 'color'], 'line-width': 5, 'line-opacity': 0.9 },
     })
     map?.resize()
     drawMap()
@@ -314,6 +391,11 @@ watch(dataset, () => {
 // Выбор инженера в списке одновременно обновляет серые/цветные маркеры и
 // единственную видимую линию его маршрута.
 watch(selectedEngineerId, () => {
+  void refreshMap()
+})
+
+// Изменение галочки сразу пересобирает набор цветных маркеров и линий.
+watch(selectedEngineerIds, () => {
   void refreshMap()
 })
 
@@ -364,6 +446,7 @@ onBeforeUnmount(() => {
           <v-col cols="12" md="4" lg="3">
             <v-card variant="outlined" class="mb-4">
               <v-card-title>Инженеры</v-card-title>
+              <v-card-subtitle>Отметьте инженеров для показа маршрутов на карте</v-card-subtitle>
               <v-list density="compact">
                 <v-list-item
                   v-for="engineer in dataset.engineers"
@@ -372,6 +455,15 @@ onBeforeUnmount(() => {
                   @click="selectedEngineerId = engineer.id"
                 >
                   <template #prepend>
+                    <v-checkbox
+                      :model-value="selectedEngineerIds.includes(engineer.id)"
+                      :color="engineerColor(engineer.id)"
+                      density="compact"
+                      hide-details
+                      class="engineer-checkbox"
+                      @click.stop
+                      @update:model-value="setEngineerSelection(engineer.id, Boolean($event))"
+                    />
                     <span
                       class="engineer-color-dot"
                       :style="{ backgroundColor: engineerColor(engineer.id) }"

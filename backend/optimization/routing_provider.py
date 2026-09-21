@@ -3,6 +3,8 @@
 from dataclasses import dataclass, field
 import math
 import json
+import os
+import time
 from typing import Any, Iterable, Mapping, Protocol, runtime_checkable
 from urllib import error as urllib_error
 from urllib import parse as urllib_parse
@@ -133,19 +135,23 @@ class InMemoryRoutingProvider:
 class CoordinateRoutingProvider:
     """Детерминированный provider для демо без внешнего картографического API.
 
-    Расстояние считается по координатам, а время — по средней скорости.
+    Расстояние считается по прямой между координатами, а время — по средней
+    скорости, зависящей от типа транспорта. Это fallback для тестов и работы
+    без сети; расстояние и geometry здесь не являются расстоянием по дорогам.
     Класс нужен для локального MVP и тестового набора; реальный сетевой
     провайдер можно позже подключить через тот же ``RoutingProvider``.
     """
 
     coordinates: Mapping[str, tuple[float, float]]  # Координаты локаций: latitude, longitude.
     speed_km_per_hour: float = 30.0  # Условная скорость для расчёта демонстрационного travel time.
+    walk_speed_km_per_hour: float = 5.0  # Средняя скорость пешего перемещения.
+    bicycle_speed_km_per_hour: float = 15.0  # Средняя скорость велосипеда.
     public_transport_time_multiplier: float = 2.0  # Дополнительный коэффициент времени общественного транспорта.
 
     def get_travel_time_matrix(
         self,
         location_ids: Iterable[str],  # Упорядоченный набор локаций для подматрицы.
-        vehicle_type: VehicleType = VehicleType.CAR,  # Координатный provider использует одну скорость для демо.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Выбирает демонстрационную скорость транспорта.
     ) -> Mapping[str, Mapping[str, int]]:
         """Возвращает детерминированное время движения в минутах."""
         _, travel_time_matrix = self._build_matrices(location_ids, vehicle_type)
@@ -154,7 +160,7 @@ class CoordinateRoutingProvider:
     def get_distance_matrix(
         self,
         location_ids: Iterable[str],  # Тот же набор локаций, что и для времени.
-        vehicle_type: VehicleType = VehicleType.CAR,  # Координатный provider использует одну скорость для демо.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Тип транспорта не меняет расстояние по прямой.
     ) -> Mapping[str, Mapping[str, float]]:
         """Возвращает расстояние между локациями в километрах."""
         distance_matrix, _ = self._build_matrices(location_ids, vehicle_type)
@@ -163,7 +169,7 @@ class CoordinateRoutingProvider:
     def get_route_geometry(
         self,
         location_ids: Iterable[str],  # Упорядоченные точки маршрута, включая старт.
-        vehicle_type: VehicleType = VehicleType.CAR,  # Тип транспорта не меняет демонстрационную геометрию.
+        vehicle_type: VehicleType = VehicleType.CAR,  # Тип транспорта не меняет прямую geometry.
     ) -> Mapping[str, Any] | None:
         """Возвращает прямую GeoJSON-линию между переданными координатами."""
         requested_locations = tuple(dict.fromkeys(location_ids))
@@ -188,6 +194,10 @@ class CoordinateRoutingProvider:
         """Строит обе матрицы для запрошенного набора координат."""
         if self.speed_km_per_hour <= 0:
             raise ValueError("speed_km_per_hour должен быть положительным")
+        if self.walk_speed_km_per_hour <= 0:
+            raise ValueError("walk_speed_km_per_hour должен быть положительным")
+        if self.bicycle_speed_km_per_hour <= 0:
+            raise ValueError("bicycle_speed_km_per_hour должен быть положительным")
         if self.public_transport_time_multiplier <= 0:
             raise ValueError("public_transport_time_multiplier должен быть положительным")
         requested_locations = tuple(dict.fromkeys(location_ids))
@@ -207,14 +217,19 @@ class CoordinateRoutingProvider:
                     *self.coordinates[destination],
                 )
                 distance_matrix[source][destination] = distance
-                base_minutes = distance / self.speed_km_per_hour * 60
-                multiplier = (
-                    self.public_transport_time_multiplier
-                    if vehicle_type == VehicleType.PUBLIC_TRANSPORT
-                    else 1.0
-                )
+                if vehicle_type == VehicleType.WALK:
+                    speed = self.walk_speed_km_per_hour
+                elif vehicle_type == VehicleType.BICYCLE:
+                    speed = self.bicycle_speed_km_per_hour
+                elif vehicle_type == VehicleType.PUBLIC_TRANSPORT:
+                    # Упрощённая модель: общественный транспорт в два раза
+                    # дольше автомобиля, без расписаний и пересадок.
+                    speed = self.speed_km_per_hour / self.public_transport_time_multiplier
+                else:
+                    speed = self.speed_km_per_hour
+                base_minutes = distance / speed * 60
                 travel_time_matrix[source][destination] = (
-                    0 if distance == 0 else max(1, math.ceil(base_minutes * multiplier))
+                    0 if distance == 0 else max(1, math.ceil(base_minutes))
                 )
         return distance_matrix, travel_time_matrix
 
@@ -244,8 +259,10 @@ def _haversine_km(
 class OSRMRoutingProvider:
     """Получает матрицы и GeoJSON geometry из OSRM HTTP API.
 
-    OSRM использует профили маршрутизации. По умолчанию ``CAR`` использует
-    ``driving``, ``BICYCLE`` — ``cycling``, ``WALK`` — ``walking``. Профиль
+    OSRM использует профили маршрутизации. Профиль передаётся отдельно для
+    каждого типа транспорта. Кроме профиля
+    можно указать отдельный ``base_urls``: это нужно, когда пеший и
+    велосипедный графы работают на отдельных экземплярах OSRM. Профиль
     ``PUBLIC_TRANSPORT`` заменяется на ``driving`` и получает коэффициент
     времени 2.0: стандартный OSRM не моделирует расписания и пересадки
     общественного транспорта. Это явное приближение; при наличии собственного
@@ -255,6 +272,8 @@ class OSRMRoutingProvider:
     coordinates: Mapping[str, tuple[float, float]]  # Координаты локаций: latitude, longitude.
     base_url: str = "https://router.project-osrm.org"  # Адрес OSRM HTTP API без завершающего слеша.
     request_timeout_seconds: float = 15.0  # Тайм-аут одного HTTP-запроса к OSRM.
+    max_rate_limit_retries: int = 2  # Сколько раз повторить запрос после HTTP 429.
+    rate_limit_backoff_seconds: float = 2.0  # Базовая пауза между повторами при HTTP 429.
     public_transport_time_multiplier: float = 2.0  # Во сколько раз увеличивать время public относительно профиля OSRM.
     profiles: Mapping[VehicleType, str] = field(
         default_factory=lambda: {
@@ -264,6 +283,7 @@ class OSRMRoutingProvider:
             VehicleType.PUBLIC_TRANSPORT: "driving",
         }
     )  # Профиль OSRM для каждого доменного типа транспорта.
+    base_urls: Mapping[VehicleType, str] = field(default_factory=dict)  # Отдельный HTTP endpoint OSRM для каждого типа транспорта.
     _cache: dict[str, Mapping[str, Any]] = field(
         default_factory=dict,
         init=False,
@@ -303,6 +323,7 @@ class OSRMRoutingProvider:
             profile=self._profile(vehicle_type),
             location_ids=requested_locations,
             query={"overview": "full", "geometries": "geojson", "steps": "false"},
+            vehicle_type=vehicle_type,
         )
         payload = self._get_json(url)
         routes = payload.get("routes")
@@ -333,6 +354,7 @@ class OSRMRoutingProvider:
             profile=self._profile(vehicle_type),
             location_ids=requested_locations,
             query={"annotations": "duration,distance"},
+            vehicle_type=vehicle_type,
         )
         payload = self._get_json(url)
         durations = payload.get("durations")
@@ -386,6 +408,7 @@ class OSRMRoutingProvider:
         profile: str,
         location_ids: tuple[str, ...],
         query: Mapping[str, str],
+        vehicle_type: VehicleType,
     ) -> str:
         """Собирает URL OSRM из координат и параметров запроса."""
         try:
@@ -401,22 +424,122 @@ class OSRMRoutingProvider:
             ) from exc
         encoded_coordinates = urllib_parse.quote(coordinates, safe=";,.-")
         encoded_query = urllib_parse.urlencode(query)
-        return f"{self.base_url.rstrip('/')}/{service}/v1/{profile}/{encoded_coordinates}?{encoded_query}"
+        # У разных транспортных режимов могут быть разные серверы OSRM.
+        # Например, routed-foot и routed-bike используют путь /v1/driving,
+        # но строят маршрут по своим графам. Если отдельный endpoint не задан,
+        # сохраняется обычное поведение: используется общий base_url.
+        base_url = self.base_urls.get(vehicle_type, self.base_url)
+        return f"{base_url.rstrip('/')}/{service}/v1/{profile}/{encoded_coordinates}?{encoded_query}"
 
     def _get_json(self, url: str) -> Mapping[str, Any]:
         """Возвращает JSON по URL, используя кэш одинаковых запросов."""
         cached = self._cache.get(url)
         if cached is not None:
             return cached
-        try:
-            with urllib_request.urlopen(url, timeout=self.request_timeout_seconds) as response:
-                payload = json.load(response)
-        except (OSError, urllib_error.URLError, json.JSONDecodeError) as exc:
-            raise RoutingProviderError(f"Ошибка запроса к OSRM: {exc}") from exc
+        for attempt in range(self.max_rate_limit_retries + 1):
+            try:
+                with urllib_request.urlopen(
+                    url, timeout=self.request_timeout_seconds
+                ) as response:
+                    payload = json.load(response)
+                break
+            except urllib_error.HTTPError as exc:
+                if exc.code != 429 or attempt >= self.max_rate_limit_retries:
+                    if exc.code == 429:
+                        raise RoutingProviderError(
+                            "OSRM отклонил запрос с HTTP 429: превышен лимит "
+                            "публичного сервиса. Подождите или используйте "
+                            "собственный OSRM; повторные попытки исчерпаны."
+                        ) from exc
+                    raise RoutingProviderError(
+                        f"Ошибка запроса к OSRM: HTTP {exc.code}"
+                    ) from exc
+
+                # OSRM может прислать Retry-After с требуемой паузой. Если
+                # заголовка нет, используем экспоненциальную задержку 2, 4, ...
+                # секунд, чтобы не усиливать ограничение частыми повторами.
+                retry_after = exc.headers.get("Retry-After")
+                try:
+                    wait_seconds = float(retry_after) if retry_after else 0.0
+                except (TypeError, ValueError):
+                    wait_seconds = 0.0
+                if wait_seconds <= 0:
+                    wait_seconds = self.rate_limit_backoff_seconds * (2**attempt)
+                time.sleep(wait_seconds)
+            except (OSError, urllib_error.URLError, json.JSONDecodeError) as exc:
+                raise RoutingProviderError(f"Ошибка запроса к OSRM: {exc}") from exc
+        else:  # pragma: no cover - цикл завершается return или исключением.
+            raise RoutingProviderError("OSRM не вернул ответ")
         if not isinstance(payload, dict):
             raise RoutingProviderError("OSRM вернул JSON не в виде объекта")
         self._cache[url] = payload
         return payload
+
+
+def create_osrm_provider_from_environment(
+    coordinates: Mapping[str, tuple[float, float]],
+    request_timeout_seconds: float,
+    base_url: str | None = None,
+) -> OSRMRoutingProvider:
+    """Создаёт OSRM provider с отдельными дорожными графами по режимам.
+
+    Публичный ``router.project-osrm.org`` предоставляет автомобильный граф.
+    Для пешего и велосипедного маршрута по умолчанию используются отдельные
+    OSRM endpoints проекта OpenStreetMap. Если задан ``OSRM_BASE_URL``, он
+    считается единым сервером с профилями ``driving``, ``walking`` и
+    ``cycling`` — это удобно для собственного многопрофильного OSRM.
+
+    Отдельные переменные ``OSRM_CAR_BASE_URL``, ``OSRM_WALK_BASE_URL``,
+    ``OSRM_BICYCLE_BASE_URL`` и ``OSRM_PUBLIC_TRANSPORT_BASE_URL`` имеют
+    приоритет. Имена профилей можно переопределить переменными
+    ``OSRM_CAR_PROFILE``, ``OSRM_WALK_PROFILE`` и ``OSRM_BICYCLE_PROFILE``.
+    Общественный транспорт остаётся приближением: автомобильный граф и
+    удвоенное время.
+    """
+    common_base_url = base_url or os.getenv("OSRM_BASE_URL")
+    has_common_profile_server = common_base_url is not None
+    default_base_urls = {
+        VehicleType.CAR: common_base_url or "https://router.project-osrm.org",
+        VehicleType.WALK: common_base_url or "https://routing.openstreetmap.de/routed-foot",
+        VehicleType.BICYCLE: common_base_url or "https://routing.openstreetmap.de/routed-bike",
+        VehicleType.PUBLIC_TRANSPORT: common_base_url or "https://router.project-osrm.org",
+    }
+    environment_names = {
+        VehicleType.CAR: "OSRM_CAR_BASE_URL",
+        VehicleType.WALK: "OSRM_WALK_BASE_URL",
+        VehicleType.BICYCLE: "OSRM_BICYCLE_BASE_URL",
+        VehicleType.PUBLIC_TRANSPORT: "OSRM_PUBLIC_TRANSPORT_BASE_URL",
+    }
+    base_urls = {
+        vehicle_type: os.getenv(variable_name, default_base_urls[vehicle_type])
+        for vehicle_type, variable_name in environment_names.items()
+    }
+    default_profiles = {
+        VehicleType.CAR: "driving",
+        VehicleType.WALK: "walking" if has_common_profile_server else "driving",
+        VehicleType.BICYCLE: "cycling" if has_common_profile_server else "driving",
+        VehicleType.PUBLIC_TRANSPORT: "driving",
+    }
+    profile_names = {
+        VehicleType.CAR: "OSRM_CAR_PROFILE",
+        VehicleType.WALK: "OSRM_WALK_PROFILE",
+        VehicleType.BICYCLE: "OSRM_BICYCLE_PROFILE",
+        VehicleType.PUBLIC_TRANSPORT: "OSRM_PUBLIC_TRANSPORT_PROFILE",
+    }
+    profiles = {
+        vehicle_type: os.getenv(variable_name, default_profiles[vehicle_type])
+        for vehicle_type, variable_name in profile_names.items()
+    }
+    return OSRMRoutingProvider(
+        coordinates=coordinates,
+        request_timeout_seconds=request_timeout_seconds,
+        max_rate_limit_retries=int(os.getenv("OSRM_MAX_RATE_LIMIT_RETRIES", "2")),
+        rate_limit_backoff_seconds=float(
+            os.getenv("OSRM_RATE_LIMIT_BACKOFF_SECONDS", "2")
+        ),
+        profiles=profiles,
+        base_urls=base_urls,
+    )
 
 class RoutingProviderError(RuntimeError):
     """Ошибка получения матрицы или geometry от routing provider."""
