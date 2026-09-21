@@ -11,16 +11,17 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
+    "corsheaders",
     "backend.web_mvp.api",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
 
 ROOT_URLCONF = "backend.web_mvp.web_mvp.urls"
-TEMPLATES = []
 WSGI_APPLICATION = "backend.web_mvp.web_mvp.wsgi.application"
 
 DATABASES = {
@@ -29,6 +30,8 @@ DATABASES = {
         "NAME": BASE_DIR / "web_mvp.sqlite3",
     }
 }
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 LANGUAGE_CODE = "ru-ru"
 TIME_ZONE = "Europe/Moscow"
@@ -42,4 +45,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "UNAUTHENTICATED_USER": None,
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
 }
