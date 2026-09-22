@@ -512,7 +512,9 @@ def generate_dataset(
                 "time_norm_code": kind,
                 "priority": "normal",
                 "required_vehicle": None,
-                "reference_status": (control or {}).get("Статус BK", "Отправлена"),
+                # Без контрольного распределения заявка ещё не назначена.
+                # «Не отправлена» импортируется как TaskStatus.NOT_SENT.
+                "reference_status": (control or {}).get("Статус BK", "Не отправлена"),
                 "reference_crew": (control or {}).get("Бригада", ""),
                 "gigabit": synthetic.get("Гигабитное подключение", "").strip().lower() == "да",
             }

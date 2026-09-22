@@ -7,9 +7,11 @@ from pathlib import Path
 from backend.optimization import (
     InMemoryRoutingProvider,
     Skill,
+    TaskStatus,
     VehicleType,
     load_control_dataset,
     load_json_scenario,
+    load_json_scenario_data,
 )
 from backend.optimization.scripts.generate_dataset_json import (
     _normalise_address,
@@ -77,6 +79,76 @@ def test_control_csv_matches_json_and_preserves_cancelled_assignments() -> None:
     }
     assert cancelled_ids
     assert cancelled_ids.issubset({assignment.task_id for assignment in control.assignments})
+
+
+def test_all_dataset_statuses_are_normalized_in_backend() -> None:
+    """Импортёр принимает статусы источника и приводит их к TaskStatus."""
+    source_statuses = (
+        ("Не отправлена", TaskStatus.NOT_SENT),
+        ("Отправлена", TaskStatus.ASSIGNED),
+        ("Назначена", TaskStatus.ASSIGNED),
+        ("В пути", TaskStatus.EN_ROUTE),
+        ("В работе", TaskStatus.IN_PROGRESS),
+        ("Выполнена", TaskStatus.COMPLETED),
+        ("Отменена", TaskStatus.CANCELLED),
+        ("Просрочена", TaskStatus.OVERDUE),
+    )
+    payload = {
+        "scenario": "status-test",
+        "office_start_point": {"lat": 55.7, "lon": 37.6},
+        "engineers": [
+            {
+                "engineer_id": "engineer-1",
+                "name": "Инженер",
+                "skills": ["local_works"],
+                "vehicle_type": "car",
+                "start_lat": 55.7,
+                "start_lon": 37.6,
+                "shift_start": "09:00",
+                "shift_end": "18:00",
+            }
+        ],
+        "jobs": [
+            {
+                "job_id": f"task-{index}",
+                "lat": 55.7,
+                "lon": 37.6,
+                "skill_required": "local_works",
+                "duration_min": 30,
+                "window_start": "09:00",
+                "window_end": "10:00",
+                "priority": "normal",
+                "required_vehicle": None,
+                "reference_status": source_status,
+                "reference_crew": "Инженер",
+            }
+            for index, (source_status, _) in enumerate(source_statuses)
+        ],
+    }
+
+    scenario = load_json_scenario_data(payload)
+
+    assert [task.status for task in scenario.tasks] == [
+        expected_status for _, expected_status in source_statuses
+    ]
+
+
+def test_all_generated_datasets_with_unassigned_jobs_are_loadable() -> None:
+    """Пустой reference_crew допустим у заявки со статусом «Не отправлена»."""
+    source_root = Path(__file__).parents[3]
+
+    scenarios = [
+        load_json_scenario(source_root / "Югоцентр.json"),
+        load_json_scenario(source_root / "Юго-восток.json"),
+        load_json_scenario(source_root / "Восток.json"),
+    ]
+
+    assert all(scenario.tasks for scenario in scenarios)
+    assert any(
+        task.status == TaskStatus.NOT_SENT
+        for scenario in scenarios
+        for task in scenario.tasks
+    )
 
 
 def test_generator_uses_synthetic_ids_and_time_norms(tmp_path: Path) -> None:

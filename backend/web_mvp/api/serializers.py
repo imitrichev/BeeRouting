@@ -200,6 +200,7 @@ class OptimizationResultSerializer(serializers.Serializer):
 class DatasetTaskSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     location_id = serializers.ReadOnlyField()
+    status = serializers.SerializerMethodField()
 
     latitude = serializers.FloatField(read_only=True)
     longitude = serializers.FloatField(read_only=True)
@@ -216,6 +217,11 @@ class DatasetTaskSerializer(serializers.Serializer):
     @staticmethod
     def get_required_skill(task: Any) -> str:
         return next(iter(task.required_skills)).value
+
+    @staticmethod
+    def get_status(task: Any) -> str:
+        """Возвращает нормализованный статус domain-модели для API."""
+        return task.status.value
 
     @staticmethod
     def get_priority(task: Any) -> str:

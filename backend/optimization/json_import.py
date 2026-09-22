@@ -43,10 +43,14 @@ _PRIORITY_CODES = {
     "urgent": Priority.URGENT,
 }
 _STATUS_CODES = {
-    "отправлена": TaskStatus.SENT,
+    "не отправлена": TaskStatus.NOT_SENT,
+    "отправлена": TaskStatus.ASSIGNED,
+    "назначена": TaskStatus.ASSIGNED,
+    "в пути": TaskStatus.EN_ROUTE,
     "в работе": TaskStatus.IN_PROGRESS,
     "выполнена": TaskStatus.COMPLETED,
     "отменена": TaskStatus.CANCELLED,
+    "просрочена": TaskStatus.OVERDUE,
 }
 
 
@@ -232,7 +236,13 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
                 longitude=task_lon,
             )
         )
-        reference_engineer_by_task[task_id] = _string(job, "reference_crew")
+        # У неназначенной заявки (`Не отправлена`) исполнителя ещё нет.
+        # Пустое значение сохраняем как пустую строку; для назначенных заявок
+        # контрольный план по-прежнему проверит имя инженера отдельно.
+        reference_crew = job.get("reference_crew", "")
+        if not isinstance(reference_crew, str):
+            raise ValueError("Поле 'reference_crew' должно быть строкой")
+        reference_engineer_by_task[task_id] = reference_crew.strip()
         reference_status_by_task[task_id] = tasks[-1].status
         if job.get("control_request_id") is not None:
             control_request_id_by_task[task_id] = str(job["control_request_id"])

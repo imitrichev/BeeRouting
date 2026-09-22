@@ -36,12 +36,20 @@ class Priority(str, Enum):
 
 
 class TaskStatus(str, Enum):
-    """Статус заявки, необходимый для корректной проверки контрольного плана."""
+    """Статусы заявки, которые приходят из исходных данных и API.
 
-    SENT = "SENT"  # Заявка отправлена и должна учитываться в плане.
-    IN_PROGRESS = "IN_PROGRESS"  # Работа выполняется и должна учитываться в плане.
-    COMPLETED = "COMPLETED"  # Работа выполнена и учитывается в контрольном графике.
-    CANCELLED = "CANCELLED"  # Заявка отменена и не занимает время инженера.
+    ``OVERDUE`` пока только хранит уже зафиксированный статус из источника.
+    Автоматическое определение просрочки по текущему времени появится позже
+    во frontend/backend-сценарии диспетчера.
+    """
+
+    NOT_SENT = "NOT_SENT"  # Заявка ещё не назначена инженеру.
+    ASSIGNED = "ASSIGNED"  # Заявка назначена инженеру, но работа ещё не начата.
+    EN_ROUTE = "EN_ROUTE"  # Инженер направляется к месту выполнения заявки.
+    IN_PROGRESS = "IN_PROGRESS"  # Инженер уже выполняет работу на объекте.
+    COMPLETED = "COMPLETED"  # Работа по заявке завершена.
+    CANCELLED = "CANCELLED"  # Заявка отменена и не должна занимать время маршрута.
+    OVERDUE = "OVERDUE"  # Заявка не была начата в установленный срок.
 
 
 def hhmm_to_minutes(value: str) -> int:
@@ -186,7 +194,7 @@ class Task:
     window_start: str  # Самое раннее допустимое начало работы, HH:MM.
     window_end: str  # Самое позднее допустимое начало работы, HH:MM.
     priority: Priority = Priority.NORMAL  # Приоритет для штрафа неназначения.
-    status: TaskStatus = TaskStatus.SENT  # Статус заявки; CANCELLED не занимает маршрутное время.
+    status: TaskStatus = TaskStatus.NOT_SENT  # Текущий статус; отменённая заявка не занимает маршрутное время.
     required_equipment: frozenset[str] = frozenset()  # Всё оборудование, необходимое на заявке.
     required_vehicle_type: VehicleType | None = None  # Требуемый тип транспорта или отсутствие требования.
     latitude: float | None = None  # Широта точки заявки в градусах WGS84.

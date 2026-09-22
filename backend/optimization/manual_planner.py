@@ -474,10 +474,14 @@ class ManualAssignmentPlanner(RouteOptimizer):
 
 
 _CSV_STATUS = {
-    "отправлена": TaskStatus.SENT,
+    "не отправлена": TaskStatus.NOT_SENT,
+    "отправлена": TaskStatus.ASSIGNED,
+    "назначена": TaskStatus.ASSIGNED,
+    "в пути": TaskStatus.EN_ROUTE,
     "в работе": TaskStatus.IN_PROGRESS,
     "выполнена": TaskStatus.COMPLETED,
     "отменена": TaskStatus.CANCELLED,
+    "просрочена": TaskStatus.OVERDUE,
 }
 
 
