@@ -8,5 +8,6 @@ ortools>=9.10,<10
 pytest>=8.0,<9
 drf-spectacular==0.30.0
 drf-spectacular-extras==0.1.0
+django-filter==26.1
 # Альтернативный solver. Пакет поддерживает Python 3.10–3.12; дополнительно нужен JDK 17+.
 timefold==1.24.0b0
