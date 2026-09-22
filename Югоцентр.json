@@ -3,119 +3,57 @@
   "scenario": "yugo_tsentr_day",
   "territory_code": "yugo_tsentr",
   "territory_name": "Юго-центр",
-  "generated_at": "2026-09-15T10:32:00+03:00",
-  "date": "2026-08-17",
   "units": {
     "time": "HH:MM",
     "duration": "minutes",
     "distance": "km",
     "coordinates": "lat/lon (WGS84)"
   },
-  "dictionaries": {
-    "skills": [
-      {
-        "code": "local_works",
-        "name": "Локальные работы"
-      },
-      {
-        "code": "connection_orders",
-        "name": "Работы на подключение и дозаказы"
-      },
-      {
-        "code": "emergency_works",
-        "name": "Аварийные работы"
-      }
-    ],
-    "vehicle_types": [
-      {
-        "code": "car",
-        "name": "Автомобиль"
-      },
-      {
-        "code": "foot",
-        "name": "Пешеход"
-      },
-      {
-        "code": "bicycle",
-        "name": "Велосипед"
-      },
-      {
-        "code": "public_transport",
-        "name": "Общественный транспорт"
-      }
-    ],
-    "priorities": [
-      {
-        "code": "normal",
-        "name": "Обычная"
-      },
-      {
-        "code": "urgent",
-        "name": "Срочная"
-      }
-    ]
-  },
-  "field_descriptions": {
-    "job": {
-      "job_id": "Уникальный ID заявки",
-      "lat/lon": "Координаты (широта/долгота)",
-      "duration_min": "Длительность работ, мин",
-      "window_start/window_end": "Временное окно, HH:MM",
-      "priority": "normal|urgent",
-      "skill_required": "Требуемый навык",
-      "required_vehicle": "Требуемый транспорт или null",
-      "reference_status": "Факт. статус из контрольных данных (для сравнения)"
-    },
-    "engineer": {
-      "engineer_id": "Уникальный ID инженера",
-      "start_lat/start_lon": "Стартовая точка (офис)",
-      "shift_start/shift_end": "Смена, HH:MM",
-      "skills": "1-3 навыка",
-      "vehicle_type": "Один тип транспорта"
-    },
-    "units": {
-      "time": "HH:MM",
-      "duration": "minutes",
-      "distance": "km",
-      "coordinates": "lat/lon (WGS84)"
-    }
-  },
   "office_start_point": {
-    "lat": 55.617,
-    "lon": 37.61
+    "lat": 55.6637956,
+    "lon": 37.6140905,
+    "address": "г.Москва проезд Симферопольский, д.7"
   },
   "engineers": [
     {
       "engineer_id": "yugo_tsentr-E01",
       "name": "Бахарев Андрей",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
         "local_works"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
       ],
       "vehicle_type": "car"
     },
     {
       "engineer_id": "yugo_tsentr-E02",
       "name": "Брюзгин Ярослав",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
         "local_works"
       ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
+      ],
       "vehicle_type": "foot"
     },
     {
       "engineer_id": "yugo_tsentr-E03",
       "name": "Выговский Сергей",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -123,107 +61,142 @@
         "emergency_works",
         "local_works"
       ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Аварийные работы",
+        "Локальные работы"
+      ],
       "vehicle_type": "car"
     },
     {
       "engineer_id": "yugo_tsentr-E04",
       "name": "Данилов Даниил",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы"
       ],
       "vehicle_type": "public_transport"
     },
     {
       "engineer_id": "yugo_tsentr-E05",
       "name": "Ионов Геннадий",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
         "local_works"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
       ],
       "vehicle_type": "car"
     },
     {
       "engineer_id": "yugo_tsentr-E06",
       "name": "Исхаков Денис",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
         "local_works"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
       ],
       "vehicle_type": "foot"
     },
     {
       "engineer_id": "yugo_tsentr-E07",
       "name": "Капитанчук Александр",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
         "local_works"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
       ],
       "vehicle_type": "bicycle"
     },
     {
       "engineer_id": "yugo_tsentr-E08",
       "name": "Переладов Алексей",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
         "local_works"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
       ],
       "vehicle_type": "public_transport"
     },
     {
       "engineer_id": "yugo_tsentr-E09",
       "name": "Прокопенко Вячеслав",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
         "local_works"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
       ],
       "vehicle_type": "car"
     },
     {
       "engineer_id": "yugo_tsentr-E10",
       "name": "Рыбалкин Егор",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
         "local_works"
       ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
+      ],
       "vehicle_type": "foot"
     },
     {
       "engineer_id": "yugo_tsentr-E11",
       "name": "Сакур Тимофей",
-      "start_lat": 55.617,
-      "start_lon": 37.61,
+      "start_lat": 55.6637956,
+      "start_lon": 37.6140905,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы"
       ],
       "vehicle_type": "bicycle"
     }
@@ -241,8 +214,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Даниловский",
       "address": "Город Москва, проезд.3-й Павелецкий, д. 9",
-      "lat": 55.70774,
-      "lon": 37.64595,
+      "lat": 55.7107376,
+      "lon": 37.6405504,
       "window_start": "18:00",
       "window_end": "20:00",
       "duration_min": 70,
@@ -265,8 +238,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Даниловский",
       "address": "Город Москва, ул.Восточная, д. 2 к 2",
-      "lat": 55.69904,
-      "lon": 37.6239,
+      "lat": 55.7143286,
+      "lon": 37.6585536,
       "window_start": "18:00",
       "window_end": "20:00",
       "duration_min": 70,
@@ -289,8 +262,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "GPON Даниловский",
       "address": "Город Москва, ул.Дубининская, д. 59 к 2",
-      "lat": 55.70057,
-      "lon": 37.64235,
+      "lat": 55.7249152,
+      "lon": 37.6400182,
       "window_start": "18:00",
       "window_end": "20:00",
       "duration_min": 70,
@@ -313,8 +286,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
       "address": "Город Москва, ул.Шверника, д. 18 к 2",
-      "lat": 55.6949,
-      "lon": 37.5624,
+      "lat": 55.6928535,
+      "lon": 37.5845609,
       "window_start": "20:00",
       "window_end": "22:00",
       "duration_min": 70,
@@ -337,8 +310,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Котловка",
       "address": "Город Москва, ул.Нагорная, д. 44 к 2",
-      "lat": 55.66727,
-      "lon": 37.5992,
+      "lat": 55.6686549,
+      "lon": 37.5907559,
       "window_start": "20:00",
       "window_end": "22:00",
       "duration_min": 70,
@@ -361,8 +334,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
       "address": "Город Москва, ул.Херсонская, д. 18",
-      "lat": 55.65944,
-      "lon": 37.5594,
+      "lat": 55.6630881,
+      "lon": 37.5682504,
       "window_start": "12:00",
       "window_end": "14:00",
       "duration_min": 70,
@@ -385,8 +358,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
       "address": "Город Москва, пр-кт.60-летия Октября, д. 18 к 2",
-      "lat": 55.67522,
-      "lon": 37.5692,
+      "lat": 55.6894338,
+      "lon": 37.573364,
       "window_start": "16:00",
       "window_end": "18:00",
       "duration_min": 70,
@@ -409,8 +382,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
       "address": "Город Москва, ул.Дмитрия Ульянова, д. 27",
-      "lat": 55.69571,
-      "lon": 37.5483,
+      "lat": 55.6845305,
+      "lon": 37.5820998,
       "window_start": "14:00",
       "window_end": "16:00",
       "duration_min": 70,
@@ -433,8 +406,8 @@
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Хамовники",
       "address": "Город Москва, ул.Усачёва, д. 29 к 1",
-      "lat": 55.736,
-      "lon": 37.5988,
+      "lat": 55.7228202,
+      "lon": 37.5599096,
       "window_start": "16:00",
       "window_end": "18:00",
       "duration_min": 70,
@@ -457,8 +430,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
       "address": "Город Москва, ул.Винокурова, д. 12 к 4",
-      "lat": 55.68002,
-      "lon": 37.5713,
+      "lat": 55.6861261,
+      "lon": 37.5931209,
       "window_start": "16:00",
       "window_end": "18:00",
       "duration_min": 70,
@@ -481,8 +454,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
       "address": "Город Москва, пр-кт.Балаклавский, д. 20 к 4",
-      "lat": 55.65443,
-      "lon": 37.58065,
+      "lat": 55.6423446,
+      "lon": 37.5959185,
       "window_start": "18:00",
       "window_end": "20:00",
       "duration_min": 70,
@@ -505,8 +478,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Нагатино - Садовники",
       "address": "Город Москва, ул.Садовники, д. 10 к 1",
-      "lat": 55.67083,
-      "lon": 37.61895,
+      "lat": 55.6679172,
+      "lon": 37.6556661,
       "window_start": "16:00",
       "window_end": "18:00",
       "duration_min": 70,
@@ -529,8 +502,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
       "address": "Город Москва, ул.Каховка, д. 7 к 1",
-      "lat": 55.65149,
-      "lon": 37.5929,
+      "lat": 55.6518966,
+      "lon": 37.5920638,
       "window_start": "12:00",
       "window_end": "14:00",
       "duration_min": 70,
@@ -553,8 +526,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Замоскворечье",
       "address": "Город Москва, ул.Большая Пионерская, д. 33 к 2",
-      "lat": 55.72108,
-      "lon": 37.62995,
+      "lat": 55.7251368,
+      "lon": 37.6344035,
       "window_start": "16:00",
       "window_end": "18:00",
       "duration_min": 70,
@@ -577,8 +550,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Хамовники",
       "address": "Город Москва, ул.Плющиха, д. 42",
-      "lat": 55.72805,
-      "lon": 37.56395,
+      "lat": 55.7416406,
+      "lon": 37.5766111,
       "window_start": "10:00",
       "window_end": "12:00",
       "duration_min": 70,
@@ -601,8 +574,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Нагатинский Затон",
       "address": "Город Москва, ул.Судостроительная, д. 31 к 3",
-      "lat": 55.67929,
-      "lon": 37.68795,
+      "lat": 55.6846497,
+      "lon": 37.6879422,
       "window_start": "10:00",
       "window_end": "12:00",
       "duration_min": 70,
@@ -625,8 +598,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Нагатинский Затон",
       "address": "Город Москва, ул.Судостроительная, д. 36",
-      "lat": 55.66393,
-      "lon": 37.65875,
+      "lat": 55.6845828,
+      "lon": 37.6880551,
       "window_start": "12:00",
       "window_end": "14:00",
       "duration_min": 70,
@@ -649,8 +622,8 @@
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Нагатинский Затон",
       "address": "Город Москва, ул.Затонная, д. 11 к 3",
-      "lat": 55.66873,
-      "lon": 37.6752,
+      "lat": 55.6795594,
+      "lon": 37.6844592,
       "window_start": "10:00",
       "window_end": "12:00",
       "duration_min": 70,
@@ -673,8 +646,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Даниловский",
       "address": "Город Москва, ул.Автозаводская, д. 11",
-      "lat": 55.70576,
-      "lon": 37.65025,
+      "lat": 55.710632,
+      "lon": 37.6655722,
       "window_start": "18:00",
       "window_end": "20:00",
       "duration_min": 70,
@@ -697,8 +670,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
       "address": "Город Москва, ул.Шверника, д. 12/2 к 3",
-      "lat": 55.69892,
-      "lon": 37.5857,
+      "lat": 55.6913492,
+      "lon": 37.5866891,
       "window_start": "10:00",
       "window_end": "12:00",
       "duration_min": 70,
@@ -721,8 +694,8 @@
       "request_type_hd": "Заявка на подключение",
       "district": "Нагатинский Затон",
       "address": "Город Москва, ул.Судостроительная, д. 27 к 2",
-      "lat": 55.66759,
-      "lon": 37.6889,
+      "lat": 55.6845828,
+      "lon": 37.6880551,
       "window_start": "20:00",
       "window_end": "22:00",
       "duration_min": 70,
@@ -745,8 +718,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
       "address": "Город Москва, ул.Шверника, д. 3",
-      "lat": 55.68179,
-      "lon": 37.5903,
+      "lat": 55.6928535,
+      "lon": 37.5845609,
       "window_start": "16:00",
       "window_end": "18:00",
       "duration_min": 70,
@@ -769,8 +742,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
       "address": "Город Москва, б-р.Черноморский, д. 19 к 2",
-      "lat": 55.65401,
-      "lon": 37.57715,
+      "lat": 55.6448239,
+      "lon": 37.5978906,
       "window_start": "12:00",
       "window_end": "14:00",
       "duration_min": 70,
@@ -793,8 +766,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
       "address": "Город Москва, ул.Керченская, д. 6 к 2",
-      "lat": 55.66076,
-      "lon": 37.5726,
+      "lat": 55.6504863,
+      "lon": 37.5791501,
       "window_start": "12:00",
       "window_end": "14:00",
       "duration_min": 70,
@@ -817,8 +790,8 @@
       "request_type_hd": "Заявка на подключение",
       "district": "Нагатинский Затон",
       "address": "Город Москва, б-р.Кленовый, д. 10 к 1",
-      "lat": 55.69045,
-      "lon": 37.6945,
+      "lat": 55.6827402,
+      "lon": 37.6732411,
       "window_start": "10:00",
       "window_end": "12:00",
       "duration_min": 70,
@@ -841,8 +814,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Нагатинский Затон",
       "address": "Город Москва, ул.Коломенская, д. 5",
-      "lat": 55.67824,
-      "lon": 37.67035,
+      "lat": 55.6765545,
+      "lon": 37.6882488,
       "window_start": "12:00",
       "window_end": "14:00",
       "duration_min": 70,
@@ -865,8 +838,8 @@
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Хамовники",
       "address": "Город Москва, б-р.Смоленский, д. 17 стр. 1",
-      "lat": 55.72421,
-      "lon": 37.60175,
+      "lat": 55.7390544,
+      "lon": 37.5859759,
       "window_start": "12:00",
       "window_end": "14:00",
       "duration_min": 70,
@@ -889,8 +862,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Хамовники",
       "address": "Город Москва, ул.Усачёва, д. 25",
-      "lat": 55.71776,
-      "lon": 37.58635,
+      "lat": 55.7303004,
+      "lon": 37.5760841,
       "window_start": "10:00",
       "window_end": "12:00",
       "duration_min": 70,
@@ -913,8 +886,8 @@
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
       "address": "Город Москва, пр-кт.60-летия Октября, д. 17",
-      "lat": 55.69403,
-      "lon": 37.5594,
+      "lat": 55.6953306,
+      "lon": 37.5798241,
       "window_start": "20:00",
       "window_end": "22:00",
       "duration_min": 20,
@@ -937,8 +910,8 @@
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Котловка",
       "address": "Город Москва, ул.Ремизова, д. 15 к 2",
-      "lat": 55.68644,
-      "lon": 37.59845,
+      "lat": 55.6759511,
+      "lon": 37.6015763,
       "window_start": "20:00",
       "window_end": "22:00",
       "duration_min": 20,
@@ -961,8 +934,8 @@
       "request_type_hd": "Нет линка",
       "district": "Академический",
       "address": "Город Москва, ул.Шверника, д. 5 к 2",
-      "lat": 55.67651,
-      "lon": 37.58865,
+      "lat": 55.6928535,
+      "lon": 37.5845609,
       "window_start": "18:00",
       "window_end": "20:00",
       "duration_min": 30,
@@ -985,8 +958,8 @@
       "request_type_hd": "Нет линка",
       "district": "Нагатино - Садовники",
       "address": "Город Москва, ул.Академика Миллионщикова, д. 13 к 1",
-      "lat": 55.67539,
-      "lon": 37.6305,
+      "lat": 55.6677892,
+      "lon": 37.6478537,
       "window_start": "20:00",
       "window_end": "22:00",
       "duration_min": 30,
@@ -1009,8 +982,8 @@
       "request_type_hd": "TVE/ENT. Другие ошибки",
       "district": "Академический",
       "address": "Город Москва, ул.Винокурова, д. 5/6 к 2",
-      "lat": 55.68767,
-      "lon": 37.59335,
+      "lat": 55.6861261,
+      "lon": 37.5931209,
       "window_start": "18:00",
       "window_end": "20:00",
       "duration_min": 30,
@@ -1489,8 +1462,8 @@
       "request_type_hd": "Переключение на Гбит/с",
       "district": "Котловка",
       "address": "Город Москва, ул.Ремизова, д. 15 к 2",
-      "lat": 55.68644,
-      "lon": 37.59845,
+      "lat": 55.6759511,
+      "lon": 37.6015763,
       "window_start": "10:00",
       "window_end": "12:00",
       "duration_min": 30,
@@ -1567,45 +1540,11 @@
       "window_end": "16:00",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "urgent",
-      "required_vehicle": "car",
+      "priority": "normal",
+      "required_vehicle": null,
       "reference_status": "Выполнена",
       "reference_crew": "Выговский Сергей",
       "gigabit": false
-    }
-  ],
-  "reschedule_events": [
-    {
-      "type": "urgent_job",
-      "time": "13:30",
-      "payload": {
-        "job_id": "yugo_tsentr-URGENT-1",
-        "territory_code": "yugo_tsentr",
-        "request_id": 999001,
-        "skill_required": "emergency_works",
-        "skill_required_ru": "Аварийные работы",
-        "request_type_bk": "Глобальная проблема",
-        "request_type_hd": "Авария",
-        "district": "Академический",
-        "address": "Город Москва, пр-кт.60-летия Октября, д. 17",
-        "lat": 55.69403,
-        "lon": 37.5594,
-        "window_start": "14:00",
-        "window_end": "16:00",
-        "duration_min": 45,
-        "priority": "urgent",
-        "required_vehicle": "car"
-      }
-    },
-    {
-      "type": "cancel_job",
-      "time": "11:00",
-      "job_id": "yugo_tsentr-J305894566"
-    },
-    {
-      "type": "engineer_unavailable",
-      "time": "12:00",
-      "engineer_id": "yugo_tsentr-E01"
     }
   ],
   "time_norms": [

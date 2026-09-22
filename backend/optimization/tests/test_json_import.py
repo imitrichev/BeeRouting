@@ -1,6 +1,5 @@
 """Тесты импорта официального JSON-сценария."""
 
-import csv
 from collections import Counter
 import json
 from pathlib import Path
@@ -12,7 +11,11 @@ from backend.optimization import (
     load_control_dataset,
     load_json_scenario,
 )
-from backend.optimization.scripts.generate_dataset_json import generate_dataset
+from backend.optimization.scripts.generate_dataset_json import (
+    _normalise_address,
+    _replace_building_marker,
+    generate_dataset,
+)
 
 
 JSON_PATH = Path(__file__).parents[3] / "Югоцентр.json"
@@ -32,7 +35,7 @@ def test_yugo_center_json_loads_into_domain_models() -> None:
     assert scenario.engineers[0].vehicle_type == VehicleType.CAR
     assert scenario.tasks[0].duration_minutes == 70
     assert scenario.tasks[0].window_start == "18:00"
-    assert scenario.location_coordinates["office_start"] == (55.617, 37.61)
+    assert scenario.location_coordinates["office_start"] == (55.6637956, 37.6140905)
 
 
 def test_imported_scenario_builds_problem_from_routing_provider() -> None:
@@ -80,30 +83,12 @@ def test_generator_uses_synthetic_ids_and_time_norms(tmp_path: Path) -> None:
     """Генератор берёт заявки из синтетического CSV и длительность из ТЗ."""
     output_path = tmp_path / "Югоцентр.json"
     source_root = Path(__file__).parents[3]
-    old_payload = json.loads((source_root / "yugo_center.json").read_text(encoding="utf-8"))
-    coordinates_by_address = {
-        job["address"]: (job["lat"], job["lon"])
-        for job in old_payload["jobs"]
-    }
-    synthetic_rows = []
-    with (source_root / "Югоцентр Синтетические данные.csv").open(encoding="cp1251", newline="") as csv_file:
-        synthetic_rows = list(csv.DictReader(csv_file, delimiter=";"))
-    address_path = tmp_path / "address.csv"
-    with address_path.open("w", encoding="utf-8", newline="") as csv_file:
-        writer = csv.DictWriter(csv_file, fieldnames=["address", "latitude", "longitude"], delimiter=";")
-        writer.writeheader()
-        writer.writerow({"address": "г.Москва проезд Симферопольский, д.7", "latitude": "55.61712345", "longitude": "37.61098765"})
-        for row in synthetic_rows:
-            if row.get("Заявка", "").isdigit():
-                lat, lon = coordinates_by_address[row["Адрес"]]
-                writer.writerow({"address": row["Адрес"], "latitude": f"{lat:.8f}", "longitude": f"{lon:.8f}"})
-
     generate_dataset(
         source_root / "Югоцентр Синтетические данные.csv",
         output_path,
         source_root / "Югоцентр Контрольное распределение..csv",
         source_root / "engineers.csv",
-        address_path,
+        geocoder=lambda _address: (55.70000123, 37.64000456),
     )
     scenario = load_json_scenario(output_path)
 
@@ -117,15 +102,8 @@ def test_generator_uses_synthetic_ids_and_time_norms(tmp_path: Path) -> None:
     assert Skill.LOCAL_WORKS in scenario.engineers[1].qualifications
 
 
-def test_generator_uses_geocoder_only_for_missing_house(tmp_path: Path) -> None:
-    """Квартира отбрасывается, а геокодер вызывается только для отсутствующего дома."""
-    address_path = tmp_path / "address.csv"
-    address_path.write_text(
-        "address;latitude;longitude\n"
-        "г.Москва проезд Симферопольский, д.7;55.60000123;37.60000456\n"
-        "Город Москва, проезд.3-й Павелецкий, д. 9;55.70000123;37.64000456\n",
-        encoding="utf-8",
-    )
+def test_generator_normalizes_apartment_before_geocoding(tmp_path: Path) -> None:
+    """Геокодер получает адрес дома без квартирной части."""
     source_root = Path(__file__).parents[3]
     calls: list[str] = []
 
@@ -139,11 +117,38 @@ def test_generator_uses_geocoder_only_for_missing_house(tmp_path: Path) -> None:
         output_path,
         control_path=tmp_path / "missing-control.csv",
         engineers_path=source_root / "engineers.csv",
-        address_path=address_path,
         geocoder=fake_geocoder,
     )
     result = json.loads(output_path.read_text(encoding="utf-8"))
-    assert result["office_start_point"]["lat"] == 55.60000123
-    assert calls  # остальные дома отсутствуют в маленьком тестовом справочнике
+    assert result["office_start_point"]["lat"] == 55.75581234
+    assert calls
     assert all("кв." not in address for address in calls)
-    assert result["jobs"][0]["lat"] == 55.70000123
+    assert result["jobs"][0]["lat"] == 55.75581234
+
+
+def test_engineers_csv_contains_start_address_instead_of_coordinates() -> None:
+    """Справочник хранит адрес старта, а не готовые координаты."""
+    source_root = Path(__file__).parents[3]
+    rows = source_root.joinpath("engineers.csv").read_text(encoding="utf-8").splitlines()
+    header = rows[0].split(";")
+    assert "start_address" in header
+    assert "start_lat" not in header
+    assert "start_lon" not in header
+
+
+def test_address_normalization_does_not_truncate_moscow() -> None:
+    """Нормализация удаляет квартиру, но сохраняет название города."""
+    assert _normalise_address("Город Москва, ул. Примерная, д. 9") == (
+        "город москва, ул. примерная, д. 9"
+    )
+    assert _normalise_address("Город Москва, ул. Примерная, д. 9, кв. 47") == (
+        "город москва, ул. примерная, д. 9"
+    )
+
+
+def test_building_marker_is_normalized_to_k() -> None:
+    """Форму с «к» можно построить только для резервного поиска."""
+    assert _replace_building_marker("Москва, д. 1с1") == "Москва, д. 1 к 1"
+    assert _replace_building_marker("Москва, д. 12 стр. 2") == "Москва, д. 12 к 2"
+    assert _replace_building_marker("Москва, д. 9б стр. 1") == "Москва, д. 9б к 1"
+    assert _normalise_address("Москва, д. 1с1") == "москва, д. 1с1"
