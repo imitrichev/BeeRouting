@@ -10,4 +10,5 @@ urlpatterns = [
     path("dataset/official/", views.official_dataset_view, name="official-dataset"),
     path("dataset/upload/", views.upload_dataset_view, name="upload-dataset"),
     path("optimize/", views.optimize_view, name="optimize"),
+    path("explain/<str:task_id>/", views.explain_task_view, name="explain-task"),
 ]

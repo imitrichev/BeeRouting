@@ -48,6 +48,7 @@ from .json_import import (
     load_json_scenario_data,
     load_problem_from_json,
 )
+from .explanation import ExplanationEngine
 
 __all__ = [
     "Engineer",
@@ -91,4 +92,5 @@ __all__ = [
     "load_json_scenario",
     "load_json_scenario_data",
     "load_problem_from_json",
+    "ExplanationEngine",
 ]

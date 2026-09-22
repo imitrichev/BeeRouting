@@ -19,6 +19,9 @@ class OptimizerConfig:
     unassigned_penalty: int = 1_000_000  # Базовая стоимость пропуска заявки; она выше обычных транспортных затрат.
     normal_unassigned_multiplier: int = 1  # Множитель базового штрафа для заявки с приоритетом NORMAL.
     urgent_unassigned_multiplier: int = 2  # Множитель базового штрафа для URGENT; должен быть больше обычного.
+    explanation_time_limit_seconds: int = 2  # Лимит одного counterfactual-расчёта для объяснения.
+    explanation_distance_threshold_km: float = 1.0  # Минимальная существенная разница пробега для текста объяснения.
+    explanation_travel_time_threshold_minutes: int = 5  # Минимальная существенная разница времени движения.
 
     def __post_init__(self) -> None:
         """Проверяет числовые параметры конфигурации."""
@@ -41,4 +44,12 @@ class OptimizerConfig:
         if self.urgent_unassigned_multiplier <= self.normal_unassigned_multiplier:
             raise ValueError(
                 "urgent_unassigned_multiplier должен быть больше normal_unassigned_multiplier"
+            )
+        if self.explanation_time_limit_seconds <= 0:
+            raise ValueError("explanation_time_limit_seconds должен быть положительным")
+        if self.explanation_distance_threshold_km < 0:
+            raise ValueError("explanation_distance_threshold_km не может быть отрицательным")
+        if self.explanation_travel_time_threshold_minutes < 0:
+            raise ValueError(
+                "explanation_travel_time_threshold_minutes не может быть отрицательным"
             )

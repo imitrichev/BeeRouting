@@ -1,23 +1,45 @@
 import os
 import uuid
 import json
+from pathlib import Path
+import argparse
 import requests
 from dotenv import load_dotenv
+
+load_dotenv()
 
 SYSTEM_PROMPT = """
 Ты формируешь краткое объяснение результата назначения заявки для диспетчера.
 
 Используй только факты из переданного JSON.
 Не придумывай причины, время, расстояния, ограничения или преимущества.
+Первое предложение обязательно начинай так: «Заявка [task.id] назначена
+инженеру [assignment.engineer.name]». Если заявка не назначена, начинай:
+«Заявка [task.id] не назначена».
 Выбери до 5 наиболее важных причин.
 Если другой инженер тоже подходит, не называй его неподходящим.
 Если есть существенно лучшая допустимая альтернатива или must_mention=true,
 обязательно укажи её.
+Поле must_mention=true означает, что факт явно важен для диспетчера.
+Не добавляй в текст все проверки подряд: используй прежде всего причины с
+must_mention=true, а остальные факты — только если они нужны для связного
+объяснения.
+В decision trace используются события task_assignment_explanation,
+candidate_assessment, deterministic_insertion_check,
+counterfactual_optimization, ASSIGNMENT_REASON, UNASSIGNED_REASON и
+OBJECTIVE_IMPACT.
 Одинаковые причины для нескольких инженеров можно объединять.
 Незначительные отличия по пробегу или времени можно не упоминать.
-Если "distance_difference_km" или "travel_time_difference_min" отрицательные,
-то это значит, что предлагаемая альтернатива лучше, и можно ее предложить как улучшение.
-Если же они положительны, то альтернативный вариант хуже.
+Поля "distance_difference_km" и "travel_time_difference_min" описывают только
+изменение отдельных метрик. Итоговое решение принимай по
+"objective_difference" или по "objective.delta.total_objective": отрицательное
+значение означает улучшение, положительное — ухудшение. Например, альтернатива
+может сократить пробег, но стать хуже из-за штрафа за дополнительного инженера.
+В таком случае не предлагай переназначение как улучшение, а объясни, что выигрыш
+по пробегу не покрывает стоимость нового маршрута.
+Если в counterfactual-расчёте есть поля
+current_assigned_engineer_distance_km и alternative_engineer_distance_km,
+используй их для конкретного сравнения пробега инженеров.
 
 Пиши кратко, естественно и понятно на русском языке.
 """
@@ -87,62 +109,28 @@ def explain_assignment(decision_trace: dict) -> str:
 
     return response.json()["choices"][0]["message"]["content"]
 
-decision_trace = {
-    "task": {
-        "id": "J70802",
-        "required_skill": "Аварийные работы",
-        "required_equipment": ["OTDR"],
-        "window_start": "14:00",
-        "window_end": "16:00"
-    },
+def load_decision_trace(path: str | Path) -> dict:
+    """Загружает реальный decision trace, сформированный backend-проверками."""
+    trace_path = Path(path)
+    payload = json.loads(trace_path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Decision trace должен быть JSON-объектом")
+    return payload
 
-    "assigned_engineer": {
-        "id": "E04",
-        "name": "Сергей Иванов"
-    },
 
-    "alternative_engineers": [
-        {
-            "name": "Алексей Петров",
-            "feasible": False,
-            "reasons": [
-                {
-                    "type": "MISSING_SKILL",
-                    "required_skill": "Аварийные работы"
-                }
-            ]
-        },
-        {
-            "name": "Николай Козлов",
-            "feasible": False,
-            "reasons": [
-                {
-                    "type": "MISSING_EQUIPMENT",
-                    "missing_equipment": ["OTDR"]
-                }
-            ]
-        },
-        {
-            "name": "Дмитрий Волков",
-            "feasible": True,
-            "impact": {
-                "distance_difference_km": 7.2,
-                "travel_time_difference_min": 15
-            }
-        },
-        {
-            "name": "Павел Сидоров",
-            "feasible": True,
-            "impact": {
-                "distance_difference_km": -0.4,
-                "travel_time_difference_min": -1
-            }
-        }
-    ]
-}
+def main() -> None:
+    """Отправляет JSON-проверку из файла в GigaChat и печатает ответ."""
+    parser = argparse.ArgumentParser(
+        description="Объяснение результата маршрутизации по decision trace"
+    )
+    parser.add_argument("trace", type=Path, help="JSON с результатами проверок")
+    args = parser.parse_args()
+    print(explain_assignment(load_decision_trace(args.trace)))
 
-load_dotenv()
 
-text = explain_assignment(decision_trace)
+# Старый ручной тестовый decision_trace намеренно удалён из выполняемого кода.
+# Его можно восстановить локально при отладке формата, но production-запросы
+# должны использовать JSON, созданный ExplanationEngine.
 
-print(text)
+if __name__ == "__main__":
+    main()

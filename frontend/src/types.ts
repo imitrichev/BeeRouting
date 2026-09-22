@@ -21,6 +21,7 @@ export interface Task {
   window_end: string
   priority: string
   required_vehicle_type: string | null
+  status: string
 }
 
 export interface Dataset {
@@ -81,6 +82,13 @@ export interface OptimizationResult {
   travel_time_by_engineer: Record<string, number>
   routes: EngineerRoute[]
   unassigned: UnassignedTask[]
+}
+
+export interface ExplanationResponse {
+  task_id: string
+  decision_trace?: Record<string, unknown>
+  explanation: string
+  developer_mode: boolean
 }
 
 export interface ApiResponse {

@@ -1,8 +1,9 @@
 """Минимальные API-тесты end-to-end MVP."""
 
 from pathlib import Path
+from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from backend.web_mvp.api.services import optimization_service
@@ -55,3 +56,71 @@ class OptimizationApiTests(TestCase):
                 for route in response.data["result"]["routes"]
             )
         )
+
+    @patch("LLM.query.explain_assignment", return_value="Заявка назначена Иванову.")
+    @patch(
+        "backend.web_mvp.api.services.ExplanationEngine.explain_task",
+        return_value={
+            "schema_version": "1.0",
+            "event_type": "task_assignment_explanation",
+            "assignment": {
+                "status": "assigned",
+                "engineer": {"id": "e1", "name": "Иванов"},
+            },
+            "assignment_reasons": [],
+            "checks": [],
+        },
+    )
+    def test_explanation_endpoint_returns_trace_and_llm_text(
+        self,
+        _trace_mock,
+        _llm_mock,
+    ) -> None:
+        """Endpoint отдаёт decision trace и текст, не выполняя LLM в тесте."""
+        optimize_response = self.client.post("/api/optimize/", {}, format="json")
+        task_id = optimize_response.data["dataset"]["tasks"][0]["id"]
+
+        response = self.client.post(
+            f"/api/explain/{task_id}/",
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["task_id"], task_id)
+        self.assertEqual(
+            response.data["explanation"],
+            f"Заявка {task_id} назначена инженеру Иванов. Заявка назначена Иванову.",
+        )
+        self.assertTrue(response.data["developer_mode"])
+        self.assertEqual(
+            response.data["decision_trace"]["event_type"],
+            "task_assignment_explanation",
+        )
+
+    @override_settings(DEVELOPER_MODE=False)
+    @patch("LLM.query.explain_assignment", return_value="Причины назначения.")
+    @patch(
+        "backend.web_mvp.api.services.ExplanationEngine.explain_task",
+        return_value={
+            "assignment": {
+                "status": "assigned",
+                "engineer": {"id": "e1", "name": "Иванов"},
+            },
+        },
+    )
+    def test_production_explanation_does_not_expose_trace(
+        self,
+        _trace_mock,
+        _llm_mock,
+    ) -> None:
+        """Production API не передаёт внутренний decision trace клиенту."""
+        optimize_response = self.client.post("/api/optimize/", {}, format="json")
+        task_id = optimize_response.data["dataset"]["tasks"][0]["id"]
+
+        response = self.client.post(f"/api/explain/{task_id}/", {}, format="json")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data["developer_mode"])
+        self.assertNotIn("decision_trace", response.data)
+        self.assertTrue(response.data["explanation"].startswith(f"Заявка {task_id}"))

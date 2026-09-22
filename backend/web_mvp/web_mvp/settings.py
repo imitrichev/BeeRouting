@@ -1,11 +1,22 @@
 """Минимальные настройки Django для локального end-to-end MVP."""
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
+PROJECT_ROOT = BASE_DIR.parent
+load_dotenv(PROJECT_ROOT / ".env")
+
+BEEROUTING_MODE = os.getenv("BEEROUTING_MODE", "developer").strip().lower()
+if BEEROUTING_MODE not in {"developer", "production"}:
+    raise ValueError("BEEROUTING_MODE должен быть developer или production")
+DEVELOPER_MODE = BEEROUTING_MODE == "developer"
+
 SECRET_KEY = "development-only-beerouting-mvp"
-DEBUG = True
+DEBUG = DEVELOPER_MODE
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [

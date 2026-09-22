@@ -16,6 +16,7 @@ from backend.optimization import (
     ORToolsOptimizer,
     OSRMRoutingProvider,
     create_osrm_provider_from_environment,
+    ExplanationEngine,
     RoutingProvider,
     load_json_scenario,
     load_json_scenario_data,
@@ -40,18 +41,24 @@ class OptimizationWebService:
         self._source_name: str | None = None
         self.routing_provider: RoutingProvider | None = None
         self.use_osrm = True
+        self._problem: OptimizationProblem | None = None
+        self._result: OptimizationResult | None = None
 
     def reset(self) -> None:
         """Очищает dataset; используется тестами и локальной перезагрузкой."""
         self._scenario = None
         self._source_name = None
         self.routing_provider = None
+        self._problem = None
+        self._result = None
 
     def load_official_dataset(self) -> JsonScenario:
         """Загружает официальный демонстрационный JSON из корня проекта."""
         scenario = load_json_scenario(OFFICIAL_DATASET_PATH)
         self._scenario = scenario
         self._source_name = OFFICIAL_DATASET_PATH.name
+        self._problem = None
+        self._result = None
         # У нового dataset другой набор координат, поэтому старый provider и
         # его кэш ответов больше нельзя использовать.
         self.routing_provider = None
@@ -66,6 +73,8 @@ class OptimizationWebService:
         scenario = load_json_scenario_data(payload)
         self._scenario = scenario
         self._source_name = filename
+        self._problem = None
+        self._result = None
         self.routing_provider = None
         return scenario
 
@@ -84,7 +93,55 @@ class OptimizationWebService:
         result = ORToolsOptimizer(
             OptimizerConfig(time_limit_minutes=1)
         ).optimize(problem)
+        self._problem = problem
+        self._result = result
         return scenario, result
+
+    def explain_current_task(self, task_id: str) -> tuple[dict[str, Any], str]:
+        """Строит decision trace и получает его объяснение от LLM."""
+        if self._problem is None or self._result is None:
+            raise ValueError("Сначала запустите оптимизацию")
+        trace = ExplanationEngine().explain_task(
+            self._problem,
+            self._result,
+            task_id,
+        )
+        # LLM остаётся отдельным слоем: математическое ядро формирует только
+        # проверяемые факты, а этот сервис передаёт их внешнему адаптеру.
+        from LLM.query import explain_assignment
+
+        try:
+            explanation = explain_assignment(trace)
+        except Exception:  # noqa: BLE001: внешний LLM может быть временно недоступен.
+            # Проверяемые причины уже сформированы математическим ядром. Даже
+            # если ключ GigaChat не настроен или внешний API недоступен, UI
+            # должен показать этот JSON, а не скрывать результат проверки.
+            explanation = (
+                "Текстовое объяснение LLM временно недоступно."
+            )
+        return trace, self._add_explanation_subject(task_id, trace, explanation)
+
+    @staticmethod
+    def _add_explanation_subject(
+        task_id: str,
+        trace: dict[str, Any],
+        explanation: str,
+    ) -> str:
+        """Гарантирует, что объяснение начинается с заявки и назначения."""
+        assignment = trace.get("assignment") or {}
+        engineer = assignment.get("engineer") or {}
+        engineer_name = engineer.get("name")
+        if assignment.get("status") == "assigned" and engineer_name:
+            prefix = f"Заявка {task_id} назначена инженеру {engineer_name}."
+        elif assignment.get("status") == "unassigned":
+            prefix = f"Заявка {task_id} не назначена."
+        else:
+            prefix = f"Заявка {task_id}."
+
+        normalized = explanation.strip()
+        if normalized.casefold().startswith(prefix.casefold()):
+            return normalized
+        return f"{prefix} {normalized}".strip()
 
     def _build_problem(self, scenario: JsonScenario) -> OptimizationProblem:
         """Добавляет к импортированным сущностям routing data.

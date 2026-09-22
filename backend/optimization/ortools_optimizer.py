@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import math
-from typing import Any
+from typing import Any, Mapping, Sequence
 
 # pywrapcp — Python-обёртка над C++ API constraint_solver из OR-Tools.
 # routing_enums_pb2 содержит перечисления стратегий поиска, например PATH_CHEAPEST_ARC.
@@ -35,8 +35,16 @@ class ORToolsOptimizer(RouteOptimizer):
         # Конфигурация хранит лимит поиска и все веса objective в одном месте.
         self.config = config or OptimizerConfig()
 
-    def optimize(self, problem: OptimizationProblem) -> OptimizationResult:
+    def optimize(
+        self,
+        problem: OptimizationProblem,
+        *,
+        forced_task_engineer_by_id: Mapping[str, str] | None = None,
+        initial_routes_by_engineer: Mapping[str, Sequence[str]] | None = None,
+        time_limit_seconds: int | None = None,
+    ) -> OptimizationResult:
         """Определяет назначения, порядок заявок и расписание маршрутов."""
+        forced_task_engineer_by_id = forced_task_engineer_by_id or {}
         eligible_tasks: list[Task] = []
         unassigned_reasons: dict[str, UnassignedReason] = {}
         for task in problem.tasks:
@@ -262,6 +270,23 @@ class ORToolsOptimizer(RouteOptimizer):
                     # принадлежать узел. RemoveValue оставляет заявку в модели,
                     # но запрещает конкретного несовместимого инженера.
                     routing.VehicleVar(task_index).RemoveValue(vehicle_index)
+            forced_engineer_id = forced_task_engineer_by_id.get(task.id)
+            if forced_engineer_id is not None:
+                forced_vehicle_index = next(
+                    (
+                        index
+                        for index, engineer in enumerate(problem.engineers)
+                        if engineer.id == forced_engineer_id
+                    ),
+                    None,
+                )
+                if forced_vehicle_index is None:
+                    raise ValueError(
+                        f"Не найден инженер {forced_engineer_id!r} для принудительного назначения"
+                    )
+                # VehicleVar хранит номер маршрута заявки. SetValue оставляет
+                # в модели только выбранного инженера для counterfactual-расчёта.
+                routing.VehicleVar(task_index).SetValue(forced_vehicle_index)
 
         self._add_resource_constraints(
             # Добавляет дополнительные hard constraints для отдельных
@@ -286,12 +311,41 @@ class ORToolsOptimizer(RouteOptimizer):
         # timedelta только переводит настроенный лимит в тип, который ожидает
         # API OR-Tools.
         search_parameters.time_limit.FromTimedelta(
-            timedelta(minutes=self.config.time_limit_minutes)
+            timedelta(
+                seconds=(
+                    time_limit_seconds
+                    if time_limit_seconds is not None
+                    else self.config.time_limit_minutes * 60
+                )
+            )
         )
 
         # SolveWithParameters запускает поиск и возвращает Assignment — набор
         # найденных значений NextVar, ActiveVar, VehicleVar и CumulVar.
-        solution = routing.SolveWithParameters(search_parameters)
+        solution = None
+        if initial_routes_by_engineer:
+            initial_routes = [
+                [
+                    task_node_by_id[task_id]
+                    for task_id in initial_routes_by_engineer.get(engineer.id, ())
+                    if task_id in task_node_by_id
+                ]
+                for engineer in problem.engineers
+            ]
+            # ReadAssignmentFromRoutes превращает уже построенные маршруты в
+            # Assignment. Если исходный план не подходит новой фиксации, OR-
+            # Tools вернёт None, и ниже будет обычный поиск с нуля.
+            initial_assignment = routing.ReadAssignmentFromRoutes(
+                initial_routes,
+                True,  # ignore_inactive_indices: пропускать заявки вне списка маршрутов.
+            )
+            if initial_assignment is not None:
+                solution = routing.SolveFromAssignmentWithParameters(
+                    initial_assignment,
+                    search_parameters,
+                )
+        if solution is None:
+            solution = routing.SolveWithParameters(search_parameters)
         if solution is None:
             raise ValueError("OR-Tools не смог построить решение")
 

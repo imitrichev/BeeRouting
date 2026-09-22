@@ -5,6 +5,7 @@ import maplibregl, { type Map as MapLibreMap, type Marker } from 'maplibre-gl'
 import type {
   ApiResponse,
   Dataset,
+  ExplanationResponse,
   EngineerRoute,
   OptimizationResult,
   Task,
@@ -19,6 +20,12 @@ const errorMessage = ref('')
 const selectedEngineerId = ref('')
 const selectedEngineerIds = ref<string[]>([])
 const mapContainer = ref<HTMLElement | null>(null)
+const explanationOpen = ref(false)
+const explanationLoading = ref(false)
+const explanationTaskId = ref('')
+const explanationText = ref('')
+const explanationTrace = ref<Record<string, unknown> | null>(null)
+const explanationDeveloperMode = ref(false)
 
 let map: MapLibreMap | null = null
 let markers: Marker[] = []
@@ -186,6 +193,33 @@ async function optimize() {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось запустить оптимизацию'
   } finally {
     optimizing.value = false
+  }
+}
+
+async function explainTask(taskId: string): Promise<void> {
+  explanationLoading.value = true
+  explanationTaskId.value = taskId
+  explanationText.value = ''
+  explanationTrace.value = null
+  explanationDeveloperMode.value = false
+  errorMessage.value = ''
+  try {
+    const response = await fetch(`/api/explain/${encodeURIComponent(taskId)}/`, {
+      method: 'POST',
+    })
+    const payload = await response.json()
+    if (!response.ok) throw new Error(payload.error ?? 'Не удалось получить объяснение')
+    const explanation = payload as ExplanationResponse
+    explanationText.value = explanation.explanation
+    explanationTrace.value = explanation.decision_trace ?? null
+    explanationDeveloperMode.value = explanation.developer_mode
+    explanationOpen.value = true
+  } catch (error) {
+    errorMessage.value = error instanceof Error
+      ? error.message
+      : 'Не удалось получить объяснение'
+  } finally {
+    explanationLoading.value = false
   }
 }
 
@@ -522,7 +556,7 @@ onBeforeUnmount(() => {
               <v-card-title>Маршрут выбранного инженера</v-card-title>
               <v-table density="compact">
                 <thead>
-                  <tr><th>#</th><th>Заявка</th><th>Прибытие</th><th>Работа</th><th>Пробег, км</th></tr>
+                  <tr><th>#</th><th>Заявка</th><th>Прибытие</th><th>Работа</th><th>Пробег, км</th><th>Объяснение</th></tr>
                 </thead>
                 <tbody>
                   <tr v-for="(stop, index) in selectedRoute.stops" :key="stop.task_id">
@@ -531,20 +565,55 @@ onBeforeUnmount(() => {
                     <td>{{ stop.arrival_time }}</td>
                     <td>{{ stop.service_start_time }}–{{ stop.service_end_time }}</td>
                     <td>{{ formatNumber(stop.distance_from_previous_km, 2) }}</td>
+                    <td class="text-no-wrap explanation-action-cell">
+                      <v-btn
+                        size="small"
+                        variant="outlined"
+                        color="primary"
+                        prepend-icon="mdi-chat-outline"
+                        :loading="explanationLoading && explanationTaskId === stop.task_id"
+                        :disabled="!result"
+                        title="Показать причины назначения"
+                        aria-label="Показать причины назначения"
+                        @click="explainTask(stop.task_id)"
+                      >
+                        Причины
+                      </v-btn>
+                    </td>
                   </tr>
                 </tbody>
               </v-table>
             </v-card>
 
             <v-card variant="outlined">
-              <v-card-title>Заявки</v-card-title>
+              <v-card-title>
+                Заявки
+                <span v-if="result" class="text-caption text-medium-emphasis ml-2">
+                  Нажмите «Причины», чтобы получить объяснение назначения
+                </span>
+              </v-card-title>
               <v-table density="compact" fixed-header height="330">
                 <thead>
-                  <tr><th>ID</th><th>Навык</th><th>Окно</th><th>Длительность</th><th>Исполнитель</th><th>Статус</th></tr>
+                  <tr><th>ID / причины</th><th>Навык</th><th>Окно</th><th>Длительность</th><th>Исполнитель</th><th>Статус</th></tr>
                 </thead>
                 <tbody>
                   <tr v-for="task in dataset.tasks" :key="task.id">
-                    <td>{{ task.id }}</td>
+                    <td class="text-no-wrap">
+                      {{ task.id }}
+                      <v-btn
+                        size="x-small"
+                        variant="outlined"
+                        color="primary"
+                        prepend-icon="mdi-chat-outline"
+                        :loading="explanationLoading && explanationTaskId === task.id"
+                        :disabled="!result"
+                        title="Показать причины назначения"
+                        aria-label="Показать причины назначения"
+                        @click="explainTask(task.id)"
+                      >
+                        Причины
+                      </v-btn>
+                    </td>
                     <td>{{ task.required_skill }}</td>
                     <td>{{ task.window_start }}–{{ task.window_end }}</td>
                     <td>{{ task.duration_minutes }} мин</td>
@@ -558,6 +627,26 @@ onBeforeUnmount(() => {
                 </tbody>
               </v-table>
             </v-card>
+
+            <v-dialog v-model="explanationOpen" max-width="760">
+              <v-card>
+                <v-card-title>Причины назначения</v-card-title>
+                <v-card-text>
+                  <div class="explanation-text">{{ explanationText }}</div>
+                  <details
+                    v-if="explanationDeveloperMode && explanationTrace"
+                    class="explanation-debug"
+                  >
+                    <summary>Показать JSON-проверки</summary>
+                    <pre>{{ JSON.stringify(explanationTrace, null, 2) }}</pre>
+                  </details>
+                </v-card-text>
+                <v-card-actions>
+                  <v-spacer />
+                  <v-btn variant="text" @click="explanationOpen = false">Закрыть</v-btn>
+                </v-card-actions>
+              </v-card>
+            </v-dialog>
           </v-col>
         </v-row>
       </v-container>
