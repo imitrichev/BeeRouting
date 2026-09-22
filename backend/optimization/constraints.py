@@ -9,6 +9,8 @@ def engineer_can_execute_task(
     task: Task,
 ) -> bool:
     """Проверяет навыки, оборудование и транспорт инженера."""
+    if engineer.id in problem.unavailable_engineer_ids:
+        return False
     # Основной сценарий берёт названия оборудования из available_equipment.
     # equipment_resource_ids добавляет типы отдельных экземпляров, если
     # приложение использует расширенную resource-модель.

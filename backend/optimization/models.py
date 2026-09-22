@@ -180,6 +180,32 @@ class EngineerAvailability:
 
 
 @dataclass(frozen=True, slots=True)
+class EngineerOperationalState:
+    """Фактическое состояние инженера в момент перепланирования.
+
+    Снимок нужен для продолжения рабочего дня с текущей точки, а не для
+    повторного расчёта от офиса и начала смены. ``current_location_id`` должен
+    ссылаться на локацию, уже присутствующую в routing data. Для выполняемой
+    заявки можно передать остаток работы; исходная длительность заявки при
+    этом сохраняется для истории.
+    """
+
+    engineer_id: str  # Инженер, к которому относится оперативный снимок.
+    current_location_id: str  # Локация инженера в момент перепланирования.
+    remaining_service_minutes: int | None = None  # Остаток активной работы; None означает полную длительность.
+
+    def __post_init__(self) -> None:
+        """Проверяет идентификаторы и неотрицательный остаток работы."""
+        if not self.engineer_id.strip() or not self.current_location_id.strip():
+            raise ValueError("engineer_id и current_location_id не должны быть пустыми")
+        remaining = self.remaining_service_minutes
+        if remaining is not None and (
+            isinstance(remaining, bool) or not isinstance(remaining, int) or remaining < 0
+        ):
+            raise ValueError("remaining_service_minutes должен быть целым и неотрицательным")
+
+
+@dataclass(frozen=True, slots=True)
 class Task:
     """Заявка с требуемой квалификацией, длительностью и жёстким окном.
 
@@ -195,10 +221,12 @@ class Task:
     window_end: str  # Самое позднее допустимое начало работы, HH:MM.
     priority: Priority = Priority.NORMAL  # Приоритет для штрафа неназначения.
     status: TaskStatus = TaskStatus.NOT_SENT  # Текущий статус; отменённая заявка не занимает маршрутное время.
+    current_engineer_id: str | None = None  # Текущий исполнитель из оперативного/контрольного плана; нужен для фиксации начатой заявки.
     required_equipment: frozenset[str] = frozenset()  # Всё оборудование, необходимое на заявке.
     required_vehicle_type: VehicleType | None = None  # Требуемый тип транспорта или отсутствие требования.
     latitude: float | None = None  # Широта точки заявки в градусах WGS84.
     longitude: float | None = None  # Долгота точки заявки в градусах WGS84.
+    address: str | None = None  # Человекочитаемый адрес, если он известен источнику.
 
     def __post_init__(self) -> None:
         """Нормализует справочники и проверяет временное окно заявки."""
@@ -227,6 +255,11 @@ class Task:
             raise ValueError("priority должен быть значением Priority")
         if not isinstance(self.status, TaskStatus):
             raise ValueError("status должен быть значением TaskStatus")
+        if self.current_engineer_id is not None and (
+            not isinstance(self.current_engineer_id, str)
+            or not self.current_engineer_id.strip()
+        ):
+            raise ValueError("current_engineer_id должен быть непустой строкой или None")
         object.__setattr__(self, "required_equipment", frozenset(self.required_equipment))
         object.__setattr__(self, "latitude", latitude)
         object.__setattr__(self, "longitude", longitude)
@@ -254,6 +287,11 @@ class OptimizationProblem:
     ] = field(default_factory=dict)  # Необязательные матрицы расстояний по профилям транспорта.
     equipment_resources: tuple[EquipmentResource, ...] = ()  # Необязательные отдельные экземпляры оборудования.
     vehicle_resources: tuple[VehicleResource, ...] = ()  # Необязательные отдельные экземпляры транспорта.
+    preserve_assigned_tasks: bool = False  # True запрещает перенос заявок со статусом ASSIGNED на другого инженера.
+    ignore_task_statuses: bool = False  # True строит новый план по всем заявкам, не учитывая их текущие статусы.
+    planning_time: str | None = None  # Текущее время HH:MM; None означает планирование от начала смены.
+    operational_states: tuple[EngineerOperationalState, ...] = ()  # Фактические позиции и остатки работ при перепланировании.
+    unavailable_engineer_ids: frozenset[str] = frozenset()  # Инженеры, исключённые из назначения в текущем пересчёте.
 
     def __post_init__(self) -> None:
         """Проверяет идентификаторы, ресурсы и полноту внешних матриц."""
@@ -262,6 +300,7 @@ class OptimizationProblem:
         tasks = tuple(self.tasks)
         equipment_resources = tuple(self.equipment_resources)
         vehicle_resources = tuple(self.vehicle_resources)
+        operational_states = tuple(self.operational_states)
         matrix = {
             source: dict(destinations)
             for source, destinations in self.travel_time_matrix.items()
@@ -289,6 +328,10 @@ class OptimizationProblem:
         object.__setattr__(self, "tasks", tasks)
         object.__setattr__(self, "equipment_resources", equipment_resources)
         object.__setattr__(self, "vehicle_resources", vehicle_resources)
+        object.__setattr__(self, "operational_states", operational_states)
+        object.__setattr__(
+            self, "unavailable_engineer_ids", frozenset(self.unavailable_engineer_ids)
+        )
         object.__setattr__(self, "travel_time_matrix", matrix)
         object.__setattr__(self, "travel_distance_matrix", distance_matrix)
         object.__setattr__(self, "travel_time_matrices_by_vehicle", time_matrices_by_vehicle)
@@ -309,6 +352,47 @@ class OptimizationProblem:
             raise ValueError("Доступность должна быть задана один раз для каждого инженера")
         if set(availability_ids) != set(engineer_ids):
             raise ValueError("Должна быть задана доступность каждого инженера и только их")
+
+        if not isinstance(self.preserve_assigned_tasks, bool):
+            raise ValueError("preserve_assigned_tasks должен быть bool")
+        if not isinstance(self.ignore_task_statuses, bool):
+            raise ValueError("ignore_task_statuses должен быть bool")
+        if self.planning_time is not None:
+            object.__setattr__(self, "planning_time", minutes_to_hhmm(hhmm_to_minutes(self.planning_time)))
+        state_engineer_ids = [state.engineer_id for state in operational_states]
+        if len(state_engineer_ids) != len(set(state_engineer_ids)):
+            raise ValueError("Оперативное состояние инженера должно быть задано один раз")
+        if not set(state_engineer_ids).issubset(set(engineer_ids)):
+            raise ValueError("Оперативное состояние содержит неизвестного инженера")
+        if not self.unavailable_engineer_ids.issubset(set(engineer_ids)):
+            raise ValueError("Список недоступных содержит неизвестного инженера")
+        known_engineer_ids = set(engineer_ids)
+        started_task_by_engineer: dict[str, str] = {}
+        for task in tasks:
+            if (
+                task.current_engineer_id is not None
+                and task.current_engineer_id not in known_engineer_ids
+            ):
+                raise ValueError(
+                    f"У заявки {task.id} указан неизвестный текущий инженер "
+                    f"{task.current_engineer_id!r}"
+                )
+            if task.status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS} and (
+                task.current_engineer_id is None
+            ):
+                raise ValueError(
+                    f"Для заявки {task.id} со статусом {task.status.value} "
+                    "должен быть указан current_engineer_id"
+                )
+            if task.status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}:
+                assert task.current_engineer_id is not None
+                previous_task_id = started_task_by_engineer.get(task.current_engineer_id)
+                if previous_task_id is not None:
+                    raise ValueError(
+                        f"У инженера {task.current_engineer_id} одновременно указаны "
+                        f"две начатые заявки: {previous_task_id} и {task.id}"
+                    )
+                started_task_by_engineer[task.current_engineer_id] = task.id
 
         equipment_ids = [resource.id for resource in equipment_resources]
         vehicle_ids = [resource.id for resource in vehicle_resources]
@@ -339,7 +423,9 @@ class OptimizationProblem:
 
         location_ids = {
             engineer.start_location_id for engineer in engineers
-        } | {task.location_id for task in tasks}
+        } | {task.location_id for task in tasks} | {
+            state.current_location_id for state in operational_states
+        }
         self._validate_matrix(matrix, location_ids, "Время движения", integer=True)
         self._validate_matrix(distance_matrix, location_ids, "Расстояние", integer=False)
         for vehicle_type, vehicle_matrix in time_matrices_by_vehicle.items():
@@ -374,6 +460,71 @@ class OptimizationProblem:
             vehicle_type, self.travel_time_matrix
         )
         return matrix[from_location][to_location]
+
+    @property
+    def planning_tasks(self) -> tuple[Task, ...]:
+        """Возвращает заявки, которые должны участвовать в новом плане.
+
+        В режиме полного перераспределения статусы источника намеренно не
+        используются: в новый план попадают все заявки. Это нужно для
+        утреннего пересчёта или демонстрационного сравнения решателей.
+        Выполненная работа уже завершена, а отменённая больше не требуется,
+        поэтому обе остаются в исходном dataset для истории, но не попадают в
+        маршруты и objective нового расчёта.
+        """
+        if self.ignore_task_statuses:
+            return self.tasks
+        return tuple(
+            task
+            for task in self.tasks
+            if task.status not in {TaskStatus.CANCELLED, TaskStatus.COMPLETED}
+        )
+
+    @property
+    def fixed_task_engineer_by_id(self) -> Mapping[str, str]:
+        """Возвращает назначения, которые solver не имеет права менять.
+
+        Заявки ``EN_ROUTE`` и ``IN_PROGRESS`` уже исполняются, поэтому всегда
+        закрепляются за текущим инженером. ``ASSIGNED`` закрепляется только в
+        режиме ``preserve_assigned_tasks``; в обычном утреннем планировании её
+        разрешено перенести для улучшения общего плана.
+        """
+        if self.ignore_task_statuses:
+            return {}
+        fixed_statuses = {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}
+        if self.preserve_assigned_tasks:
+            fixed_statuses.add(TaskStatus.ASSIGNED)
+        return {
+            task.id: task.current_engineer_id
+            for task in self.planning_tasks
+            if task.status in fixed_statuses and task.current_engineer_id is not None
+        }
+
+    @property
+    def operational_state_by_engineer(self) -> Mapping[str, EngineerOperationalState]:
+        """Возвращает оперативные состояния по ID инженера."""
+        return {state.engineer_id: state for state in self.operational_states}
+
+    def route_start_location(self, engineer: Engineer) -> str:
+        """Возвращает фактическую стартовую локацию продолжения маршрута."""
+        state = self.operational_state_by_engineer.get(engineer.id)
+        return state.current_location_id if state is not None else engineer.start_location_id
+
+    def route_start_minutes(self, availability: EngineerAvailability) -> int:
+        """Возвращает начало нового участка маршрута с учётом текущего времени."""
+        shift_start = hhmm_to_minutes(availability.available_from)
+        if self.planning_time is None:
+            return shift_start
+        return max(shift_start, hhmm_to_minutes(self.planning_time))
+
+    def service_duration(self, task: Task) -> int:
+        """Возвращает полную или оставшуюся длительность активной работы."""
+        if task.status != TaskStatus.IN_PROGRESS or task.current_engineer_id is None:
+            return task.duration_minutes
+        state = self.operational_state_by_engineer.get(task.current_engineer_id)
+        if state is None or state.remaining_service_minutes is None:
+            return task.duration_minutes
+        return state.remaining_service_minutes
 
     def travel_distance_between(
         self,
@@ -472,12 +623,15 @@ class OptimizationResult:
     used_engineers_count: int  # Число инженеров, у которых есть хотя бы одна заявка.
     assigned_task_count: int  # Число заявок во всех непустых маршрутах.
     unassigned_task_count: int  # Число заявок без маршрута.
-    total_objective: int  # Итоговая стоимость по четырём компонентам ниже.
+    total_objective: int  # Итоговая стоимость по компонентам ниже.
     total_service_minutes: int = 0  # Суммарная длительность обслуживания, минуты.
     unassigned_penalty: int = 0  # Штраф за неназначенные заявки с учётом приоритета.
     used_engineers_penalty: int = 0  # Штраф за количество задействованных инженеров.
     distance_penalty: int = 0  # Взвешенный штраф за общий пробег.
     travel_time_penalty: int = 0  # Взвешенный штраф за общее время движения.
+    plan_disruption_penalty: int = 0  # Штраф за переносы и изменение порядка существующего плана.
+    reassigned_task_count: int = 0  # Сколько заявок перешло к другому инженеру.
+    reordered_task_count: int = 0  # У скольких заявок изменился предшественник маршрута.
 
     def __post_init__(self) -> None:
         """Проверяет метрики маршрутов и сумму компонентов objective."""
@@ -486,6 +640,7 @@ class OptimizationResult:
             + self.used_engineers_penalty
             + self.distance_penalty
             + self.travel_time_penalty
+            + self.plan_disruption_penalty
         )
         if self.total_objective != penalty_sum:
             raise ValueError(

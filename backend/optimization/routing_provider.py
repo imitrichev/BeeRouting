@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import math
 import json
 import os
+from pathlib import Path
 import time
 from typing import Any, Iterable, Mapping, Protocol, runtime_checkable
 from urllib import error as urllib_error
@@ -11,6 +12,7 @@ from urllib import parse as urllib_parse
 from urllib import request as urllib_request
 
 from .models import VehicleType
+from .osrm_cache import load_table
 
 
 @runtime_checkable
@@ -284,12 +286,18 @@ class OSRMRoutingProvider:
         }
     )  # Профиль OSRM для каждого доменного типа транспорта.
     base_urls: Mapping[VehicleType, str] = field(default_factory=dict)  # Отдельный HTTP endpoint OSRM для каждого типа транспорта.
+    pair_cache_path: Path | None = None  # SQLite-кэш направленных OSRM-пар между запусками.
+    matrix_cache_path: Path | None = None  # Каталог NPZ: отдельный файл на граф и упорядоченные координаты.
     _cache: dict[str, Mapping[str, Any]] = field(
         default_factory=dict,
         init=False,
         repr=False,
         compare=False,
     )  # Простое in-memory кэширование ответов по полному URL запроса.
+    _table_cache: dict[
+        tuple[str, VehicleType, float],
+        tuple[dict[str, dict[str, int]], dict[str, dict[str, float]]],
+    ] = field(default_factory=dict, init=False, repr=False, compare=False)  # Матрицы текущего процесса после чтения любого уровня кэша.
 
     def get_travel_time_matrix(
         self,
@@ -356,13 +364,36 @@ class OSRMRoutingProvider:
             query={"annotations": "duration,distance"},
             vehicle_type=vehicle_type,
         )
-        payload = self._get_json(url)
-        durations = payload.get("durations")
-        distances = payload.get("distances")
-        if payload.get("code") != "Ok" or not isinstance(durations, list) or not isinstance(distances, list):
-            raise RoutingProviderError(
-                f"OSRM table не построил матрицы: {payload.get('code', 'Unknown')}"
+        # URL включает все координаты, endpoint и профиль. Коэффициент ОТ
+        # применяется ниже к сырым данным после любого уровня кэширования.
+        memory_key = (url, vehicle_type, self.public_transport_time_multiplier)
+        if memory_key in self._table_cache:
+            return self._table_cache[memory_key]
+
+        def fetch(sources: list[int], destinations: list[int]) -> tuple[list, list]:
+            """Запрашивает прямоугольник отсутствующих пар через Table API."""
+            query = {"annotations": "duration,distance"}
+            if len(sources) != len(requested_locations) or len(destinations) != len(requested_locations):
+                query.update(sources=";".join(map(str, sources)), destinations=";".join(map(str, destinations)))
+            payload = self._get_json(self._url(
+                "table", self._profile(vehicle_type), requested_locations, query, vehicle_type,
+            ))
+            if payload.get("code") != "Ok":
+                raise RoutingProviderError(f"OSRM table: {payload.get('code', 'Unknown')}")
+            return payload.get("durations", []), payload.get("distances", [])
+
+        identity = json.dumps([
+            "osrm-table-v1",
+            self.base_urls.get(vehicle_type, self.base_url).rstrip("/"),
+            self._profile(vehicle_type),
+        ])
+        try:
+            durations, distances = load_table(
+                [self.coordinates[location] for location in requested_locations],
+                identity, self.pair_cache_path, self.matrix_cache_path, fetch,
             )
+        except ValueError as exc:
+            raise RoutingProviderError(str(exc)) from exc
         if len(durations) != len(requested_locations) or len(distances) != len(requested_locations):
             raise RoutingProviderError("OSRM вернул матрицы неправильного размера")
 
@@ -391,6 +422,7 @@ class OSRMRoutingProvider:
                     else max(1, math.ceil(duration_seconds / 60 * multiplier))
                 )
                 distance_matrix[source][destination] = float(distance_meters) / 1000
+        self._table_cache[memory_key] = (time_matrix, distance_matrix)
         return time_matrix, distance_matrix
 
     def _profile(self, vehicle_type: VehicleType) -> str:
@@ -539,7 +571,16 @@ def create_osrm_provider_from_environment(
         ),
         profiles=profiles,
         base_urls=base_urls,
+        pair_cache_path=_cache_path("OSRM_PAIR_CACHE_PATH", "osrm_pairs.sqlite3"),
+        matrix_cache_path=_cache_path("OSRM_MATRIX_CACHE_PATH", "matrices"),
     )
+
+
+def _cache_path(variable: str, filename: str) -> Path | None:
+    """Возвращает путь к OSRM-кэшу; off или пустая строка отключает уровень."""
+    default = Path(__file__).resolve().parents[2] / ".cache" / "osrm" / filename
+    value = os.getenv(variable, str(default)).strip()
+    return None if value.lower() in {"", "off", "none"} else Path(value)
 
 class RoutingProviderError(RuntimeError):
     """Ошибка получения матрицы или geometry от routing provider."""

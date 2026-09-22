@@ -19,6 +19,7 @@ from .models import (
     OptimizationResult,
     RouteStop,
     Task,
+    TaskStatus,
     UnassignedReason,
     UnassignedReasonCode,
     VehicleType,
@@ -41,13 +42,45 @@ class ORToolsOptimizer(RouteOptimizer):
         *,
         forced_task_engineer_by_id: Mapping[str, str] | None = None,
         initial_routes_by_engineer: Mapping[str, Sequence[str]] | None = None,
+        reference_routes_by_engineer: Mapping[str, Sequence[str]] | None = None,
         time_limit_seconds: int | None = None,
     ) -> OptimizationResult:
         """Определяет назначения, порядок заявок и расписание маршрутов."""
-        forced_task_engineer_by_id = forced_task_engineer_by_id or {}
+        # Оперативные статусы задачи задают обязательные назначения. Явная
+        # фиксация вызывающего кода (например, counterfactual-проверка) может их
+        # дополнить, но не должна противоречить уже начатой работе.
+        fixed_assignments = dict(problem.fixed_task_engineer_by_id)
+        reference_routes = reference_routes_by_engineer or {}
+        reference_engineer_by_task = {
+            task_id: engineer_id
+            for engineer_id, task_ids in reference_routes.items()
+            for task_id in task_ids
+        }
+        reference_predecessor_by_task: dict[str, str] = {}
+        for engineer_id, task_ids in reference_routes.items():
+            predecessor = f"__START__:{engineer_id}"
+            for task_id in task_ids:
+                reference_predecessor_by_task[task_id] = predecessor
+                predecessor = task_id
+        started_assignments = {
+            task.id: engineer_id
+            for task in problem.planning_tasks
+            for engineer_id in [fixed_assignments.get(task.id)]
+            if task.status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}
+            and engineer_id is not None
+        }
+        forced_assignments = dict(fixed_assignments)
+        for task_id, engineer_id in (forced_task_engineer_by_id or {}).items():
+            previous_engineer_id = forced_assignments.get(task_id)
+            if previous_engineer_id is not None and previous_engineer_id != engineer_id:
+                raise ValueError(
+                    f"Заявка {task_id} уже зафиксирована за инженером "
+                    f"{previous_engineer_id!r}"
+                )
+            forced_assignments[task_id] = engineer_id
         eligible_tasks: list[Task] = []
         unassigned_reasons: dict[str, UnassignedReason] = {}
-        for task in problem.tasks:
+        for task in problem.planning_tasks:
             # На этом этапе отбрасываем только заявки без единого инженера,
             # подходящего по skill/equipment/vehicle. Временные ограничения не
             # проверяем здесь: их должен совместно рассмотреть OR-Tools вместе
@@ -84,7 +117,7 @@ class ORToolsOptimizer(RouteOptimizer):
         # разными узлами (две заявки в одном месте), а OR-Tools затем создаёт
         # ещё один слой собственных внутренних индексов.
         node_location_ids = [
-            engineer.start_location_id for engineer in problem.engineers
+            problem.route_start_location(engineer) for engineer in problem.engineers
         ] + [task.location_id for task in eligible_tasks]
 
         # Связываем логический номер узла с объектом Task. Стартовые узлы в
@@ -131,7 +164,7 @@ class ORToolsOptimizer(RouteOptimizer):
                 from_location = node_location_ids[from_node]
                 task_at_from = task_by_node.get(from_node)
                 service_duration = (
-                    task_at_from.duration_minutes if task_at_from is not None else 0
+                    problem.service_duration(task_at_from) if task_at_from is not None else 0
                 )
                 if routing.IsEnd(to_index):
                     return service_duration
@@ -176,10 +209,26 @@ class ORToolsOptimizer(RouteOptimizer):
                     to_location,
                     engineer.vehicle_type,
                 )
-                return (
+                cost = (
                     travel_time * self.config.travel_time_penalty_per_minute
                     + int(round(distance * self.config.distance_penalty_per_km))
                 )
+                task_at_to = task_by_node.get(to_node)
+                if task_at_to is not None:
+                    previous_engineer = reference_engineer_by_task.get(task_at_to.id)
+                    if previous_engineer is not None and previous_engineer != engineer.id:
+                        cost += self.config.reassignment_penalty
+                    expected_predecessor = reference_predecessor_by_task.get(task_at_to.id)
+                    if expected_predecessor is not None:
+                        task_at_from = task_by_node.get(from_node)
+                        actual_predecessor = (
+                            task_at_from.id
+                            if task_at_from is not None
+                            else f"__START__:{engineer.id}"
+                        )
+                        if actual_predecessor != expected_predecessor:
+                            cost += self.config.route_order_change_penalty
+                return cost
 
             return objective_callback
 
@@ -229,7 +278,7 @@ class ORToolsOptimizer(RouteOptimizer):
                 vehicle_index,  # vehicle: номер инженера/маршрута.
             )
             availability = availability_by_engineer[engineer.id]
-            shift_start = hhmm_to_minutes(availability.available_from)
+            shift_start = problem.route_start_minutes(availability)
             shift_end = hhmm_to_minutes(availability.available_until)
             # Start/End возвращают специальные внутренние индексы маршрута,
             # а CumulVar — переменную накопленного времени в этом индексе.
@@ -252,6 +301,20 @@ class ORToolsOptimizer(RouteOptimizer):
             task_index = manager.NodeToIndex(task_node)
             window_start = hhmm_to_minutes(task.window_start)
             window_end = hhmm_to_minutes(task.window_end)
+            # Для уже выполняемой заявки исходное окно описывает момент её
+            # фактического начала в прошлом. При перепланировании CumulVar
+            # представляет начало оставшегося участка «сейчас», поэтому
+            # фиксируем его на времени оперативного снимка.
+            if (
+                problem.planning_time is not None
+                and task.status == TaskStatus.IN_PROGRESS
+                and task.id in started_assignments
+            ):
+                fixed_start = problem.route_start_minutes(
+                    availability_by_engineer[started_assignments[task.id]]
+                )
+                window_start = fixed_start
+                window_end = fixed_start
             time_dimension.CumulVar(task_index).SetRange(
                 window_start,  # minimum: самое раннее начало обслуживания.
                 window_end,  # maximum: самое позднее начало обслуживания.
@@ -270,7 +333,7 @@ class ORToolsOptimizer(RouteOptimizer):
                     # принадлежать узел. RemoveValue оставляет заявку в модели,
                     # но запрещает конкретного несовместимого инженера.
                     routing.VehicleVar(task_index).RemoveValue(vehicle_index)
-            forced_engineer_id = forced_task_engineer_by_id.get(task.id)
+            forced_engineer_id = forced_assignments.get(task.id)
             if forced_engineer_id is not None:
                 forced_vehicle_index = next(
                     (
@@ -287,6 +350,27 @@ class ORToolsOptimizer(RouteOptimizer):
                 # VehicleVar хранит номер маршрута заявки. SetValue оставляет
                 # в модели только выбранного инженера для counterfactual-расчёта.
                 routing.VehicleVar(task_index).SetValue(forced_vehicle_index)
+                # Для выполняемой/текущей заявки недостаточно указать vehicle:
+                # disjunction иначе всё ещё могла бы сделать узел неактивным.
+                routing.ActiveVar(task_index).SetValue(1)
+
+        # Уже выполняемая заявка или заявка, к которой инженер едет, является
+        # первой изменяемой точкой его текущего маршрута. Фиксация Start->task
+        # запрещает solver вставить перед ней ещё одну новую работу.
+        engineer_index_by_id = {
+            engineer.id: index for index, engineer in enumerate(problem.engineers)
+        }
+        for task in eligible_tasks:
+            # В режиме полного перераспределения статус заявки не имеет силы,
+            # поэтому ориентируемся на фактическую карту принудительных
+            # назначений, а не напрямую на Task.status.
+            if task.id not in started_assignments:
+                continue
+            engineer_id = started_assignments[task.id]
+            task_index = manager.NodeToIndex(task_node_by_id[task.id])
+            routing.NextVar(
+                routing.Start(engineer_index_by_id[engineer_id])
+            ).SetValue(task_index)
 
         self._add_resource_constraints(
             # Добавляет дополнительные hard constraints для отдельных
@@ -323,12 +407,43 @@ class ORToolsOptimizer(RouteOptimizer):
         # SolveWithParameters запускает поиск и возвращает Assignment — набор
         # найденных значений NextVar, ActiveVar, VehicleVar и CumulVar.
         solution = None
+        if initial_routes_by_engineer is None and forced_assignments:
+            # PATH_CHEAPEST_ARC плохо находит первое решение, когда несколько
+            # узлов уже обязаны принадлежать конкретным маршрутам. Передаём
+            # минимальный допустимый warm start только из зафиксированных
+            # заявок; остальные заявки solver сам вставит или оставит inactive.
+            fixed_tasks_by_engineer: dict[str, list[Task]] = {
+                engineer.id: [] for engineer in problem.engineers
+            }
+            for task in eligible_tasks:
+                engineer_id = forced_assignments.get(task.id)
+                if engineer_id is not None:
+                    fixed_tasks_by_engineer[engineer_id].append(task)
+            initial_routes_by_engineer = {
+                engineer_id: tuple(
+                    task.id
+                    for task in sorted(
+                        tasks,
+                        key=lambda item: (
+                            hhmm_to_minutes(item.window_start),
+                            hhmm_to_minutes(item.window_end),
+                            item.id,
+                        ),
+                    )
+                )
+                for engineer_id, tasks in fixed_tasks_by_engineer.items()
+            }
         if initial_routes_by_engineer:
+            task_by_id = {task.id: task for task in eligible_tasks}
             initial_routes = [
                 [
                     task_node_by_id[task_id]
                     for task_id in initial_routes_by_engineer.get(engineer.id, ())
                     if task_id in task_node_by_id
+                    and self._engineer_can_execute_task(
+                        problem, engineer, task_by_id[task_id]
+                    )
+                    and forced_assignments.get(task_id, engineer.id) == engineer.id
                 ]
                 for engineer in problem.engineers
             ]
@@ -394,11 +509,11 @@ class ORToolsOptimizer(RouteOptimizer):
 
             route = self._build_engineer_route(
                 engineer_id=engineer.id,
-                start_location_id=engineer.start_location_id,
+                start_location_id=problem.route_start_location(engineer),
                 vehicle_type=engineer.vehicle_type,
                 tasks=route_tasks,
-                availability_from=hhmm_to_minutes(
-                    availability_by_engineer[engineer.id].available_from
+                availability_from=problem.route_start_minutes(
+                    availability_by_engineer[engineer.id]
                 ),
                 problem=problem,
                 total_travel_minutes=route_travel_minutes,
@@ -420,7 +535,7 @@ class ORToolsOptimizer(RouteOptimizer):
                 )
 
         unassigned_task_ids = tuple(
-            task.id for task in problem.tasks if task.id in unassigned_reasons
+            task.id for task in problem.planning_tasks if task.id in unassigned_reasons
         )
         return self._build_result(
             problem=problem,
@@ -429,6 +544,7 @@ class ORToolsOptimizer(RouteOptimizer):
             total_travel_minutes=total_travel_minutes,
             total_distance_km=total_distance_km,
             unassigned_task_ids=unassigned_task_ids,
+            reference_routes_by_engineer=reference_routes,
         )
 
     def _build_result(
@@ -439,11 +555,12 @@ class ORToolsOptimizer(RouteOptimizer):
         total_travel_minutes: int,
         total_distance_km: float,
         unassigned_task_ids: tuple[str, ...] | None = None,
+        reference_routes_by_engineer: Mapping[str, Sequence[str]] | None = None,
     ) -> OptimizationResult:
         """Собирает метрики и четыре компонента целевой функции."""
         if unassigned_task_ids is None:
             unassigned_task_ids = tuple(
-                task.id for task in problem.tasks if task.id in unassigned_reasons
+                task.id for task in problem.planning_tasks if task.id in unassigned_reasons
             )
         used_engineers_count = sum(bool(route.stops) for route in routes.values())
         # Сначала задача штрафуется за неназначение, затем за число маршрутов,
@@ -458,7 +575,7 @@ class ORToolsOptimizer(RouteOptimizer):
         travel_time_penalty = total_travel_minutes * self.config.travel_time_penalty_per_minute
         unassigned_penalty = sum(
             self.config.unassigned_penalty * self._priority_multiplier(task)
-            for task in problem.tasks
+            for task in problem.planning_tasks
             if task.id in unassigned_task_ids
         )
         total_service_minutes = sum(
@@ -473,6 +590,13 @@ class ORToolsOptimizer(RouteOptimizer):
             for engineer_id, route in routes.items()
         }
         assigned_task_count = sum(len(route.stops) for route in routes.values())
+        reassigned_task_count, reordered_task_count = self._plan_disruption_metrics(
+            routes, reference_routes_by_engineer or {}
+        )
+        plan_disruption_penalty = (
+            reassigned_task_count * self.config.reassignment_penalty
+            + reordered_task_count * self.config.route_order_change_penalty
+        )
         return OptimizationResult(
             routes=routes,
             unassigned_task_ids=unassigned_task_ids,
@@ -489,13 +613,45 @@ class ORToolsOptimizer(RouteOptimizer):
                 + used_engineers_penalty
                 + distance_penalty
                 + travel_time_penalty
+                + plan_disruption_penalty
             ),
             total_service_minutes=total_service_minutes,
             unassigned_penalty=unassigned_penalty,
             used_engineers_penalty=used_engineers_penalty,
             distance_penalty=distance_penalty,
             travel_time_penalty=travel_time_penalty,
+            plan_disruption_penalty=plan_disruption_penalty,
+            reassigned_task_count=reassigned_task_count,
+            reordered_task_count=reordered_task_count,
         )
+
+    @staticmethod
+    def _plan_disruption_metrics(
+        routes: Mapping[str, EngineerRoute],
+        reference_routes: Mapping[str, Sequence[str]],
+    ) -> tuple[int, int]:
+        """Считает переносы и изменения предшественника относительно старого плана."""
+        old_engineer: dict[str, str] = {}
+        old_predecessor: dict[str, str] = {}
+        for engineer_id, task_ids in reference_routes.items():
+            predecessor = f"__START__:{engineer_id}"
+            for task_id in task_ids:
+                old_engineer[task_id] = engineer_id
+                old_predecessor[task_id] = predecessor
+                predecessor = task_id
+
+        reassigned = 0
+        reordered = 0
+        for engineer_id, route in routes.items():
+            predecessor = f"__START__:{engineer_id}"
+            for stop in route.stops:
+                task_id = stop.task_id
+                if task_id in old_engineer and old_engineer[task_id] != engineer_id:
+                    reassigned += 1
+                if task_id in old_predecessor and old_predecessor[task_id] != predecessor:
+                    reordered += 1
+                predecessor = task_id
+        return reassigned, reordered
 
     @staticmethod
     def _empty_routes(problem: OptimizationProblem) -> dict[str, EngineerRoute]:
@@ -809,7 +965,8 @@ class ORToolsOptimizer(RouteOptimizer):
                 vehicle_type,
             )
             arrival_time = current_time + travel_time
-            service_end_time = service_start_time + task.duration_minutes
+            service_duration = problem.service_duration(task)
+            service_end_time = service_start_time + service_duration
             distance = ORToolsOptimizer._distance(
                 problem,
                 previous_location_id,
@@ -828,7 +985,7 @@ class ORToolsOptimizer(RouteOptimizer):
             )
             current_time = service_end_time
             previous_location_id = task.location_id
-            total_service_minutes += task.duration_minutes
+            total_service_minutes += service_duration
 
         return EngineerRoute(
             engineer_id=engineer_id,

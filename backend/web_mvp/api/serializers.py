@@ -7,7 +7,108 @@ from rest_framework import serializers
 from backend.optimization import (
     JsonScenario,
     OptimizationResult,
+    Priority,
+    Skill,
+    TaskStatus,
+    VehicleType,
+    WorkType,
+    hhmm_to_minutes,
 )
+
+
+class TaskCreateSerializer(serializers.Serializer):
+    """Проверяет поля новой заявки до передачи в domain-модель."""
+
+    id = serializers.CharField(max_length=120)
+    address = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    latitude = serializers.FloatField(min_value=-90, max_value=90)
+    longitude = serializers.FloatField(min_value=-180, max_value=180)
+    work_type = serializers.ChoiceField(choices=[item.value for item in WorkType])
+    window_start = serializers.RegexField(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    window_end = serializers.RegexField(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    priority = serializers.ChoiceField(
+        choices=[item.value for item in Priority], default=Priority.NORMAL.value
+    )
+    required_vehicle_type = serializers.ChoiceField(
+        choices=[item.value for item in VehicleType], required=False, allow_null=True
+    )
+    required_equipment = serializers.ListField(
+        child=serializers.CharField(max_length=100), required=False, default=list
+    )
+    status = serializers.ChoiceField(
+        choices=[TaskStatus.NOT_SENT.value, TaskStatus.OVERDUE.value],
+        default=TaskStatus.NOT_SENT.value,
+    )
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        """Проверяет настоящее время в 24-часовом формате и порядок окна."""
+        try:
+            start = hhmm_to_minutes(attrs["window_start"])
+            end = hhmm_to_minutes(attrs["window_end"])
+        except ValueError as exc:
+            raise serializers.ValidationError(
+                {"window_start": "Используйте время HH:MM в 24-часовом формате."}
+            ) from exc
+        if end <= start:
+            raise serializers.ValidationError(
+                {"window_end": "Конец окна должен быть позже начала."}
+            )
+        return attrs
+
+
+class GeocodeAddressSerializer(serializers.Serializer):
+    """Проверяет адрес, введённый диспетчером."""
+
+    address = serializers.CharField(max_length=500, trim_whitespace=True)
+
+
+class OperationalStateSerializer(serializers.Serializer):
+    """Проверяет фактическое состояние инженера для перепланирования."""
+
+    engineer_id = serializers.CharField()
+    current_location_id = serializers.CharField()
+    remaining_service_minutes = serializers.IntegerField(
+        min_value=0, required=False, allow_null=True
+    )
+
+
+class ReplanningEventSerializer(serializers.Serializer):
+    """Проверяет одно из трёх поддерживаемых событий перепланирования."""
+
+    event_type = serializers.ChoiceField(
+        choices=("ENGINEER_UNAVAILABLE", "EMERGENCY_TASK", "TASK_CANCELLED")
+    )
+    planning_time = serializers.RegexField(r"^\d{2}:\d{2}$")
+    engineer_id = serializers.CharField(required=False)
+    task_id = serializers.CharField(required=False)
+    task = TaskCreateSerializer(required=False)
+
+    def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        """Требует payload, соответствующий выбранному типу события."""
+        event_type = attrs["event_type"]
+        required_field = {
+            "ENGINEER_UNAVAILABLE": "engineer_id",
+            "EMERGENCY_TASK": "task",
+            "TASK_CANCELLED": "task_id",
+        }[event_type]
+        if not attrs.get(required_field):
+            raise serializers.ValidationError(
+                {required_field: "Поле обязательно для выбранного события."}
+            )
+        return attrs
+
+
+class ManualReassignmentPreviewSerializer(serializers.Serializer):
+    """Проверяет запрос предварительного ручного переназначения."""
+
+    task_id = serializers.CharField(max_length=120)
+    engineer_id = serializers.CharField(max_length=120)
+
+
+class ManualReassignmentConfirmSerializer(serializers.Serializer):
+    """Проверяет подтверждение ранее рассчитанного переназначения."""
+
+    proposal_id = serializers.CharField(max_length=64)
 
 
 class RouteStopSerializer(serializers.Serializer):
@@ -61,11 +162,20 @@ class EngineerRouteSerializer(serializers.Serializer):
         engineers_by_id: dict[Any, Any] = self.context["engineers_by_id"]
         tasks_by_id: dict[Any, Any] = self.context["tasks_by_id"]
         routing_provider = self.context.get("routing_provider")
+        problem = self.context.get("problem")
 
         engineer = engineers_by_id[engineer_id]
+        start_location_id = (
+            problem.route_start_location(engineer)
+            if problem is not None
+            else engineer.start_location_id
+        )
+        start_coordinates = self.context["scenario"].location_coordinates.get(
+            start_location_id
+        )
 
         location_ids = [
-            engineer.start_location_id,
+            start_location_id,
             *[
                 tasks_by_id[stop.task_id].location_id
                 for stop in route.stops
@@ -85,8 +195,12 @@ class EngineerRouteSerializer(serializers.Serializer):
             "engineer_id": engineer_id,
             "engineer_name": engineer.name,
             "vehicle_type": engineer.vehicle_type.value,
-            "start_latitude": engineer.start_latitude,
-            "start_longitude": engineer.start_longitude,
+            "start_latitude": (
+                start_coordinates[0] if start_coordinates else engineer.start_latitude
+            ),
+            "start_longitude": (
+                start_coordinates[1] if start_coordinates else engineer.start_longitude
+            ),
             "total_distance_km": route.total_distance_km,
             "total_travel_minutes": route.total_travel_minutes,
             "geometry": geometry,
@@ -135,6 +249,9 @@ class OptimizationMetricsSerializer(serializers.Serializer):
     used_engineers_penalty = serializers.FloatField(read_only=True)
     distance_penalty = serializers.FloatField(read_only=True)
     travel_time_penalty = serializers.FloatField(read_only=True)
+    plan_disruption_penalty = serializers.FloatField(read_only=True)
+    reassigned_task_count = serializers.IntegerField(read_only=True)
+    reordered_task_count = serializers.IntegerField(read_only=True)
 
 
 class OptimizationResultSerializer(serializers.Serializer):
@@ -201,9 +318,11 @@ class DatasetTaskSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     location_id = serializers.ReadOnlyField()
     status = serializers.SerializerMethodField()
+    current_engineer_id = serializers.ReadOnlyField()
 
     latitude = serializers.FloatField(read_only=True)
     longitude = serializers.FloatField(read_only=True)
+    address = serializers.CharField(read_only=True, allow_null=True)
 
     required_skill = serializers.SerializerMethodField()
     duration_minutes = serializers.IntegerField(read_only=True)
@@ -213,6 +332,9 @@ class DatasetTaskSerializer(serializers.Serializer):
 
     priority = serializers.SerializerMethodField()
     required_vehicle_type = serializers.SerializerMethodField()
+    required_equipment = serializers.SerializerMethodField()
+    is_plannable = serializers.SerializerMethodField()
+    assignment_locked = serializers.SerializerMethodField()
 
     @staticmethod
     def get_required_skill(task: Any) -> str:
@@ -222,6 +344,23 @@ class DatasetTaskSerializer(serializers.Serializer):
     def get_status(task: Any) -> str:
         """Возвращает нормализованный статус domain-модели для API."""
         return task.status.value
+
+    def get_is_plannable(self, task: Any) -> bool:
+        """Показывает, участвует ли заявка в выбранном режиме расчёта."""
+        if self.context.get("ignore_task_statuses", False):
+            return True
+        return task.status.value not in {"CANCELLED", "COMPLETED"}
+
+    def get_assignment_locked(self, task: Any) -> bool:
+        """Показывает, запрещено ли solver менять текущего исполнителя."""
+        if self.context.get("ignore_task_statuses", False):
+            return False
+        if task.status.value in {"EN_ROUTE", "IN_PROGRESS"}:
+            return True
+        return bool(
+            self.context.get("preserve_assigned_tasks", False)
+            and task.status.value == "ASSIGNED"
+        )
 
     @staticmethod
     def get_priority(task: Any) -> str:
@@ -233,6 +372,11 @@ class DatasetTaskSerializer(serializers.Serializer):
             return None
 
         return task.required_vehicle_type.value
+
+    @staticmethod
+    def get_required_equipment(task: Any) -> list[str]:
+        """Возвращает стабильный список обязательного оборудования."""
+        return sorted(task.required_equipment)
 
 
 class DatasetEngineerSerializer(serializers.Serializer):

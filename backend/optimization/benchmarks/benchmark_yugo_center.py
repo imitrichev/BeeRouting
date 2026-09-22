@@ -89,6 +89,51 @@ def _measure_timefold(
     return measurements, result
 
 
+def _validate_status_contract(
+    solver_name: str,
+    problem: OptimizationProblem,
+    result: OptimizationResult,
+) -> None:
+    """Проверяет, что benchmark не скрывает нарушение режима статусов.
+
+    В полном режиме все заявки разрешены к перераспределению. В статусном
+    режиме исторические заявки не должны попасть в новый маршрут, а начатые
+    должны остаться у своего инженера и быть первым активным визитом.
+    """
+    route_by_task = {
+        stop.task_id: engineer_id
+        for engineer_id, route in result.routes.items()
+        for stop in route.stops
+    }
+    if not problem.ignore_task_statuses:
+        excluded_ids = {
+            task.id
+            for task in problem.tasks
+            if task.status.value in {"CANCELLED", "COMPLETED"}
+        }
+        unexpected = sorted(excluded_ids & route_by_task.keys())
+        if unexpected:
+            raise RuntimeError(
+                f"{solver_name}: исторические заявки попали в новый план: {unexpected}"
+            )
+        for task_id, engineer_id in problem.fixed_task_engineer_by_id.items():
+            if route_by_task.get(task_id) != engineer_id:
+                raise RuntimeError(
+                    f"{solver_name}: заявка {task_id} нарушила закрепление "
+                    f"за инженером {engineer_id}"
+                )
+        for task_id, engineer_id in problem.fixed_task_engineer_by_id.items():
+            task = next(item for item in problem.tasks if item.id == task_id)
+            if task.status.value not in {"EN_ROUTE", "IN_PROGRESS"}:
+                continue
+            route = result.routes[engineer_id]
+            if not route.stops or route.stops[0].task_id != task_id:
+                raise RuntimeError(
+                    f"{solver_name}: начатая заявка {task_id} не является первым "
+                    "визитом маршрута"
+                )
+
+
 def _format_value(value: float | int | None, decimals: int) -> str:
     """Форматирует значение таблицы или ставит прочерк для недопустимого плана."""
     if value is None:
@@ -170,6 +215,52 @@ def _print_percent_changes(
         print(f"  {_percent_phrase(name, timefold, control, 'Timefold', 'контрольного распределения')}")
 
 
+def _print_ortools_summary(
+    baseline: OptimizationResult,
+    ortools: OptimizationResult,
+    problem: OptimizationProblem,
+) -> None:
+    """Печатает краткое сравнение и отдельный пробег OR-Tools для защиты."""
+    print("\nOR-Tools относительно Baseline:")
+    metrics = (
+        ("заявок", baseline.assigned_task_count, ortools.assigned_task_count, "назначил"),
+        ("количество инженеров", baseline.used_engineers_count, ortools.used_engineers_count, "сократил"),
+        ("пробег", baseline.total_distance, ortools.total_distance, "сократил"),
+        ("время движения", baseline.total_travel_time, ortools.total_travel_time, "сократил"),
+        ("objective", baseline.total_objective, ortools.total_objective, "уменьшил"),
+    )
+    for name, reference, value, decrease_verb in metrics:
+        if value == reference:
+            phrase = (
+                "назначил столько же заявок (0.00%)"
+                if name == "заявок" else f"не изменил {name} (0.00%)"
+            )
+        elif reference == 0:
+            phrase = f"{name}: Baseline — 0, OR-Tools — {value}; процент не определён"
+        elif name == "заявок":
+            direction = "больше" if value > reference else "меньше"
+            phrase = f"назначил на {_percent_change(value, reference)} {direction} заявок"
+        else:
+            verb = decrease_verb if value < reference else "увеличил"
+            phrase = f"{verb} {name} на {_percent_change(value, reference)}"
+        print(f"  - {phrase}.")
+
+    # Короткие ID удобны для презентации; при совпадениях оставляем полные.
+    labels = [engineer.id.rsplit("-", 1)[-1] for engineer in problem.engineers]
+    if len(set(labels)) != len(labels):
+        labels = [engineer.id for engineer in problem.engineers]
+    width = max(len("Инженер"), *(len(label) for label in labels))
+    print("\nПробег OR-Tools по инженерам:")
+    print(f"{'Инженер':<{width}}  {'Пробег, км':>12}")
+    print("━" * width + "  " + "━" * 12)
+    for index, (engineer, label) in enumerate(zip(problem.engineers, labels)):
+        if index:
+            print("─" * width + "  " + "─" * 12)
+        distance = ortools.distance_by_engineer[engineer.id]
+        formatted = "0" if distance == 0 else f"{distance:.3f}"
+        print(f"{label:<{width}}  {formatted:>12}")
+
+
 def _print_distance_by_engineer(
     control_result: OptimizationResult | None,
     baseline_result: OptimizationResult,
@@ -219,6 +310,16 @@ def main() -> None:
         help="Лимит отдельного запуска Timefold; нужен только его solver.",
     )
     parser.add_argument("--osrm-timeout-seconds", type=float, default=30.0)
+    parser.add_argument(
+        "--preserve-assigned",
+        action="store_true",
+        help="Не разрешать solver переносить заявки со статусом ASSIGNED.",
+    )
+    parser.add_argument(
+        "--ignore-task-statuses",
+        action="store_true",
+        help="Построить новый план по всем заявкам, игнорируя статусы dataset.",
+    )
     args = parser.parse_args()
     if (
         args.iterations <= 0
@@ -231,17 +332,23 @@ def main() -> None:
     load_started_at = time.perf_counter()
     scenario = load_json_scenario(args.path)
     provider = build_provider(scenario, args.routing_provider, args.osrm_timeout_seconds)
-    problem = scenario.to_problem(provider)
+    problem = scenario.to_problem(
+        provider,
+        preserve_assigned_tasks=args.preserve_assigned and not args.ignore_task_statuses,
+        ignore_task_statuses=args.ignore_task_statuses,
+    )
     load_seconds = time.perf_counter() - load_started_at
 
     baseline_measurements, baseline_result = _measure_optimizer(
         GreedyBaselineOptimizer(), problem, args.iterations
     )
+    _validate_status_contract("Baseline", problem, baseline_result)
     ortools_measurements, ortools_result = _measure_optimizer(
         ORToolsOptimizer(OptimizerConfig(time_limit_minutes=args.time_limit_minutes)),
         problem,
         args.iterations,
     )
+    _validate_status_contract("OR-Tools", problem, ortools_result)
     timefold_measurements: list[float] = []
     timefold_result: OptimizationResult | None = None
     timefold_error: str | None = None
@@ -254,6 +361,7 @@ def main() -> None:
             problem,
             args.iterations,
         )
+        _validate_status_contract("Timefold", problem, timefold_result)
     except TimefoldUnavailableError as exc:
         timefold_error = str(exc)
 
@@ -275,6 +383,32 @@ def main() -> None:
     print(f"JSON benchmark: {args.path}")
     print(f"Routing provider: {args.routing_provider}")
     print(f"Загружено: {len(problem.engineers)} инженеров, {len(problem.tasks)} заявок")
+    status_counts = Counter(task.status.value for task in problem.tasks)
+    print(
+        "Статусы: "
+        + ", ".join(
+            f"{status.value}={status_counts.get(status.value, 0)}"
+            for status in type(problem.tasks[0].status)
+        )
+    )
+    print(
+        f"В новом плане: {len(problem.planning_tasks)} заявок; "
+        f"исключено завершённых/отменённых: "
+        f"{len(problem.tasks) - len(problem.planning_tasks)}; "
+        f"зафиксировано начатых: {len(problem.fixed_task_engineer_by_id)}"
+    )
+    print(
+        "ASSIGNED: "
+        + ("назначение сохраняется" if args.preserve_assigned else "перенос разрешён")
+    )
+    print(
+        "Режим статусов: "
+        + (
+            "статусы игнорируются, строится новый план по всем заявкам"
+            if args.ignore_task_statuses
+            else "статусы учитываются: CANCELLED/COMPLETED исключены, начатые закреплены"
+        )
+    )
     print(f"Импорт и построение матриц: {load_seconds:.6f} с")
     if args.routing_provider == "coordinate":
         print(f"Скорость демонстрационной матрицы: {DEMO_TRAVEL_SPEED_KM_PER_HOUR:g} км/ч")
@@ -309,6 +443,7 @@ def main() -> None:
     _print_value_table(rows)
     _print_percent_changes(rows)
     _print_distance_by_engineer(control_result, baseline_result, ortools_result, timefold_result, problem)
+    _print_ortools_summary(baseline_result, ortools_result, problem)
 
 
 if __name__ == "__main__":

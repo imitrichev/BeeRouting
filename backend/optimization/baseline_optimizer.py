@@ -20,6 +20,7 @@ from .models import (
     OptimizationResult,
     RouteStop,
     Task,
+    TaskStatus,
     UnassignedReason,
     UnassignedReasonCode,
     hhmm_to_minutes,
@@ -62,10 +63,64 @@ class GreedyBaselineOptimizer(RouteOptimizer):
         resource_intervals: dict[str, list[tuple[str, int, int]]] = {}
         unassigned_reasons: dict[str, UnassignedReason] = {}
 
-        for task in problem.tasks:
+        # Начатая заявка образует неизменяемый первый участок маршрута. После
+        # неё обычный baseline продолжает обрабатывать остальные заявки строго
+        # в исходном порядке.
+        started_task_ids: set[str] = set()
+        for task in problem.planning_tasks:
+            fixed_engineer_id = problem.fixed_task_engineer_by_id.get(task.id)
+            if (
+                problem.ignore_task_statuses
+                or task.status not in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}
+            ):
+                continue
+            started_task_ids.add(task.id)
+            engineer = next(
+                item for item in problem.engineers if item.id == fixed_engineer_id
+            )
+            if not engineer_can_execute_task(problem, engineer, task):
+                unassigned_reasons[task.id] = self._unassigned_reason(
+                    problem, task, availability_by_engineer
+                )
+                continue
+            schedule = self._schedule(
+                problem,
+                engineer,
+                availability_by_engineer[engineer.id],
+                [task],
+            )
+            if schedule is None:
+                unassigned_reasons[task.id] = self._unassigned_reason(
+                    problem, task, availability_by_engineer
+                )
+                continue
+            tasks_by_engineer[engineer.id].append(task)
+            candidate_stop = schedule[-1]
+            for resource_id in resource_ids_used_for_task(problem, engineer, task):
+                resource_intervals.setdefault(resource_id, []).append(
+                    (
+                        engineer.id,
+                        candidate_stop.service_start_time,
+                        candidate_stop.service_end_time,
+                    )
+                )
+
+        for task in problem.planning_tasks:
+            if task.id in started_task_ids:
+                continue
             # Этот двойной цикл и есть baseline: порядок задач и инженеров
             # полностью определяется входными кортежами, без перестановки.
-            for engineer in problem.engineers:
+            fixed_engineer_id = problem.fixed_task_engineer_by_id.get(task.id)
+            candidate_engineers = (
+                tuple(
+                    engineer
+                    for engineer in problem.engineers
+                    if engineer.id == fixed_engineer_id
+                )
+                if fixed_engineer_id is not None
+                else problem.engineers
+            )
+            for engineer in candidate_engineers:
                 if not engineer_can_execute_task(problem, engineer, task):
                     continue
                 candidate_tasks = tasks_by_engineer[engineer.id] + [task]
@@ -123,7 +178,7 @@ class GreedyBaselineOptimizer(RouteOptimizer):
             )
 
         unassigned_task_ids = tuple(
-            task.id for task in problem.tasks if task.id in unassigned_reasons
+            task.id for task in problem.planning_tasks if task.id in unassigned_reasons
         )
         distance_by_engineer = {
             engineer_id: route.total_distance_km
@@ -144,7 +199,7 @@ class GreedyBaselineOptimizer(RouteOptimizer):
         )
         unassigned_penalty = sum(
             self.config.unassigned_penalty * self._priority_multiplier(task)
-            for task in problem.tasks
+            for task in problem.planning_tasks
             if task.id in unassigned_task_ids
         )
         travel_time_penalty = (
@@ -192,8 +247,8 @@ class GreedyBaselineOptimizer(RouteOptimizer):
         """Проверяет последовательный маршрут и возвращает его расписание."""
         # Тип availability намеренно читается через атрибуты модели: метод не
         # меняет domain-модель и использует только её публичные поля.
-        current_time = hhmm_to_minutes(availability.available_from)
-        previous_location = engineer.start_location_id
+        current_time = problem.route_start_minutes(availability)
+        previous_location = problem.route_start_location(engineer)
         schedule: list[_ScheduledStop] = []
         for task in tasks:
             travel_time = problem.travel_time_between(
@@ -203,7 +258,7 @@ class GreedyBaselineOptimizer(RouteOptimizer):
             )
             arrival_time = current_time + travel_time
             service_start = max(arrival_time, hhmm_to_minutes(task.window_start))
-            service_end = service_start + task.duration_minutes
+            service_end = service_start + problem.service_duration(task)
             if service_start > hhmm_to_minutes(task.window_end):
                 return None
             if service_end > hhmm_to_minutes(availability.available_until):
@@ -316,7 +371,7 @@ class GreedyBaselineOptimizer(RouteOptimizer):
         problem: OptimizationProblem,
     ) -> EngineerRoute:
         """Преобразует последовательное расписание в доменный маршрут."""
-        previous_location = engineer.start_location_id
+        previous_location = problem.route_start_location(engineer)
         total_travel = 0
         total_distance = 0.0
         total_service = 0
@@ -344,7 +399,7 @@ class GreedyBaselineOptimizer(RouteOptimizer):
             )
             total_travel += travel_time
             total_distance += scheduled_stop.distance_from_previous_km
-            total_service += task.duration_minutes
+            total_service += problem.service_duration(task)
             previous_location = task.location_id
         return EngineerRoute(
             engineer_id=engineer.id,

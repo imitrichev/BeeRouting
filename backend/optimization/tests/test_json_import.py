@@ -14,8 +14,11 @@ from backend.optimization import (
     load_json_scenario_data,
 )
 from backend.optimization.scripts.generate_dataset_json import (
+    DEFAULT_MOSCOW_COORDINATES,
+    NominatimGeocoder,
     _normalise_address,
     _replace_building_marker,
+    _resolve_coordinates,
     generate_dataset,
 )
 
@@ -37,7 +40,7 @@ def test_yugo_center_json_loads_into_domain_models() -> None:
     assert scenario.engineers[0].vehicle_type == VehicleType.CAR
     assert scenario.tasks[0].duration_minutes == 70
     assert scenario.tasks[0].window_start == "18:00"
-    assert scenario.location_coordinates["office_start"] == (55.6637956, 37.6140905)
+    assert scenario.location_coordinates["office_start"] == (55.6638404, 37.6138686)
 
 
 def test_imported_scenario_builds_problem_from_routing_provider() -> None:
@@ -224,3 +227,31 @@ def test_building_marker_is_normalized_to_k() -> None:
     assert _replace_building_marker("Москва, д. 12 стр. 2") == "Москва, д. 12 к 2"
     assert _replace_building_marker("Москва, д. 9б стр. 1") == "Москва, д. 9б к 1"
     assert _normalise_address("Москва, д. 1с1") == "москва, д. 1с1"
+
+
+def test_nominatim_delay_depends_on_endpoint(tmp_path: Path) -> None:
+    """Локальный сервер работает без паузы, публичный — с паузой 1,1 с."""
+    local = NominatimGeocoder(
+        cache_path=tmp_path / "local.json",
+        endpoint="http://127.0.0.1:8080/search",
+    )
+    remote = NominatimGeocoder(
+        cache_path=tmp_path / "remote.json",
+        endpoint="https://nominatim.openstreetmap.org/search",
+    )
+
+    assert local.is_local
+    assert local.min_interval_seconds == 0
+    assert not remote.is_local
+    assert remote.min_interval_seconds == 1.1
+
+
+def test_unresolved_address_gets_visible_default(capsys) -> None:
+    """Ошибка адреса не останавливает dataset и явно указывает субъект."""
+    def missing(_address: str) -> tuple[float, float]:
+        raise ValueError("не найден")
+
+    coordinates = _resolve_coordinates("Плохой адрес", missing, "заявка J1")
+
+    assert coordinates == DEFAULT_MOSCOW_COORDINATES
+    assert "заявка J1" in capsys.readouterr().out

@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import json
 import os
+from uuid import uuid4
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 from backend.optimization import (
     CoordinateRoutingProvider,
+    EngineerOperationalState,
     JsonScenario,
     OptimizationProblem,
     OptimizationResult,
@@ -18,9 +21,18 @@ from backend.optimization import (
     create_osrm_provider_from_environment,
     ExplanationEngine,
     RoutingProvider,
+    Priority,
+    Skill,
+    Task,
+    TaskStatus,
+    VehicleType,
+    WORK_NORMS,
+    WorkType,
     load_json_scenario,
     load_json_scenario_data,
 )
+from backend.optimization.scripts.generate_dataset_json import NominatimGeocoder
+from backend.optimization.constraints import engineer_has_required_equipment
 from .serializers import OptimizationResultSerializer, DatasetSerializer
 
 
@@ -43,6 +55,11 @@ class OptimizationWebService:
         self.use_osrm = True
         self._problem: OptimizationProblem | None = None
         self._result: OptimizationResult | None = None
+        self._preserve_assigned_tasks = False
+        self._ignore_task_statuses = False
+        self._unavailable_engineer_ids: set[str] = set()
+        self._geocoder: NominatimGeocoder | None = None
+        self._manual_reassignment_proposals: dict[str, dict[str, Any]] = {}
 
     def reset(self) -> None:
         """Очищает dataset; используется тестами и локальной перезагрузкой."""
@@ -51,6 +68,10 @@ class OptimizationWebService:
         self.routing_provider = None
         self._problem = None
         self._result = None
+        self._preserve_assigned_tasks = False
+        self._ignore_task_statuses = False
+        self._unavailable_engineer_ids = set()
+        self._manual_reassignment_proposals.clear()
 
     def load_official_dataset(self) -> JsonScenario:
         """Загружает официальный демонстрационный JSON из корня проекта."""
@@ -59,9 +80,14 @@ class OptimizationWebService:
         self._source_name = OFFICIAL_DATASET_PATH.name
         self._problem = None
         self._result = None
+        self._preserve_assigned_tasks = False
+        self._ignore_task_statuses = False
+        self._unavailable_engineer_ids = set()
+        self._manual_reassignment_proposals.clear()
         # У нового dataset другой набор координат, поэтому старый provider и
         # его кэш ответов больше нельзя использовать.
         self.routing_provider = None
+        self._unavailable_engineer_ids = set()
         return scenario
 
     def load_uploaded_dataset(self, content: bytes, filename: str) -> JsonScenario:
@@ -75,7 +101,9 @@ class OptimizationWebService:
         self._source_name = filename
         self._problem = None
         self._result = None
+        self._preserve_assigned_tasks = False
         self.routing_provider = None
+        self._manual_reassignment_proposals.clear()
         return scenario
 
     def current_dataset(self) -> JsonScenario:
@@ -84,18 +112,407 @@ class OptimizationWebService:
             return self.load_official_dataset()
         return self._scenario
 
-    def optimize_current(self) -> tuple[JsonScenario, OptimizationResult]:
+    def optimize_current(
+        self,
+        preserve_assigned_tasks: bool = False,
+        ignore_task_statuses: bool = False,
+        planning_time: str | None = None,
+        operational_states: tuple[EngineerOperationalState, ...] = (),
+        initial_routes_by_engineer: dict[str, tuple[str, ...]] | None = None,
+        reference_routes_by_engineer: dict[str, tuple[str, ...]] | None = None,
+    ) -> tuple[JsonScenario, OptimizationResult]:
         """Строит задачу и запускает OR-Tools для текущего dataset."""
         scenario = self.current_dataset()
-        problem = self._build_problem(scenario)
+        self._preserve_assigned_tasks = preserve_assigned_tasks
+        self._ignore_task_statuses = ignore_task_statuses
+        states = self._complete_operational_states(
+            scenario, planning_time, operational_states
+        )
+        problem = self._build_problem(
+            scenario,
+            planning_time=planning_time,
+            operational_states=states,
+        )
         # Для интерактивного MVP оставляем короткий лимит поиска. Он является
         # параметром OR-Tools, а не ограничением корректности hard constraints.
         result = ORToolsOptimizer(
             OptimizerConfig(time_limit_minutes=1)
-        ).optimize(problem)
+        ).optimize(
+            problem,
+            initial_routes_by_engineer=initial_routes_by_engineer,
+            reference_routes_by_engineer=reference_routes_by_engineer,
+        )
         self._problem = problem
         self._result = result
+        self._manual_reassignment_proposals.clear()
         return scenario, result
+
+    def preview_manual_reassignment(
+        self,
+        task_id: str,
+        engineer_id: str,
+    ) -> dict[str, Any]:
+        """Проверяет перенос заявки и рассчитывает метрики без изменения плана."""
+        if self._problem is None or self._result is None:
+            raise ValueError("Сначала запустите оптимизацию")
+
+        task = next((item for item in self._problem.tasks if item.id == task_id), None)
+        engineer = next(
+            (item for item in self._problem.engineers if item.id == engineer_id), None
+        )
+        if task is None:
+            raise ValueError(f"Заявка {task_id!r} не найдена")
+        if engineer is None:
+            raise ValueError(f"Инженер {engineer_id!r} не найден")
+
+        current_engineer_id = next(
+            (
+                route_engineer_id
+                for route_engineer_id, route in self._result.routes.items()
+                if any(stop.task_id == task_id for stop in route.stops)
+            ),
+            None,
+        )
+        if current_engineer_id == engineer_id:
+            return self._infeasible_reassignment(
+                "ALREADY_ASSIGNED",
+                f"Заявка {task_id} уже назначена инженеру {engineer.name}.",
+            )
+        if (
+            not self._ignore_task_statuses
+            and task.status in {TaskStatus.CANCELLED, TaskStatus.COMPLETED}
+        ):
+            return self._infeasible_reassignment(
+                "TASK_CLOSED",
+                f"Заявка {task_id} закрыта со статусом «{task.status.value}» и не перепланируется.",
+            )
+        if (
+            not self._ignore_task_statuses
+            and task.status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}
+        ):
+            return self._infeasible_reassignment(
+                "ASSIGNMENT_LOCKED",
+                f"Заявка {task_id} уже начата: её исполнитель зафиксирован.",
+            )
+        if engineer.id in self._problem.unavailable_engineer_ids:
+            return self._infeasible_reassignment(
+                "ENGINEER_UNAVAILABLE",
+                f"Инженер {engineer.name} недоступен в рассматриваемый период.",
+            )
+        if not task.required_skills.issubset(engineer.qualifications):
+            required = ", ".join(sorted(skill.value for skill in task.required_skills))
+            return self._infeasible_reassignment(
+                "MISSING_SKILL",
+                f"У инженера {engineer.name} нет требуемой квалификации: {required}.",
+            )
+        if not engineer_has_required_equipment(self._problem, engineer, task):
+            missing = ", ".join(sorted(task.required_equipment - engineer.available_equipment))
+            return self._infeasible_reassignment(
+                "MISSING_EQUIPMENT",
+                f"У инженера {engineer.name} нет обязательного оборудования: {missing}.",
+            )
+        if (
+            task.required_vehicle_type is not None
+            and task.required_vehicle_type != engineer.vehicle_type
+        ):
+            return self._infeasible_reassignment(
+                "VEHICLE_MISMATCH",
+                f"Для заявки нужен транспорт {task.required_vehicle_type.value}, "
+                f"у инженера {engineer.name} — {engineer.vehicle_type.value}.",
+            )
+
+        current_routes = {
+            route_engineer_id: tuple(stop.task_id for stop in route.stops)
+            for route_engineer_id, route in self._result.routes.items()
+        }
+        try:
+            candidate_result = ORToolsOptimizer(
+                OptimizerConfig(time_limit_minutes=1)
+            ).optimize(
+                self._problem,
+                forced_task_engineer_by_id={task_id: engineer_id},
+                initial_routes_by_engineer=current_routes,
+                reference_routes_by_engineer=current_routes,
+                time_limit_seconds=5,
+            )
+        except ValueError:
+            return self._infeasible_reassignment(
+                "SCHEDULE_INFEASIBLE",
+                "Переназначение нарушает временное окно заявки, рабочую смену "
+                "или расписание других заявок инженера.",
+            )
+
+        target_route = candidate_result.routes[engineer_id]
+        if not any(stop.task_id == task_id for stop in target_route.stops):
+            return self._infeasible_reassignment(
+                "SCHEDULE_INFEASIBLE",
+                "OR-Tools не нашёл допустимый маршрут с выбранным исполнителем.",
+            )
+
+        proposal_id = uuid4().hex
+        before = self._main_metrics(self._result)
+        after = self._main_metrics(candidate_result)
+        old_engineer = next(
+            (item for item in self._problem.engineers if item.id == current_engineer_id),
+            None,
+        )
+        self._manual_reassignment_proposals[proposal_id] = {
+            "result": candidate_result,
+            "task_id": task_id,
+            "engineer_id": engineer_id,
+        }
+        return {
+            "feasible": True,
+            "proposal_id": proposal_id,
+            "task_id": task_id,
+            "old_engineer": (
+                {"id": old_engineer.id, "name": old_engineer.name}
+                if old_engineer else None
+            ),
+            "new_engineer": {"id": engineer.id, "name": engineer.name},
+            "before": before,
+            "after": after,
+            "delta": {
+                "used_engineers_count": (
+                    after["used_engineers_count"] - before["used_engineers_count"]
+                ),
+                "total_distance_km": round(
+                    after["total_distance_km"] - before["total_distance_km"], 3
+                ),
+            },
+        }
+
+    def confirm_manual_reassignment(
+        self, proposal_id: str
+    ) -> tuple[JsonScenario, OptimizationResult, dict[str, Any]]:
+        """Применяет результат preview; повторный или устаревший ID не принимается."""
+        proposal = self._manual_reassignment_proposals.get(proposal_id)
+        if proposal is None or self._scenario is None:
+            raise ValueError("Предложение переназначения не найдено или устарело")
+        result: OptimizationResult = proposal["result"]
+        assigned_by_task = {
+            stop.task_id: engineer_id
+            for engineer_id, route in result.routes.items()
+            for stop in route.stops
+        }
+        tasks = []
+        for task in self._scenario.tasks:
+            if (
+                not self._ignore_task_statuses
+                and task.status in {TaskStatus.CANCELLED, TaskStatus.COMPLETED}
+            ):
+                tasks.append(task)
+            elif (
+                not self._ignore_task_statuses
+                and task.status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}
+            ):
+                tasks.append(task)
+            elif task.id in assigned_by_task:
+                tasks.append(
+                    replace(
+                        task,
+                        status=TaskStatus.ASSIGNED,
+                        current_engineer_id=assigned_by_task[task.id],
+                    )
+                )
+            else:
+                tasks.append(
+                    replace(
+                        task,
+                        status=(
+                            TaskStatus.OVERDUE
+                            if task.status == TaskStatus.OVERDUE
+                            else TaskStatus.NOT_SENT
+                        ),
+                        current_engineer_id=None,
+                    )
+                )
+        self._scenario = replace(self._scenario, tasks=tuple(tasks))
+        self._problem = replace(self._problem, tasks=tuple(tasks)) if self._problem else None
+        self._result = result
+        confirmation = {
+            "proposal_id": proposal_id,
+            "task_id": proposal["task_id"],
+            "engineer_id": proposal["engineer_id"],
+        }
+        self._manual_reassignment_proposals.clear()
+        return self._scenario, result, confirmation
+
+    @staticmethod
+    def _infeasible_reassignment(reason_code: str, message: str) -> dict[str, Any]:
+        """Формирует единый структурированный ответ о невозможности переноса."""
+        return {"feasible": False, "reason_code": reason_code, "message": message}
+
+    @staticmethod
+    def _main_metrics(result: OptimizationResult) -> dict[str, int | float]:
+        """Возвращает две обязательные метрики ТЗ для окна подтверждения."""
+        return {
+            "used_engineers_count": result.used_engineers_count,
+            "total_distance_km": round(result.total_distance, 3),
+        }
+
+    def replan_current(
+        self,
+        event: dict[str, Any],
+    ) -> tuple[JsonScenario, OptimizationResult, dict[str, Any]]:
+        """Применяет оперативное событие и перестраивает оставшийся план."""
+        scenario = self.current_dataset()
+        reference_routes = (
+            {
+                engineer_id: tuple(stop.task_id for stop in route.stops)
+                for engineer_id, route in self._result.routes.items()
+            }
+            if self._result is not None
+            else None
+        )
+        initial_routes = (
+            dict(reference_routes) if reference_routes is not None else None
+        )
+        event_type = event["event_type"]
+        details: dict[str, Any] = {"event_type": event_type}
+
+        if event_type == "ENGINEER_UNAVAILABLE":
+            engineer_id = event["engineer_id"]
+            if engineer_id not in {engineer.id for engineer in scenario.engineers}:
+                raise ValueError(f"Инженер {engineer_id!r} не найден")
+            self._unavailable_engineer_ids.add(engineer_id)
+            # Начатая работа больше не может оставаться жёстко закреплённой за
+            # недоступным исполнителем. Она возвращается в очередь; COMPLETED
+            # и CANCELLED сохраняются как история.
+            tasks = tuple(
+                replace(task, status=TaskStatus.NOT_SENT, current_engineer_id=None)
+                if task.current_engineer_id == engineer_id
+                and task.status in {
+                    TaskStatus.ASSIGNED,
+                    TaskStatus.EN_ROUTE,
+                    TaskStatus.IN_PROGRESS,
+                    TaskStatus.OVERDUE,
+                }
+                else task
+                for task in scenario.tasks
+            )
+            scenario = replace(scenario, tasks=tasks)
+            self._scenario = scenario
+            if initial_routes is not None:
+                initial_routes.pop(engineer_id, None)
+            details["engineer_id"] = engineer_id
+
+        elif event_type == "TASK_CANCELLED":
+            task_id = event["task_id"]
+            if not any(task.id == task_id for task in scenario.tasks):
+                raise ValueError(f"Заявка {task_id!r} не найдена")
+            scenario = replace(
+                scenario,
+                tasks=tuple(
+                    replace(task, status=TaskStatus.CANCELLED, current_engineer_id=None)
+                    if task.id == task_id
+                    else task
+                    for task in scenario.tasks
+                ),
+            )
+            self._scenario = scenario
+            details["task_id"] = task_id
+
+        elif event_type == "EMERGENCY_TASK":
+            task_data = dict(event["task"])
+            task_data["priority"] = Priority.URGENT.value
+            task_data["work_type"] = WorkType.EMERGENCY.value
+            task_data["status"] = TaskStatus.NOT_SENT.value
+            scenario = self.add_task(task_data)
+            details["task_id"] = task_data["id"]
+        else:  # pragma: no cover — serializer ограничивает справочник.
+            raise ValueError(f"Неизвестное событие {event_type!r}")
+
+        # ASSIGNED разрешено перестраивать, а EN_ROUTE/IN_PROGRESS остаются
+        # за текущими исполнителями через правила OptimizationProblem.
+        self._problem = None
+        self._result = None
+        scenario, result = self.optimize_current(
+            preserve_assigned_tasks=False,
+            ignore_task_statuses=False,
+            planning_time=event["planning_time"],
+            initial_routes_by_engineer=initial_routes,
+            reference_routes_by_engineer=reference_routes,
+        )
+        return scenario, result, details
+
+    @staticmethod
+    def _complete_operational_states(
+        scenario: JsonScenario,
+        planning_time: str | None,
+        states: tuple[EngineerOperationalState, ...],
+    ) -> tuple[EngineerOperationalState, ...]:
+        """Дополняет снимок очевидной позицией уже работающего инженера."""
+        if planning_time is None:
+            return states
+        by_engineer = {state.engineer_id: state for state in states}
+        for task in scenario.tasks:
+            if (
+                task.status == TaskStatus.IN_PROGRESS
+                and task.current_engineer_id is not None
+                and task.current_engineer_id not in by_engineer
+            ):
+                by_engineer[task.current_engineer_id] = EngineerOperationalState(
+                    engineer_id=task.current_engineer_id,
+                    current_location_id=task.location_id,
+                )
+        return tuple(by_engineer.values())
+
+    def add_task(self, data: dict[str, Any]) -> JsonScenario:
+        """Добавляет валидированную заявку в текущий in-memory dataset."""
+        scenario = self.current_dataset()
+        task_id = data["id"].strip()
+        if any(task.id == task_id for task in scenario.tasks):
+            raise ValueError(f"Заявка {task_id!r} уже существует")
+        location_id = f"task:{task_id}"
+        norm = WORK_NORMS[WorkType(data["work_type"])]
+        task = Task(
+            id=task_id,
+            location_id=location_id,
+            required_skills=frozenset({norm.required_skill}),
+            duration_minutes=norm.duration_minutes,
+            window_start=data["window_start"],
+            window_end=data["window_end"],
+            priority=Priority(data["priority"]),
+            status=TaskStatus(data["status"]),
+            required_equipment=frozenset(data.get("required_equipment", ())),
+            required_vehicle_type=(
+                VehicleType(data["required_vehicle_type"])
+                if data.get("required_vehicle_type")
+                else None
+            ),
+            latitude=data["latitude"],
+            longitude=data["longitude"],
+            address=data.get("address", "").strip() or None,
+        )
+        coordinates = dict(scenario.location_coordinates)
+        new_coordinates = (task.latitude, task.longitude)
+        if location_id in coordinates and coordinates[location_id] != new_coordinates:
+            raise ValueError(
+                f"Локация {location_id!r} уже существует с другими координатами"
+            )
+        coordinates[location_id] = new_coordinates
+        self._scenario = replace(
+            scenario,
+            tasks=(*scenario.tasks, task),
+            location_coordinates=coordinates,
+        )
+        self._problem = None
+        self._result = None
+        self._manual_reassignment_proposals.clear()
+        self.routing_provider = None
+        return self._scenario
+
+    def geocode_address(self, address: str) -> tuple[float, float]:
+        """Находит точный адрес через локальный или публичный Nominatim."""
+        if self._geocoder is None:
+            cache_path = Path(__file__).resolve().parents[3] / ".cache" / "nominatim_web.json"
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            self._geocoder = NominatimGeocoder(
+                cache_path=cache_path,
+                allow_street_fallback=False,
+            )
+        return self._geocoder(address)
 
     def explain_current_task(self, task_id: str) -> tuple[dict[str, Any], str]:
         """Строит decision trace и получает его объяснение от LLM."""
@@ -143,7 +560,13 @@ class OptimizationWebService:
             return normalized
         return f"{prefix} {normalized}".strip()
 
-    def _build_problem(self, scenario: JsonScenario) -> OptimizationProblem:
+    def _build_problem(
+        self,
+        scenario: JsonScenario,
+        *,
+        planning_time: str | None = None,
+        operational_states: tuple[EngineerOperationalState, ...] = (),
+    ) -> OptimizationProblem:
         """Добавляет к импортированным сущностям routing data.
 
         В обычном web-запуске используется OSRM. Тесты переключают
@@ -167,7 +590,15 @@ class OptimizationWebService:
         vehicle_types = tuple(
             dict.fromkeys(engineer.vehicle_type for engineer in scenario.engineers)
         )
-        return scenario.to_problem(provider, vehicle_types=vehicle_types)
+        return scenario.to_problem(
+            provider,
+            vehicle_types=vehicle_types,
+            preserve_assigned_tasks=self._preserve_assigned_tasks,
+            ignore_task_statuses=self._ignore_task_statuses,
+            planning_time=planning_time,
+            operational_states=operational_states,
+            unavailable_engineer_ids=self._unavailable_engineer_ids,
+        )
 
     def serialize_dataset(self, scenario: JsonScenario) -> dict[str, Any]:
         """Сериализует dataset для Vue-таблиц и карты."""
@@ -175,6 +606,8 @@ class OptimizationWebService:
             instance=scenario,
             context={
                 "source_name": self._source_name,
+                "preserve_assigned_tasks": self._preserve_assigned_tasks,
+                "ignore_task_statuses": self._ignore_task_statuses,
             },
         )
 
@@ -276,6 +709,7 @@ class OptimizationWebService:
             context={
                 "scenario": scenario,
                 "routing_provider": self.routing_provider,
+                "problem": self._problem,
             }
         )
         return serializer.data

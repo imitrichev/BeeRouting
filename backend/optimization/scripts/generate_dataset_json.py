@@ -26,16 +26,24 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+from backend.optimization.work_norms import WORK_NORMS, WorkType
+
 
 ROAD_MINUTES = 20
+LOCAL_NOMINATIM_ENDPOINT = "http://127.0.0.1:8080/search"
+REMOTE_NOMINATIM_ENDPOINT = "https://nominatim.openstreetmap.org/search"
+REMOTE_NOMINATIM_INTERVAL_SECONDS = 1.1
+# Запасная точка в центре Московского Кремля. Она намеренно заметна на карте:
+# диспетчер увидит проблему и сможет исправить адрес вручную.
+DEFAULT_MOSCOW_COORDINATES = (55.752023, 37.617499)
 
 # В JSON duration_min хранится только работа после прибытия. Нормативные
 # 20 минут дороги отдельно моделируются routing matrix.
 TIME_NORMS: dict[str, dict[str, int | str]] = {
-    "connection": {"name": "Подключение клиентов Базовая", "road_to_client_min": 20, "technical_work_min": 60, "documents_min": 10, "base_norm_min": 90},
-    "emergency": {"name": "Авария на ТКД", "road_to_client_min": 20, "technical_work_min": 80, "documents_min": 0, "base_norm_min": 100},
-    "equipment_order": {"name": "Дозаказ оборудования", "road_to_client_min": 20, "technical_work_min": 10, "documents_min": 10, "base_norm_min": 40},
-    "local": {"name": "Локальная заявка/ремонт у клиента", "road_to_client_min": 20, "technical_work_min": 30, "documents_min": 0, "base_norm_min": 50},
+    "connection": {"name": "Подключение клиентов Базовая", "road_to_client_min": 20, "technical_work_min": 60, "documents_min": 10, "base_norm_min": WORK_NORMS[WorkType.CONNECTION].duration_minutes + ROAD_MINUTES},
+    "emergency": {"name": "Авария на ТКД", "road_to_client_min": 20, "technical_work_min": 80, "documents_min": 0, "base_norm_min": WORK_NORMS[WorkType.EMERGENCY].duration_minutes + ROAD_MINUTES},
+    "equipment_order": {"name": "Дозаказ оборудования", "road_to_client_min": 20, "technical_work_min": 10, "documents_min": 10, "base_norm_min": WORK_NORMS[WorkType.EQUIPMENT_ORDER].duration_minutes + ROAD_MINUTES},
+    "local": {"name": "Локальная заявка/ремонт у клиента", "road_to_client_min": 20, "technical_work_min": 30, "documents_min": 0, "base_norm_min": WORK_NORMS[WorkType.LOCAL].duration_minutes + ROAD_MINUTES},
 }
 
 SKILL_NAMES_RU = {
@@ -188,25 +196,60 @@ class NominatimGeocoder:
     def __init__(
         self,
         cache_path: Path = Path("nominatim_cache.json"),
-        endpoint: str = "https://nominatim.openstreetmap.org/search",
+        endpoint: str | None = None,
         user_agent: str = "BeeRouting-dataset-import/1.0",
         email: str | None = None,
-        min_interval_seconds: float = 1.0,
+        min_interval_seconds: float | None = None,
+        local_probe_timeout_seconds: float = 2.0,
+        refresh_cache: bool = False,
+        allow_street_fallback: bool = True,
     ) -> None:
         self.cache_path = cache_path
-        self.endpoint = endpoint
+        self.endpoint, self.is_local = self._select_endpoint(
+            endpoint, local_probe_timeout_seconds
+        )
         self.user_agent = user_agent
         self.email = email
-        self.min_interval_seconds = min_interval_seconds
+        self.min_interval_seconds = (
+            min_interval_seconds
+            if min_interval_seconds is not None
+            else 0.0 if self.is_local else REMOTE_NOMINATIM_INTERVAL_SECONDS
+        )
         self._last_request_at = 0.0
+        self.allow_street_fallback = allow_street_fallback
+        self.warnings: list[str] = []
         try:
-            loaded = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
+            loaded = (
+                json.loads(cache_path.read_text(encoding="utf-8"))
+                if cache_path.exists() and not refresh_cache
+                else {}
+            )
             self._cache: dict[str, tuple[float, float]] = {
                 str(key): (float(value[0]), float(value[1]))
                 for key, value in loaded.items()
             }
         except (OSError, ValueError, TypeError, KeyError, IndexError):
             self._cache = {}
+
+    @staticmethod
+    def _select_endpoint(
+        endpoint: str | None,
+        timeout_seconds: float,
+    ) -> tuple[str, bool]:
+        """Выбирает локальный Nominatim, если его HTTP endpoint отвечает."""
+        if endpoint is not None:
+            return endpoint, endpoint.startswith(("http://127.0.0.1:8080", "http://localhost:8080"))
+        probe = Request(
+            f"{LOCAL_NOMINATIM_ENDPOINT}?{urlencode({'q': 'Москва', 'format': 'jsonv2', 'limit': '1'})}",
+            headers={"User-Agent": "BeeRouting-dataset-import/1.0"},
+        )
+        try:
+            with urlopen(probe, timeout=timeout_seconds) as response:  # noqa: S310: локальный сервис проекта
+                if 200 <= response.status < 300:
+                    return LOCAL_NOMINATIM_ENDPOINT, True
+        except (HTTPError, URLError, TimeoutError, OSError):
+            pass
+        return REMOTE_NOMINATIM_ENDPOINT, False
 
     def __call__(self, address: str) -> tuple[float, float]:
         """Возвращает координаты дома или сообщает, что Nominatim его не нашёл."""
@@ -221,7 +264,8 @@ class NominatimGeocoder:
         # только как второй поиск после полного отсутствия результата.
         if fallback_address != address:
             query_addresses.extend(self._query_variants(fallback_address))
-        for query_index, query_address in enumerate(dict.fromkeys(query_addresses)):
+        house_variants = tuple(dict.fromkeys(query_addresses))
+        for query_index, query_address in enumerate(house_variants):
             # Старые версии генератора могли сохранить координаты под
             # заменённой формой «к». Используем её только после того, как
             # исходная форма не дала результата.
@@ -231,62 +275,125 @@ class NominatimGeocoder:
                 and fallback_key in self._cache
             ):
                 return self._cache[fallback_key]
-            wait_seconds = self.min_interval_seconds - (time.monotonic() - self._last_request_at)
-            if wait_seconds > 0:
-                time.sleep(wait_seconds)
-            query = {
-                "q": query_address,
-                "format": "jsonv2",
-                "limit": "1",
-                "addressdetails": "0",
-            }
-            if self.email:
-                query["email"] = self.email
-            request = Request(
-                f"{self.endpoint}?{urlencode(query)}",
-                headers={"User-Agent": self.user_agent, "Accept-Language": "ru"},
-            )
-            self._last_request_at = time.monotonic()
-            try:
-                with urlopen(request, timeout=30) as response:  # noqa: S310: endpoint задаётся конфигурацией
-                    results = json.loads(response.read().decode("utf-8"))
-            except HTTPError as exc:
-                if exc.code == 429:
-                    # Публичный Nominatim временно ограничивает частоту
-                    # запросов. Уважаем Retry-After; без него ждём минуту и
-                    # повторяем тот же вариант адреса один раз.
-                    retry_after = exc.headers.get("Retry-After")
-                    try:
-                        wait_seconds = float(retry_after) if retry_after else 60.0
-                    except (TypeError, ValueError):
-                        wait_seconds = 60.0
-                    time.sleep(max(wait_seconds, 60.0))
-                    self._last_request_at = 0.0
-                    try:
-                        with urlopen(request, timeout=30) as response:  # noqa: S310: endpoint задаётся конфигурацией
-                            results = json.loads(response.read().decode("utf-8"))
-                    except HTTPError as retry_exc:
-                        raise ValueError(
-                            f"Nominatim вернул HTTP {retry_exc.code} для адреса {address!r} после повторной попытки"
-                        ) from retry_exc
-                    except URLError as retry_exc:
-                        raise ValueError(
-                            f"Не удалось обратиться к Nominatim для адреса {address!r} после повторной попытки"
-                        ) from retry_exc
-                else:
-                    raise ValueError(f"Nominatim вернул HTTP {exc.code} для адреса {address!r}") from exc
-            except URLError as exc:
-                raise ValueError(f"Не удалось обратиться к Nominatim для адреса {address!r}") from exc
+            results = self._request(query_address, address)
+            if not results:
+                continue
+            if not self._is_precise_result(results[0]):
+                continue
+            coordinates = (float(results[0]["lat"]), float(results[0]["lon"]))
+            self._cache[key] = coordinates
+            self._save_cache()
+            return coordinates
+        # Последняя осмысленная попытка — найти улицу без номера дома. Это
+        # даёт приблизительную точку, но лучше координат произвольного района.
+        for street_query in (
+            self._street_query_variants(address) if self.allow_street_fallback else ()
+        ):
+            results = self._request(street_query, address)
             if not results:
                 continue
             coordinates = (float(results[0]["lat"]), float(results[0]["lon"]))
             self._cache[key] = coordinates
-            self.cache_path.write_text(
-                json.dumps(self._cache, ensure_ascii=False, indent=2) + "\n",
-                encoding="utf-8",
+            self._save_cache()
+            self.warnings.append(
+                f"Точный дом не найден: {address!r}; использованы координаты улицы по запросу {street_query!r}."
             )
             return coordinates
         raise ValueError(f"Nominatim не нашёл адрес дома: {address!r}")
+
+    def _request(self, query_address: str, original_address: str) -> list[dict[str, Any]]:
+        """Выполняет один запрос, соблюдая паузу только удалённого сервиса."""
+        wait_seconds = self.min_interval_seconds - (time.monotonic() - self._last_request_at)
+        if wait_seconds > 0:
+            time.sleep(wait_seconds)
+        query: dict[str, str] = {
+            "q": query_address,
+            "format": "jsonv2",
+            "limit": "1",
+            "addressdetails": "0",
+        }
+        if self.email:
+            query["email"] = self.email
+        request = Request(
+            f"{self.endpoint}?{urlencode(query)}",
+            headers={"User-Agent": self.user_agent, "Accept-Language": "ru"},
+        )
+        self._last_request_at = time.monotonic()
+        try:
+            with urlopen(request, timeout=30) as response:  # noqa: S310: endpoint задаётся конфигурацией
+                payload = json.loads(response.read().decode("utf-8"))
+        except HTTPError as exc:
+            raise ValueError(
+                f"Nominatim вернул HTTP {exc.code} для адреса {original_address!r}"
+            ) from exc
+        except (URLError, TimeoutError, OSError) as exc:
+            raise ValueError(
+                f"Не удалось обратиться к Nominatim для адреса {original_address!r}"
+            ) from exc
+        return payload if isinstance(payload, list) else []
+
+    def _save_cache(self) -> None:
+        """Атомарность здесь не требуется: генератор работает одним процессом."""
+        self.cache_path.write_text(
+            json.dumps(self._cache, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+    @staticmethod
+    def _is_precise_result(result: Mapping[str, Any]) -> bool:
+        """Отличает объект или дом от результата уровня улицы/района."""
+        if result.get("category") in {"highway", "boundary"}:
+            return False
+        return result.get("addresstype") not in {
+            "road",
+            "city",
+            "town",
+            "village",
+            "suburb",
+            "borough",
+            "quarter",
+            "neighbourhood",
+            "administrative",
+        }
+
+    @staticmethod
+    def _street_query_variants(address: str) -> tuple[str, ...]:
+        """Удаляет номер дома и возвращает запросы уровня улицы."""
+        normalized = _normalise_address(address)
+        street = re.split(r",\s*(?:д\.?|дом)\s*|\s+(?:д\.?|дом)\s*", normalized, maxsplit=1)[0]
+        street = street.strip(" ,")
+        if not street:
+            return ()
+        canonical = re.sub(r"\bпр-кт\.?\s*", "проспект ", street)
+        canonical = re.sub(r"\bпр-зд\.?\s*", "проезд ", canonical)
+        canonical = re.sub(
+            r"\b([а-яё0-9-]+)\s+ул\.?(?=\s|,|$)",
+            r"улица \1",
+            canonical,
+            flags=re.IGNORECASE,
+        )
+        canonical = re.sub(r"\bул(?:\.|\s)+", "улица ", canonical)
+        canonical = re.sub(r"\bпроезд\.?\s*", "проезд ", canonical)
+        canonical = re.sub(r"\bг(?:\.|\s)+", "город ", canonical)
+        canonical = re.sub(r"\bобл(?:\.|\s)+", "область ", canonical)
+        canonical = re.sub(r"^мо\s*,\s*", "Московская область, ", canonical)
+        canonical = re.sub(r"\s+", " ", canonical).strip(" ,")
+        variants = [canonical]
+        city_street_match = re.search(
+            r"\bгород\s+([а-яё-]+).*?\b(улица|проезд|проспект)\s+([^,]+)$",
+            canonical,
+            flags=re.IGNORECASE,
+        )
+        if city_street_match:
+            city, street_type, street_name = city_street_match.groups()
+            variants.append(f"{city}, {street_type} {street_name}")
+        if not re.search(
+            r"\b(?:москва|московская область|область московская)\b",
+            canonical,
+            flags=re.IGNORECASE,
+        ):
+            variants.append(f"Московская область, {canonical}")
+        return tuple(dict.fromkeys(variants))
 
     @staticmethod
     def _query_variants(address: str) -> tuple[str, ...]:
@@ -300,7 +407,7 @@ class NominatimGeocoder:
         normalized = _normalise_address(address)
         variants: list[str] = [normalized]
         without_city = re.sub(
-            r"^(?:г\.\s*|город\s+)москва\s*,?\s*",
+            r"^(?:(?:г\.?|город)\s*)+москва\s*,?\s*",
             "",
             normalized,
         )
@@ -359,6 +466,7 @@ class NominatimGeocoder:
 def _resolve_coordinates(
     address: str,
     geocoder: Callable[[str], tuple[float, float]],
+    subject: str,
 ) -> tuple[float, float]:
     """Возвращает координаты через кэш Nominatim или новый запрос.
 
@@ -366,7 +474,20 @@ def _resolve_coordinates(
     Передаём ему исходный адрес: ``NominatimGeocoder`` нормализует его перед
     формированием запроса, а тестовый geocoder может проверить этот контракт.
     """
-    return geocoder(address)
+    try:
+        return geocoder(address)
+    except ValueError as exc:
+        message = (
+            f"Адрес не найден — проверьте и исправьте вручную ({subject}): "
+            f"{address!r}. Установлены координаты Кремля "
+            f"{DEFAULT_MOSCOW_COORDINATES[0]}, {DEFAULT_MOSCOW_COORDINATES[1]}. "
+            f"Причина: {exc}"
+        )
+        print(f"ОШИБКА ГЕОКОДИРОВАНИЯ: {message}")
+        warnings = getattr(geocoder, "warnings", None)
+        if isinstance(warnings, list):
+            warnings.append(message)
+        return DEFAULT_MOSCOW_COORDINATES
 
 
 def _office_address(rows: Iterable[Mapping[str, str]]) -> str:
@@ -427,7 +548,9 @@ def _engineers_from_csv(
         # Координаты не читаются из engineers.csv. Даже если один и тот же
         # офис встречается у нескольких инженеров, его точка определяется
         # через общий Nominatim-кэш.
-        start_lat, start_lon = _resolve_coordinates(start_address, geocoder)
+        start_lat, start_lon = _resolve_coordinates(
+            start_address, geocoder, f"офис/точка старта инженера {name}"
+        )
         raw_skills = re.split(r"[,|;/]+", _first_value(row, "skills", "Навыки", "Квалификации"))
         raw_vehicle = _first_value(row, "vehicle_type", "Транспорт", "Тип транспорта").lower()
         skills = [skill.strip() for skill in raw_skills if skill.strip()]
@@ -478,7 +601,9 @@ def generate_dataset(
 
     geocode = geocoder or NominatimGeocoder()
     office = office_address or _office_address(all_synthetic_rows)
-    office_lat, office_lon = _resolve_coordinates(office, geocode)
+    office_lat, office_lon = _resolve_coordinates(
+        office, geocode, f"офис района {synthetic_path.stem}"
+    )
     office_point = {"lat": office_lat, "lon": office_lon, "address": office}
     engineers = _engineers_from_csv(engineers_path, geocode)
 
@@ -490,7 +615,9 @@ def generate_dataset(
         norm = TIME_NORMS[kind]
         skill, skill_ru = _skill_for_kind(kind)
         address = synthetic["Адрес"].strip()
-        latitude, longitude = _resolve_coordinates(address, geocode)
+        latitude, longitude = _resolve_coordinates(
+            address, geocode, f"заявка {request_id}"
+        )
         jobs.append(
             {
                 "job_id": f"{territory_code}-J{request_id}",
@@ -530,6 +657,7 @@ def generate_dataset(
         "engineers": engineers,
         "jobs": jobs,
         "time_norms": list(TIME_NORMS.values()),
+        "geocoding_warnings": list(getattr(geocode, "warnings", ())),
     }
     output_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return result
@@ -574,16 +702,34 @@ def main() -> None:
     parser.add_argument("--engineers", type=Path, default=Path("engineers.csv"))
     parser.add_argument("--nominatim-cache", type=Path, default=Path("nominatim_cache.json"))
     parser.add_argument("--nominatim-email", default=None)
+    parser.add_argument(
+        "--refresh-geocoding",
+        action="store_true",
+        help="Не читать прежний кэш и заново получить координаты всех адресов.",
+    )
     parser.add_argument("--office-address", default=None)
     parser.add_argument("--output", type=Path, default=Path("Югоцентр.json"))
     parser.add_argument("--compare-json", type=Path, default=Path("yugo_center.json"))
     args = parser.parse_args()
     print(f"Источник инженеров: {args.engineers}")
-    geocoder = NominatimGeocoder(cache_path=args.nominatim_cache, email=args.nominatim_email)
+    geocoder = NominatimGeocoder(
+        cache_path=args.nominatim_cache,
+        email=args.nominatim_email,
+        refresh_cache=args.refresh_geocoding,
+    )
     result = generate_dataset(args.synthetic, args.output, args.control, args.engineers, geocoder, args.office_address)
     print(f"Создан {args.output}: {len(result['engineers'])} инженеров, {len(result['jobs'])} заявок")
     print("Источники: синтетические данные + engineers.csv" + (" + контрольное распределение" if args.control or _find_control_path(args.control, args.synthetic) else ""))
-    print("Координаты: nominatim_cache.json, отсутствующие адреса — Nominatim; квартиры удаляются до поиска")
+    print(
+        f"Геокодер: {'локальный Nominatim без задержки' if geocoder.is_local else 'удалённый Nominatim с паузой 1,1 с'} "
+        f"({geocoder.endpoint})"
+    )
+    if geocoder.warnings:
+        print(f"Предупреждения геокодирования: {len(geocoder.warnings)}")
+        for warning in geocoder.warnings:
+            print(f"  - {warning}")
+    else:
+        print("Ошибок и приблизительных адресов геокодирования: нет")
     print("Нормативы после прибытия: Подключение 70, авария 80, дозаказ 20, локальная заявка 30 минут")
     if args.compare_json.exists():
         report = compare_with_json(result, args.compare_json)
