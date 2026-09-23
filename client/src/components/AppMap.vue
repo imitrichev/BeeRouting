@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import BasicCard from '@/templates/BasicCard.vue'
-import { nextTick, ref, watch } from 'vue'
-import { type Map as MapLibreMap, Map, NavigationControl } from 'maplibre-gl'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { Map, Marker, NavigationControl, Popup } from 'maplibre-gl'
+import 'maplibre-gl/dist/maplibre-gl.css'
+import { useCurrentStateStore } from '@/stores/state.ts'
 
 interface IProps {
   loading: boolean
@@ -9,11 +11,18 @@ interface IProps {
 
 const props = defineProps<IProps>()
 
-let map: MapLibreMap | null = null
+const stateStore = useCurrentStateStore()
+
+let map: Map | null = null
+let markers: Marker[] = []
+
 const container = ref<HTMLElement | null>(null)
+
+const tasks = computed(() => stateStore.getTasks)
 
 const renderMap = () => {
   if (!container.value) return
+
   map = new Map({
     container: container.value,
     style: {
@@ -37,21 +46,45 @@ const renderMap = () => {
     center: [37.61, 55.617],
     zoom: 10,
   })
-  map.addControl(new NavigationControl(), 'top-right')
-  map.on('load', () => {
-    map?.addSource('routes', {
-      type: 'geojson',
-      data: { type: 'FeatureCollection', features: [] },
-    })
-    map?.addLayer({
-      id: 'route-lines',
-      type: 'line',
-      source: 'routes',
-      // Цвет берётся из свойства каждой GeoJSON-линии, поэтому несколько
-      // выбранных инженеров видны одновременно и не смешиваются.
-      paint: { 'line-color': ['get', 'color'], 'line-width': 5, 'line-opacity': 0.9 },
-    })
-    map?.resize()
+
+  map.addControl(
+    new NavigationControl({
+      showZoom: true,
+      showCompass: false,
+      visualizePitch: true,
+    }),
+    'top-right',
+  )
+}
+
+const renderTasks = () => {
+  if (!map) return
+
+  markers.forEach((marker) => marker.remove())
+  markers = []
+
+  tasks.value.forEach((task) => {
+    if (task.latitude === null || task.longitude === null) return
+
+    const popupContent = `
+      <div style="font-size: 13px; line-height: 1.4;">
+        <strong>Task ${task.id}</strong><br/>
+        <b>Skill:</b> ${task.required_skill}<br/>
+        <b>Duration:</b> ${task.duration_minutes} min<br/>
+        <b>Window:</b> ${new Date(task.window_start).toLocaleString()} — ${new Date(task.window_end).toLocaleString()}<br/>
+        <b>Priority:</b> ${task.priority}<br/>
+        ${task.required_vehicle_type ? `<b>Vehicle:</b> ${task.required_vehicle_type}<br/>` : ''}
+      </div>
+    `
+
+    const popup = new Popup({ offset: 25 }).setHTML(popupContent)
+
+    const marker = new Marker({ color: '#888888' })
+      .setLngLat([task.longitude, task.latitude])
+      .setPopup(popup)
+      .addTo(map!)
+
+    markers.push(marker)
   })
 }
 
@@ -62,9 +95,23 @@ watch(
 
     nextTick(() => {
       renderMap()
+      nextTick(() => {
+        renderTasks()
+      })
     })
   },
 )
+
+watch(tasks, () => {
+  if (map) renderTasks()
+})
+
+onBeforeUnmount(() => {
+  markers.forEach((m) => m.remove())
+  markers = []
+  map?.remove()
+  map = null
+})
 </script>
 
 <template>

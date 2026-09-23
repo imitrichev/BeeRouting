@@ -60,42 +60,40 @@ onMounted(() => {
     <app-header />
     <v-main class="main-container px-4 py-3">
       <v-row no-gutters class="justify-center">
-        <v-col cols="12">
-          <v-row no-gutters class="row-container">
-            <v-col cols="12">
-              <v-row no-gutters>
-                <v-col cols="12" class="mb-3">
-                  <file-upload :loading="getLoading" />
-                </v-col>
-              </v-row>
-              <v-row no-gutters>
-                <v-col cols="12" md="5" xl="6">
-                  <v-row no-gutters>
-                    <v-col
-                      cols="12"
-                      xl="6"
-                      class="mb-3 fill-height"
-                      :class="display.mdAndUp.value ? 'pr-3' : ''"
-                    >
-                      <app-tasks :loading="getLoading" :tasks="getTasks" />
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      xl="6"
-                      class="mb-3 fill-height"
-                      :class="display.mdAndUp.value ? 'pr-3' : ''"
-                    >
-                      <app-engineers :loading="getLoading" :engineers="getEngineers" />
-                    </v-col>
-                  </v-row>
-                </v-col>
-                <v-col cols="12" md="7" xl="6" class="mb-3">
-                  <app-map :loading="getLoading" />
-                </v-col>
-              </v-row>
-            </v-col>
-          </v-row>
-        </v-col>
+        <v-row no-gutters class="row-container">
+          <v-col cols="12">
+            <v-row no-gutters>
+              <v-col cols="12" class="mb-3">
+                <file-upload :loading="getLoading" />
+              </v-col>
+            </v-row>
+            <v-row no-gutters>
+              <v-col cols="12" md="5" xl="6">
+                <v-row no-gutters>
+                  <v-col
+                    cols="12"
+                    xl="6"
+                    class="mb-3 fill-height"
+                    :class="display.mdAndUp.value ? 'pr-3' : ''"
+                  >
+                    <app-tasks :loading="getLoading" :tasks="getTasks" />
+                  </v-col>
+                  <v-col
+                    cols="12"
+                    xl="6"
+                    class="mb-3 fill-height"
+                    :class="display.mdAndUp.value ? 'pr-3' : ''"
+                  >
+                    <app-engineers :loading="getLoading" :engineers="getEngineers" />
+                  </v-col>
+                </v-row>
+              </v-col>
+              <v-col cols="12" md="7" xl="6" class="mb-3">
+                <app-map :loading="getLoading" />
+              </v-col>
+            </v-row>
+          </v-col>
+        </v-row>
       </v-row>
     </v-main>
   </v-app>

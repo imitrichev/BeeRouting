@@ -19,7 +19,7 @@ export const VEHICLE_TYPE_MAP = {
 export const SKILL_TYPE_MAP = {
   LOCAL_WORKS: 'Локальные работы',
   EMERGENCY_WORKS: 'Аварийные работы',
-  CONNECTION_AND_UPSELL: 'Подключение',
+  CONNECTION_AND_UPSELL: 'Подключение и дозаказы',
 } as const
 
 export const PRIORITY_TYPE_MAP = {
