@@ -232,10 +232,8 @@ class GreedyBaselineOptimizer(RouteOptimizer):
         )
 
     def _priority_multiplier(self, task: Task) -> int:
-        """Возвращает множитель штрафа за неназначение из конфигурации."""
-        if task.priority.value == "URGENT":
-            return self.config.urgent_unassigned_multiplier
-        return self.config.normal_unassigned_multiplier
+        """Возвращает настроенный вес неназначения по типу работ."""
+        return self.config.unassigned_multiplier(task)
 
     @staticmethod
     def _schedule(

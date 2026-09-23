@@ -572,12 +572,14 @@ def _engineers_from_csv(
             raise ValueError(
                 f"Для инженера {name!r} в {path} не задан start_address"
             )
-        # Координаты не читаются из engineers.csv. Даже если один и тот же
-        # офис встречается у нескольких инженеров, его точка определяется
-        # через общий Nominatim-кэш.
-        start_lat, start_lon = _resolve_coordinates(
-            start_address, geocoder, f"офис/точка старта инженера {name}"
-        )
+        raw_start_lat = _first_value(row, "start_lat", "Широта старта")
+        raw_start_lon = _first_value(row, "start_lon", "Долгота старта")
+        if raw_start_lat and raw_start_lon:
+            start_lat, start_lon = float(raw_start_lat), float(raw_start_lon)
+        else:
+            start_lat, start_lon = _resolve_coordinates(
+                start_address, geocoder, f"офис/точка старта инженера {name}"
+            )
         raw_skills = re.split(r"[,|;/]+", _first_value(row, "skills", "Навыки", "Квалификации"))
         raw_vehicle = _first_value(row, "vehicle_type", "Транспорт", "Тип транспорта").lower()
         skills = [skill.strip() for skill in raw_skills if skill.strip()]
@@ -633,7 +635,6 @@ def generate_dataset(
     )
     office_point = {"lat": office_lat, "lon": office_lon, "address": office}
     engineers = _engineers_from_csv(engineers_path, geocode)
-
     jobs: list[dict[str, Any]] = []
     territory_code, territory_name, scenario_name = _territory_metadata(synthetic_path)
     for synthetic, control in zip(synthetic_rows, control_matches):

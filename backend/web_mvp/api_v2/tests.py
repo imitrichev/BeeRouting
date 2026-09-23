@@ -2,6 +2,7 @@
 import json
 from unittest.mock import patch
 from django.test import TestCase
+from django.core.management import call_command
 from rest_framework.test import APIClient
 from backend.web_mvp.api.services import OFFICIAL_DATASET_PATH
 from backend.optimization import CoordinateRoutingProvider
@@ -100,3 +101,82 @@ class PersistentPlanningTests(TestCase):
         }, format='json')
         self.assertEqual(response.status_code, 422)
         self.assertEqual(old, self.client.get(self.url('dataset')).data)
+
+    def test_colleague_viewsets_filters_selectors_and_persistent_rebuild(self):
+        """CRUD/filters коллеги работают поверх того же persistent scenario."""
+        engineers = self.client.get(
+            f'/api/v2/engineers/?territory={self.territory.code}'
+        )
+        self.assertEqual(engineers.status_code, 200, engineers.data)
+        self.assertEqual(len(engineers.data), 11)
+
+        skills = self.client.get('/api/v2/selectors/skills/')
+        self.assertEqual(skills.status_code, 200, skills.data)
+        self.assertEqual(len(skills.data), 3)
+
+        engineer = self.territory.engineers.order_by('id').first()
+        changed = self.client.patch(
+            f'/api/v2/engineers/{engineer.pk}/',
+            {'start_address': 'Новый адрес офиса'},
+            format='json',
+        )
+        self.assertEqual(changed.status_code, 200, changed.data)
+        self.territory.refresh_from_db()
+        restored = restore(self.territory)
+        engineer.refresh_from_db()
+        self.assertEqual(engineer.start_address, 'Новый адрес офиса')
+        self.assertIn(
+            engineer.engineer_id,
+            {item.id for item in restored._scenario.engineers},
+        )
+        self.assertIsNone(restored._result)
+
+    def test_colleague_management_command_populates_persistent_state(self):
+        """Команда ORM-импорта оставляет район готовым для planning API."""
+        call_command(
+            'load_dispatch_dataset', str(OFFICIAL_DATASET_PATH), verbosity=0
+        )
+        self.territory.refresh_from_db()
+        restored = restore(self.territory)
+        self.assertEqual(len(restored._scenario.engineers), 11)
+        self.assertEqual(len(restored._scenario.tasks), 56)
+        self.assertTrue(self.territory.response['dataset'])
+
+    def test_official_reload_clears_state_and_imports_three_regions(self):
+        """Повторная загрузка удаляет изменённый план и создаёт три района."""
+        created = self.client.post(self.url('tasks'), {
+            'id': 'TEMPORARY', 'work_type': 'LOCAL',
+            'latitude': 55.7, 'longitude': 37.6,
+            'window_start': '12:00', 'window_end': '18:00',
+        }, format='json')
+        self.assertEqual(created.status_code, 201, created.data)
+
+        response = self.client.post('/api/v2/dataset/official/', {}, format='json')
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(Territory.objects.count(), 3)
+        self.assertEqual(
+            {item['code'] for item in response.data['reloaded_territories']},
+            {'vostok', 'yugo_vostok', 'yugo_tsentr'},
+        )
+        reloaded = Territory.objects.get(code='yugo_tsentr')
+        task_ids = {item['id'] for item in reloaded.response['dataset']['tasks']}
+        self.assertNotIn('TEMPORARY', task_ids)
+        self.assertNotIn('result', reloaded.response)
+
+    def test_control_distribution_derives_time_from_in_progress_windows(self):
+        """Контрольный режим берёт позднейшее начало окна активной работы."""
+        expected = max(
+            task.window_start
+            for task in restore(self.territory)._scenario.tasks
+            if task.status.value == 'IN_PROGRESS'
+        )
+
+        response = self.client.post(
+            self.url('optimize'),
+            {'ignore_task_statuses': False},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.data['planning_options']['planning_time'], expected)

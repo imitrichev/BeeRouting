@@ -1,14 +1,13 @@
-"""API v2: запрос всегда адресован конкретной территории, состояние хранится в БД."""
+"""Request context API v2: изоляция территории и атомарное сохранение плана."""
 from contextvars import ContextVar
 from functools import wraps
 from django.db import transaction
 from rest_framework.decorators import api_view as drf_api_view
 from rest_framework.response import Response
 from backend.optimization import RoutingProviderError
-from backend.web_mvp.api.services import OFFICIAL_DATASET_PATH, OptimizationWebService
 from ..models import Territory, ReassignmentProposal, RescheduleEvent
 from ..services import restore, save, import_dataset
-from ..state import encode, decode
+from ..services.state import encode, decode
 
 _current = ContextVar('request_optimization_service')
 
@@ -71,5 +70,3 @@ def api_view(methods):
                 return Response({'error': str(exc)}, status=422)
         return drf_api_view(methods)(dispatch)
     return decorate
-
-

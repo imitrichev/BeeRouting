@@ -27,6 +27,38 @@ JSON_PATH = Path(__file__).parents[3] / "Югоцентр.json"
 CONTROL_CSV_PATH = Path(__file__).parents[3] / "Югоцентр Контрольное распределение..csv"
 
 
+def test_each_region_uses_its_own_office_as_engineer_start() -> None:
+    """Дублированные координаты инженера не подменяют офис другого района."""
+    root = Path(__file__).parents[3]
+    for filename in ("Восток.json", "Юго-восток.json", "Югоцентр.json"):
+        payload = json.loads((root / filename).read_text(encoding="utf-8"))
+        scenario = load_json_scenario_data(payload)
+        office = payload["office_start_point"]
+        expected = (office["lat"], office["lon"])
+        assert scenario.location_coordinates["office_start"] == expected
+        assert all(
+            (engineer.start_latitude, engineer.start_longitude) == expected
+            for engineer in scenario.engineers
+        )
+
+
+def test_engineers_can_start_from_different_locations_than_office() -> None:
+    """Офис и индивидуальные точки старта являются разными локациями."""
+    payload = json.loads(JSON_PATH.read_text(encoding="utf-8"))
+    payload["engineers"][0]["start_lat"] = 55.71
+    payload["engineers"][0]["start_lon"] = 37.61
+    payload["engineers"][1]["start_lat"] = 55.72
+    payload["engineers"][1]["start_lon"] = 37.62
+
+    scenario = load_json_scenario_data(payload)
+
+    first, second = scenario.engineers[:2]
+    assert scenario.location_coordinates["office_start"] == (55.6638404, 37.6138686)
+    assert scenario.location_coordinates[first.start_location_id] == (55.71, 37.61)
+    assert scenario.location_coordinates[second.start_location_id] == (55.72, 37.62)
+    assert first.start_location_id != second.start_location_id
+
+
 def test_yugo_center_json_loads_into_domain_models() -> None:
     """JSON преобразуется в инженеров, смены, заявки и координаты."""
     scenario = load_json_scenario(JSON_PATH)
@@ -35,7 +67,7 @@ def test_yugo_center_json_loads_into_domain_models() -> None:
     assert len(scenario.engineers) == 11
     assert len(scenario.availabilities) == 11
     assert len(scenario.tasks) == 56
-    assert scenario.engineers[0].start_location_id == "office_start"
+    assert scenario.engineers[0].start_location_id == "engineer_start:yugo_tsentr-E01"
     assert scenario.tasks[0].required_skills == frozenset({Skill.CONNECTION_AND_UPSELL})
     assert scenario.engineers[0].vehicle_type == VehicleType.CAR
     assert scenario.tasks[0].duration_minutes == 70
@@ -66,8 +98,9 @@ def test_imported_scenario_builds_problem_from_routing_provider() -> None:
 
     problem = scenario.to_problem(provider)
 
-    assert problem.travel_time_matrix["office_start"][scenario.tasks[0].location_id] == 1
-    assert problem.travel_distance_matrix["office_start"][scenario.tasks[0].location_id] == 1.0
+    start_id = scenario.engineers[0].start_location_id
+    assert problem.travel_time_matrix[start_id][scenario.tasks[0].location_id] == 1
+    assert problem.travel_distance_matrix[start_id][scenario.tasks[0].location_id] == 1.0
 
 
 def test_control_csv_matches_json_and_preserves_cancelled_assignments() -> None:
@@ -201,14 +234,18 @@ def test_generator_normalizes_apartment_before_geocoding(tmp_path: Path) -> None
     assert result["jobs"][0]["lat"] == 55.75581234
 
 
-def test_engineers_csv_contains_start_address_instead_of_coordinates() -> None:
-    """Справочник хранит адрес старта, а не готовые координаты."""
+def test_engineers_csv_contains_start_address_and_coordinates() -> None:
+    """Справочник хранит проверенный адрес и координаты старта инженеров."""
     source_root = Path(__file__).parents[3]
     rows = source_root.joinpath("engineers.csv").read_text(encoding="utf-8").splitlines()
     header = rows[0].split(";")
     assert "start_address" in header
-    assert "start_lat" not in header
-    assert "start_lon" not in header
+    assert "start_lat" in header
+    assert "start_lon" in header
+    lat_index = header.index("start_lat")
+    lon_index = header.index("start_lon")
+    assert all(float(row.split(";")[lat_index]) == 55.6638404 for row in rows[1:])
+    assert all(float(row.split(";")[lon_index]) == 37.6138686 for row in rows[1:])
 
 
 def test_address_normalization_does_not_truncate_moscow() -> None:

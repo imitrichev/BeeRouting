@@ -5,13 +5,13 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import api_view as drf_api_view
 from backend.optimization import EngineerOperationalState, RoutingProviderError
-from backend.web_mvp.api.services import OFFICIAL_DATASET_PATH
+from backend.web_mvp.api.services import OFFICIAL_DATASET_PATHS
 from ..models import Territory
-from ..services import import_dataset
+from ..services import import_dataset, reload_official_datasets
 from ..serializers import (OperationalStateSerializer, ReplanningEventSerializer,
     ManualReassignmentConfirmSerializer, ManualReassignmentPreviewSerializer,
     TaskCreateSerializer, GeocodeAddressSerializer)
-from .context import api_view, optimization_service
+from ..utils.request_context import api_view, optimization_service
 
 
 @drf_api_view(['GET'])
@@ -27,11 +27,21 @@ def dataset_view(request):
         return Response({'error': 'Район не загружен.'}, status=404)
     return Response({**territory.response, 'territory_code': territory.code})
 
-@drf_api_view(['GET', 'POST'])
+@drf_api_view(['POST'])
 def official_dataset_view(request):
-    """Импортирует официальный район один раз, затем открывает сохранённый план."""
-    territory = import_dataset(OFFICIAL_DATASET_PATH.read_bytes(), OFFICIAL_DATASET_PATH.name)
-    return Response({**territory.response, 'territory_code': territory.code})
+    """Полностью очищает состояние и заново загружает три официальных района."""
+    territories = reload_official_datasets(OFFICIAL_DATASET_PATHS)
+    selected = next(
+        (item for item in territories if item.code == 'yugo_tsentr'),
+        territories[0],
+    )
+    return Response({
+        **selected.response,
+        'territory_code': selected.code,
+        'reloaded_territories': [
+            {'code': item.code, 'name': item.name} for item in territories
+        ],
+    })
 
 @drf_api_view(['POST'])
 def upload_dataset_view(request):

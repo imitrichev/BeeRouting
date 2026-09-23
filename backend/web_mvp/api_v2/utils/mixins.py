@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from django.db import transaction
 
 class ACTIONS:
     LIST = 'list'
@@ -41,3 +42,34 @@ class MultiSerializerViewSet(GetActionViewSet):
             self.serializer_class = self.serializers_class.get(action)
         return super().get_serializer_class()
 
+
+class PersistentTerritoryMutationMixin:
+    """Синхронизирует CRUD коллеги с domain-снимком выбранного района.
+
+    Наследник должен изменять модель, у которой есть поле ``territory``.
+    Любое изменение входных данных инвалидирует прежний маршрут; сервис
+    пересобирает сценарий, а новый план появляется после следующего запуска
+    оптимизации.
+    """
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        self._rebuild(instance.territory)
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        self._rebuild(instance.territory)
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        territory = instance.territory
+        instance.delete()
+        self._rebuild(territory)
+
+    @staticmethod
+    def _rebuild(territory):
+        # Локальный импорт не создаёт цикл services -> serializers -> views.
+        from ..services import rebuild_after_crud
+        rebuild_after_crud(territory)

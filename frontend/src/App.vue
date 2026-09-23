@@ -36,7 +36,14 @@ async function switchTerritory(code: string): Promise<void> {
     territoryCode.value = code
     dataset.value = payload.dataset
     result.value = payload.result ?? null
-    ignoreTaskStatuses.value = payload.planning_options?.ignore_task_statuses ?? true
+    ignoreTaskStatuses.value = payload.result
+      ? (payload.planning_options?.ignore_task_statuses ?? true)
+      : true
+    planningTime.value = (
+      payload.result && !ignoreTaskStatuses.value
+        ? (payload.planning_options?.planning_time ?? '')
+        : ''
+    )
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
     reassignmentOpen.value = false
@@ -92,8 +99,8 @@ const newTask = ref({
   id: '', address: '', latitude: null as number | null,
   longitude: null as number | null, work_type: 'LOCAL',
   window_start: '09:00', window_end: '11:00',
-  priority: 'NORMAL', required_vehicle_type: null as string | null,
-  required_equipment: '', status: 'NOT_SENT',
+  required_vehicle_type: null as string | null,
+  required_equipment: '',
 })
 
 const WORK_NORMS: Record<string, { title: string; duration: number }> = {
@@ -107,7 +114,19 @@ let map: MapLibreMap | null = null
 let markers: Marker[] = []
 let draftLocationMarker: Marker | null = null
 
-const selectedWorkNorm = computed(() => WORK_NORMS[newTask.value.work_type])
+const selectedPriorityLabel = computed(() =>
+  newTask.value.work_type === 'EMERGENCY' ? 'Срочный' : 'Обычный',
+)
+const hhmmPattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/
+const taskWindowValid = computed(() => {
+  if (!hhmmPattern.test(newTask.value.window_start) || !hhmmPattern.test(newTask.value.window_end)) {
+    return false
+  }
+  return newTask.value.window_end > newTask.value.window_start
+})
+const hhmmRules = [
+  (value: string) => hhmmPattern.test(value) || 'Введите время в формате ЧЧ:ММ, например 09:00',
+]
 
 const selectedRoute = computed<EngineerRoute | null>(() => {
   if (!result.value || !selectedEngineerId.value) return null
@@ -174,10 +193,12 @@ function createDepotMarkerElement(): HTMLElement {
   element.className = 'depot-marker'
   element.setAttribute('aria-label', 'Депо')
   element.innerHTML = `
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5v-9Z" />
-      <path class="depot-door" d="M9 21v-6h6v6" />
-    </svg>
+    <span class="depot-marker-shape">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5v-9Z" />
+        <path class="depot-door" d="M9 21v-6h6v6" />
+      </svg>
+    </span>
   `
   return element
 }
@@ -188,6 +209,13 @@ const assignedTaskIds = computed(() => {
     route.stops.forEach((stop) => ids.add(stop.task_id))
   })
   return ids
+})
+
+const canLoadControlDistribution = computed(() => Boolean(dataset.value) && !result.value)
+const canDistributeTasks = computed(() => {
+  if (!dataset.value) return false
+  if (!result.value) return dataset.value.tasks.length > 0
+  return result.value.metrics.unassigned_task_count > 0
 })
 
 const assignmentByTask = computed(() => {
@@ -270,12 +298,14 @@ async function loadOfficialDataset() {
   loading.value = true
   errorMessage.value = ''
   try {
-    const response = await apiFetch('/api/dataset/official/')
+    const response = await apiFetch('/api/dataset/official/', { method: 'POST' })
     const payload = await readResponse(response)
     dataset.value = payload.dataset
     if (payload.territory_code) territoryCode.value = payload.territory_code
     await refreshTerritories()
     result.value = payload.result ?? null
+    ignoreTaskStatuses.value = true
+    planningTime.value = ''
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
     await refreshMap()
@@ -307,6 +337,14 @@ async function uploadDataset() {
     if (payload.territory_code) territoryCode.value = payload.territory_code
     await refreshTerritories()
     result.value = payload.result ?? null
+    ignoreTaskStatuses.value = payload.result
+      ? (payload.planning_options?.ignore_task_statuses ?? true)
+      : true
+    planningTime.value = (
+      payload.result && !ignoreTaskStatuses.value
+        ? (payload.planning_options?.planning_time ?? '')
+        : ''
+    )
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
     await refreshMap()
@@ -317,16 +355,26 @@ async function uploadDataset() {
   }
 }
 
-async function optimize() {
+function controlPlanningTime(): string {
+  const starts = dataset.value?.tasks
+    .filter((task) => task.status === 'IN_PROGRESS')
+    .map((task) => task.window_start)
+    .sort() ?? []
+  return starts.length ? starts[starts.length - 1] : ''
+}
+
+async function optimize(ignoreStatuses: boolean) {
   optimizing.value = true
   errorMessage.value = ''
+  ignoreTaskStatuses.value = ignoreStatuses
+  planningTime.value = ignoreStatuses ? '' : controlPlanningTime()
   try {
     const response = await apiFetch('/api/optimize/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ignore_task_statuses: ignoreTaskStatuses.value,
-        planning_time: !ignoreTaskStatuses.value && planningTime.value
+        ignore_task_statuses: ignoreStatuses,
+        planning_time: !ignoreStatuses && planningTime.value
           ? planningTime.value
           : null,
       }),
@@ -361,9 +409,7 @@ async function createTask(): Promise<void> {
         work_type: newTask.value.work_type,
         window_start: newTask.value.window_start,
         window_end: newTask.value.window_end,
-        priority: newTask.value.priority,
         required_vehicle_type: newTask.value.required_vehicle_type,
-        status: newTask.value.status,
         required_equipment: newTask.value.required_equipment
           .split(',').map((item) => item.trim()).filter(Boolean),
       }),
@@ -377,8 +423,8 @@ async function createTask(): Promise<void> {
     newTask.value = {
       id: '', address: '', latitude: null, longitude: null,
       work_type: 'LOCAL',
-      window_start: '09:00', window_end: '11:00', priority: 'NORMAL',
-      required_vehicle_type: null, required_equipment: '', status: 'NOT_SENT',
+      window_start: '09:00', window_end: '11:00',
+      required_vehicle_type: null, required_equipment: '',
     }
     taskAddressError.value = ''
     draftLocationMarker?.remove()
@@ -650,24 +696,23 @@ function drawMap() {
   const source = map.getSource('routes') as maplibregl.GeoJSONSource | undefined
   if (source) source.setData(sourceData as never)
 
-  // Общая начальная точка всех маршрутов обозначается домиком.
-  const depotEngineer = dataset.value?.engineers.find(
-    (engineer) => engineer.start_longitude !== null && engineer.start_latitude !== null,
-  )
+  // Домик обозначает офис района. Старт конкретного инженера может находиться
+  // в другой точке и используется линией его маршрута, но не маркером офиса.
+  const office = dataset.value
   if (
-    depotEngineer &&
-    depotEngineer.start_longitude !== null &&
-    depotEngineer.start_latitude !== null
+    office &&
+    office.office_longitude !== null &&
+    office.office_latitude !== null
   ) {
     const depotMarker = new maplibregl.Marker({
       element: createDepotMarkerElement(),
       anchor: 'bottom',
     })
-      .setLngLat([depotEngineer.start_longitude, depotEngineer.start_latitude])
+      .setLngLat([office.office_longitude, office.office_latitude])
       .setPopup(
         new maplibregl.Popup({ offset: 16 }).setHTML(
           '<strong>Офис</strong><br>' +
-          escapeHtml(depotEngineer.start_address ?? 'Адрес не указан'),
+          escapeHtml(office.office_address ?? 'Адрес не указан'),
         ),
       )
       .addTo(map as MapLibreMap)
@@ -838,7 +883,7 @@ onBeforeUnmount(() => {
         <v-card class="mb-4" variant="outlined">
           <v-card-text class="d-flex flex-wrap align-center ga-3">
             <v-btn color="primary" :loading="loading" @click="loadOfficialDataset">
-              Открыть официальный dataset
+              Перезагрузить официальный датасет
             </v-btn>
             <v-file-input
               accept="application/json,.json"
@@ -851,35 +896,36 @@ onBeforeUnmount(() => {
             <v-btn variant="tonal" :disabled="!selectedFile" :loading="loading" @click="uploadDataset">
               Загрузить JSON
             </v-btn>
-            <v-btn color="success" :loading="optimizing" :disabled="!dataset" @click="optimize">
-              Запустить OR-Tools
+            <v-btn
+              color="secondary"
+              variant="tonal"
+              :loading="optimizing"
+              :disabled="!canLoadControlDistribution"
+              @click="optimize(false)"
+            >
+              Контрольное распределение
+            </v-btn>
+            <v-btn
+              color="success"
+              :loading="optimizing"
+              :disabled="!canDistributeTasks"
+              @click="optimize(true)"
+            >
+              Распределить заявки
             </v-btn>
             <v-btn color="primary" variant="tonal" :disabled="!dataset" @click="createTaskOpen = true">
               Создать заявку
             </v-btn>
             <v-btn color="warning" variant="tonal" :disabled="!dataset" @click="replanOpen = true">
-              Перепланировать
+              Сценарии перепланирования...
             </v-btn>
-            <v-switch
-              v-model="ignoreTaskStatuses"
-              label="Игнорировать статусы и перераспределить все заявки"
-              color="primary"
-              density="compact"
-              hide-details
-            />
-            <v-text-field
-              v-if="!ignoreTaskStatuses"
-              v-model="planningTime"
-              type="time"
-              label="Текущее время"
-              density="compact"
-              hide-details
-              style="max-width: 160px"
-            />
             <span v-if="dataset" class="text-medium-emphasis">
               {{ dataset.source_name }} · {{ dataset.engineers.length }} инженеров ·
               {{ ignoreTaskStatuses ? dataset.tasks.length : plannableTaskCount }}
               в плане из {{ dataset.tasks.length }} заявок
+              <template v-if="result && !ignoreTaskStatuses && planningTime">
+                · Контрольное распределение на время {{ planningTime }}
+              </template>
             </span>
           </v-card-text>
         </v-card>
@@ -897,7 +943,9 @@ onBeforeUnmount(() => {
                     :items="Object.entries(WORK_NORMS).map(([value, norm]) => ({ title: norm.title, value }))"
                   />
                 </v-col>
-                <v-col cols="12" sm="6"><v-text-field :model-value="selectedWorkNorm.duration" readonly label="Норматив выполнения, минут" /></v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field :model-value="selectedPriorityLabel" readonly label="Приоритет (определяется типом работы)" />
+                </v-col>
                 <v-col cols="12">
                   <v-btn-toggle :model-value="taskLocationMode" mandatory color="primary" @update:model-value="changeTaskLocationMode">
                     <v-btn value="address">Ввести адрес</v-btn>
@@ -927,13 +975,15 @@ onBeforeUnmount(() => {
                 </v-col>
                 <v-col cols="12" sm="6"><v-text-field :model-value="newTask.latitude ?? ''" readonly label="Широта (определяется автоматически)" /></v-col>
                 <v-col cols="12" sm="6"><v-text-field :model-value="newTask.longitude ?? ''" readonly label="Долгота (определяется автоматически)" /></v-col>
-                <v-col cols="12" sm="6"><v-text-field v-model="newTask.window_start" type="time" label="Начало окна, HH:MM (24 часа) *" /></v-col>
-                <v-col cols="12" sm="6"><v-text-field v-model="newTask.window_end" type="time" label="Конец окна, HH:MM (24 часа) *" /></v-col>
-                <v-col cols="12" sm="6"><v-select v-model="newTask.priority" label="Приоритет *" :items="['NORMAL', 'URGENT']" /></v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field v-model="newTask.window_start" :rules="hhmmRules" type="text" inputmode="numeric" maxlength="5" placeholder="09:00" label="Начало окна, ЧЧ:ММ *" hint="24-часовой формат, например 09:00" persistent-hint />
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field v-model="newTask.window_end" :rules="hhmmRules" type="text" inputmode="numeric" maxlength="5" placeholder="18:00" label="Конец окна, ЧЧ:ММ *" hint="24-часовой формат, например 18:00" persistent-hint />
+                </v-col>
                 <v-col cols="12" sm="6">
                   <v-select v-model="newTask.required_vehicle_type" clearable label="Необходимый транспорт" :items="['CAR', 'WALK', 'BICYCLE', 'PUBLIC_TRANSPORT']" />
                 </v-col>
-                <v-col cols="12" sm="6"><v-select v-model="newTask.status" label="Статус" :items="['NOT_SENT', 'OVERDUE']" /></v-col>
                 <v-col cols="12" sm="6"><v-text-field v-model="newTask.required_equipment" label="Оборудование через запятую" /></v-col>
               </v-row>
               <div class="text-caption text-medium-emphasis">Поля со звёздочкой обязательны. Новая заявка сохраняется в текущем локальном dataset.</div>
@@ -941,7 +991,7 @@ onBeforeUnmount(() => {
             <v-card-actions>
               <v-spacer />
               <v-btn variant="text" @click="createTaskOpen = false">Отмена</v-btn>
-              <v-btn color="primary" :loading="creatingTask" :disabled="!newTask.id || newTask.latitude === null || newTask.longitude === null" @click="createTask">Создать</v-btn>
+              <v-btn color="primary" :loading="creatingTask" :disabled="!newTask.id || newTask.latitude === null || newTask.longitude === null || !taskWindowValid" @click="createTask">Создать</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>

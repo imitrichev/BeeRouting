@@ -37,6 +37,10 @@ from backend.web_mvp.api_v2.serializers.optimization import OptimizationResultSe
 
 
 OFFICIAL_DATASET_PATH = Path(__file__).resolve().parents[3] / "Югоцентр.json"
+OFFICIAL_DATASET_PATHS = tuple(
+    Path(__file__).resolve().parents[3] / filename
+    for filename in ("Восток.json", "Юго-восток.json", "Югоцентр.json")
+)
 
 
 class OptimizationWebService:
@@ -123,6 +127,16 @@ class OptimizationWebService:
     ) -> tuple[JsonScenario, OptimizationResult]:
         """Строит задачу и запускает OR-Tools для текущего dataset."""
         scenario = self.current_dataset()
+        if not ignore_task_statuses and not planning_time:
+            # Контрольный снимок относится к минимальному моменту, когда все
+            # уже выполняемые заявки могли начаться в своих окнах. Для этого
+            # достаточно взять самое позднее начало окна среди IN_PROGRESS.
+            active_window_starts = [
+                task.window_start
+                for task in scenario.tasks
+                if task.status == TaskStatus.IN_PROGRESS
+            ]
+            planning_time = max(active_window_starts, default=None)
         self._preserve_assigned_tasks = preserve_assigned_tasks
         self._ignore_task_statuses = ignore_task_statuses
         states = self._complete_operational_states(
@@ -466,6 +480,13 @@ class OptimizationWebService:
             raise ValueError(f"Заявка {task_id!r} уже существует")
         location_id = f"task:{task_id}"
         norm = WORK_NORMS[WorkType(data["work_type"])]
+        # Приоритет задаётся типом работ по ТЗ: авария всегда срочная,
+        # остальные новые заявки имеют обычный приоритет.
+        priority = (
+            Priority.URGENT
+            if WorkType(data["work_type"]) == WorkType.EMERGENCY
+            else Priority.NORMAL
+        )
         task = Task(
             id=task_id,
             location_id=location_id,
@@ -473,8 +494,10 @@ class OptimizationWebService:
             duration_minutes=norm.duration_minutes,
             window_start=data["window_start"],
             window_end=data["window_end"],
-            priority=Priority(data["priority"]),
-            status=TaskStatus(data["status"]),
+            work_type=WorkType(data["work_type"]),
+            priority=priority,
+            # Созданная диспетчером заявка ещё никому не отправлена.
+            status=TaskStatus.NOT_SENT,
             required_equipment=frozenset(data.get("required_equipment", ())),
             required_vehicle_type=(
                 VehicleType(data["required_vehicle_type"])

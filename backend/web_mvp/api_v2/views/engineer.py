@@ -4,7 +4,9 @@ from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 
-from backend.web_mvp.api_v2.utils.mixins import ACTIONS, MultiSerializerViewSet
+from backend.web_mvp.api_v2.utils.mixins import (
+    ACTIONS, MultiSerializerViewSet, PersistentTerritoryMutationMixin,
+)
 
 from ..models import Engineer
 from ..serializers.engineer import (
@@ -32,6 +34,7 @@ class EngineerFilterSet(filters.FilterSet):
 # ---------------------------------------------------------------------------
 
 class EngineerViewSet(
+    PersistentTerritoryMutationMixin,
     ModelViewSet,
     MultiSerializerViewSet,
 ):

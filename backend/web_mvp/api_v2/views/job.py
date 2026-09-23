@@ -1,22 +1,75 @@
-"""Обработчики API v2: job."""
-from django.conf import settings
-from rest_framework import status
+"""ViewSet'ы CRUD для Job (заявка)."""
+
+from django_filters import rest_framework as filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.decorators import api_view as drf_api_view
-from backend.optimization import EngineerOperationalState, RoutingProviderError
-from backend.web_mvp.api.services import OFFICIAL_DATASET_PATH
-from ..models import Territory
-from ..services import import_dataset
-from ..serializers import (OperationalStateSerializer, ReplanningEventSerializer,
-    ManualReassignmentConfirmSerializer, ManualReassignmentPreviewSerializer,
-    TaskCreateSerializer, GeocodeAddressSerializer)
-from .context import api_view, optimization_service
+from rest_framework import status
+from rest_framework.viewsets import ModelViewSet
+
+from backend.web_mvp.api_v2.utils.mixins import (
+    ACTIONS, MultiSerializerViewSet, PersistentTerritoryMutationMixin,
+)
+
+from ..models import Job
+from ..serializers import (
+    GeocodeAddressSerializer,
+    JobCreateSerializer,
+    JobSerializer,
+    TaskCreateSerializer,
+)
+from ..utils.request_context import api_view, optimization_service
+
+
+# ---------------------------------------------------------------------------
+# Фильтры
+# ---------------------------------------------------------------------------
+
+class JobFilterSet(filters.FilterSet):
+    territory = filters.CharFilter(field_name="territory__code")
+    district = filters.CharFilter(field_name="district__name", lookup_expr="icontains")
+    skill_required = filters.CharFilter(field_name="skill_required__code")
+    priority = filters.CharFilter(field_name="priority__code")
+    reference_status = filters.CharFilter(field_name="reference_status")
+
+    class Meta:
+        model = Job
+        fields = [
+            "territory", "district", "skill_required",
+            "priority", "reference_status", "gigabit",
+        ]
+
+
+# ---------------------------------------------------------------------------
+# Job (заявка)
+# ---------------------------------------------------------------------------
+
+class JobViewSet(
+    PersistentTerritoryMutationMixin,
+    ModelViewSet,
+    MultiSerializerViewSet,
+):
+    """CRUD по заявкам с раздельными сериалайзерами на чтение/запись."""
+
+    queryset = Job.objects.select_related(
+        "territory", "district", "skill_required", "priority",
+        "required_vehicle", "time_norm", "reference_engineer",
+    ).all()
+    serializer_class = JobSerializer
+    serializers_class = {
+        ACTIONS.LIST: JobSerializer,
+        ACTIONS.RETRIEVE: JobSerializer,
+        ACTIONS.POST: JobCreateSerializer,
+        ACTIONS.PUT: JobCreateSerializer,
+        ACTIONS.PATCH: JobCreateSerializer,
+    }
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = JobFilterSet
 
 
 @api_view(["POST"])
 def create_task_view(request: Request) -> Response:
-    """Создаёт новую заявку в текущем dataset локального MVP."""
+    """Создаёт заявку через domain-сервис и сохраняет её в текущем районе."""
     serializer = TaskCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:
@@ -28,9 +81,10 @@ def create_task_view(request: Request) -> Response:
         status=status.HTTP_201_CREATED,
     )
 
+
 @api_view(["POST"])
 def geocode_address_view(request: Request) -> Response:
-    """Преобразует введённый адрес в координаты без приблизительного fallback."""
+    """Преобразует введённый адрес в координаты через Nominatim."""
     serializer = GeocodeAddressSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     try:

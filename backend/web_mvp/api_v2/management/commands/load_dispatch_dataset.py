@@ -31,6 +31,7 @@ from ...models import (
     Job,
     RescheduleEvent,
 )
+from ...services import rebuild_after_crud
 
 
 def parse_time(value):
@@ -77,7 +78,13 @@ class Command(BaseCommand):
                 continue
 
             with transaction.atomic():
-                self._load(data, flush_territory=options["flush_territory"])
+                territory = self._load(
+                    data, flush_territory=options["flush_territory"]
+                )
+                # ORM-загрузка коллеги остаётся источником справочников и
+                # сущностей. После неё формируем тот же persistent snapshot,
+                # который используют optimization/replanning endpoints.
+                rebuild_after_crud(territory)
 
             self.stdout.write(self.style.SUCCESS(f"Загружено: {path}"))
 
@@ -131,6 +138,7 @@ class Command(BaseCommand):
             data, territory, skills_map, priorities_map, vehicles_map,
             time_norms_map, districts_map, engineers_map, jobs_map,
         )
+        return territory
 
     # ------------------------------------------------------------------
     # Справочники
@@ -144,6 +152,8 @@ class Command(BaseCommand):
                 "name": data["territory_name"],
                 "office_lat": office.get("lat"),
                 "office_lon": office.get("lon"),
+                "office_address": office.get("address", ""),
+                "source_payload": data,
             },
         )
         return territory
@@ -242,6 +252,8 @@ class Command(BaseCommand):
                     "shift_start": parse_time(item["shift_start"]),
                     "shift_end": parse_time(item["shift_end"]),
                     "vehicle_type": vehicle,
+                    "start_address": item.get("start_address", ""),
+                    "available_equipment": item.get("available_equipment", []),
                 },
             )
 
@@ -296,6 +308,13 @@ class Command(BaseCommand):
         if crew_name:
             reference_engineer = engineers_by_name.get(crew_name)
 
+        current_engineer = None
+        if item.get("current_engineer_id"):
+            current_engineer = Engineer.objects.filter(
+                territory=territory,
+                engineer_id=item["current_engineer_id"],
+            ).first()
+
         return {
             "territory": territory,
             "request_id": item["request_id"],
@@ -316,6 +335,9 @@ class Command(BaseCommand):
             "reference_status": item.get("reference_status", Job.STATUS_SENT),
             "reference_engineer": reference_engineer,
             "gigabit": item.get("gigabit", False),
+            "current_status": item.get("status", "NOT_SENT"),
+            "current_engineer": current_engineer,
+            "required_equipment": item.get("required_equipment", []),
         }
 
     def _load_jobs(

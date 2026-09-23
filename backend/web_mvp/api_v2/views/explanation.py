@@ -11,7 +11,7 @@ from ..services import import_dataset
 from ..serializers import (OperationalStateSerializer, ReplanningEventSerializer,
     ManualReassignmentConfirmSerializer, ManualReassignmentPreviewSerializer,
     TaskCreateSerializer, GeocodeAddressSerializer)
-from .context import api_view, optimization_service
+from ..utils.request_context import api_view, optimization_service
 
 
 @api_view(["POST"])

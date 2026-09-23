@@ -1,5 +1,5 @@
 """Синхронизация актуального domain-состояния с моделями коллеги."""
-from .models import Engineer, Job, Skill, VehicleType, Priority, District
+from ..models import Engineer, Job, Skill, VehicleType, Priority, District
 
 
 def sync_entities(territory, service):
@@ -8,10 +8,19 @@ def sync_entities(territory, service):
     for item in service._scenario.engineers:
         shift = next(a for a in service._scenario.availabilities if a.engineer_id == item.id)
         vehicle, _ = VehicleType.objects.get_or_create(code=item.vehicle_type.value, defaults={'name':item.vehicle_type.value})
+        existing = Engineer.objects.filter(
+            territory=territory, engineer_id=item.id
+        ).first()
         engineer, _ = Engineer.objects.update_or_create(territory=territory, engineer_id=item.id, defaults={
             'name':item.name, 'vehicle_type':vehicle,
             'start_lat':item.start_latitude, 'start_lon':item.start_longitude,
-            'start_address':service._scenario.office_address or '',
+            # В domain Engineer пока нет отдельного адреса старта. Поэтому
+            # повторное сохранение плана не должно затирать адрес, введённый
+            # через ORM API коллеги, общим адресом офиса scenario.
+            'start_address':(
+                existing.start_address if existing
+                else service._scenario.office_address or ''
+            ),
             'shift_start':shift.available_from, 'shift_end':shift.available_until,
             'available_equipment':sorted(item.available_equipment),
         })

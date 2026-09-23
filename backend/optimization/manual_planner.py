@@ -492,12 +492,8 @@ class ManualAssignmentPlanner(RouteOptimizer):
         )
 
     def _priority_multiplier(self, task: Task) -> int:
-        """Возвращает коэффициент штрафа за неназначение из конфигурации."""
-        return (
-            self.config.urgent_unassigned_multiplier
-            if task.priority.value == "URGENT"
-            else self.config.normal_unassigned_multiplier
-        )
+        """Возвращает настроенный вес неназначения по типу работ."""
+        return self.config.unassigned_multiplier(task)
 
 
 _CSV_STATUS = {

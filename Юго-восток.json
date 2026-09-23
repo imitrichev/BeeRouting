@@ -18,8 +18,8 @@
     {
       "engineer_id": "yugo_tsentr-E01",
       "name": "Бахарев Андрей",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -35,8 +35,8 @@
     {
       "engineer_id": "yugo_tsentr-E02",
       "name": "Брюзгин Ярослав",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -52,8 +52,8 @@
     {
       "engineer_id": "yugo_tsentr-E03",
       "name": "Выговский Сергей",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -71,8 +71,8 @@
     {
       "engineer_id": "yugo_tsentr-E04",
       "name": "Данилов Даниил",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -86,8 +86,8 @@
     {
       "engineer_id": "yugo_tsentr-E05",
       "name": "Ионов Геннадий",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -103,8 +103,8 @@
     {
       "engineer_id": "yugo_tsentr-E06",
       "name": "Исхаков Денис",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -120,8 +120,8 @@
     {
       "engineer_id": "yugo_tsentr-E07",
       "name": "Капитанчук Александр",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -137,8 +137,8 @@
     {
       "engineer_id": "yugo_tsentr-E08",
       "name": "Переладов Алексей",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -154,8 +154,8 @@
     {
       "engineer_id": "yugo_tsentr-E09",
       "name": "Прокопенко Вячеслав",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -171,8 +171,8 @@
     {
       "engineer_id": "yugo_tsentr-E10",
       "name": "Рыбалкин Егор",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
@@ -188,8 +188,8 @@
     {
       "engineer_id": "yugo_tsentr-E11",
       "name": "Сакур Тимофей",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [

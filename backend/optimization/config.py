@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from .models import Priority, Task, WorkType
+
 
 @dataclass(frozen=True, slots=True)
 class OptimizerConfig:
@@ -21,6 +23,10 @@ class OptimizerConfig:
     unassigned_penalty: int = 1_000_000  # Базовая стоимость пропуска заявки; она выше обычных транспортных затрат.
     normal_unassigned_multiplier: int = 1  # Множитель базового штрафа для заявки с приоритетом NORMAL.
     urgent_unassigned_multiplier: int = 2  # Множитель базового штрафа для URGENT; должен быть больше обычного.
+    emergency_unassigned_multiplier: int = 4  # Вес потери аварии — максимальный среди типов работ.
+    connection_unassigned_multiplier: int = 2  # Подключение важнее ремонта и дозаказа при дефиците ресурсов.
+    local_unassigned_multiplier: int = 1  # Вес потери локальной заявки или ремонта.
+    equipment_order_unassigned_multiplier: int = 1  # Вес потери заявки на дозаказ оборудования.
     explanation_time_limit_seconds: int = 2  # Лимит одного counterfactual-расчёта для объяснения.
     explanation_distance_threshold_km: float = 1.0  # Минимальная существенная разница пробега для текста объяснения.
     explanation_travel_time_threshold_minutes: int = 5  # Минимальная существенная разница времени движения.
@@ -51,6 +57,18 @@ class OptimizerConfig:
             raise ValueError(
                 "urgent_unassigned_multiplier должен быть больше normal_unassigned_multiplier"
             )
+        if any(
+            value <= 0
+            for value in (
+                self.emergency_unassigned_multiplier,
+                self.connection_unassigned_multiplier,
+                self.local_unassigned_multiplier,
+                self.equipment_order_unassigned_multiplier,
+            )
+        ):
+            raise ValueError(
+                "Множители неназначения по WorkType должны быть положительными"
+            )
         if self.explanation_time_limit_seconds <= 0:
             raise ValueError("explanation_time_limit_seconds должен быть положительным")
         if self.explanation_distance_threshold_km < 0:
@@ -59,3 +77,23 @@ class OptimizerConfig:
             raise ValueError(
                 "explanation_travel_time_threshold_minutes не может быть отрицательным"
             )
+
+    def unassigned_multiplier(self, task: Task) -> int:
+        """Возвращает множитель потери заявки по типу выполняемых работ.
+
+        Для старых задач без ``work_type`` применяется прежний приоритет
+        NORMAL/URGENT, что сохраняет совместимость внешнего API и тестов.
+        """
+        by_work_type = {
+            WorkType.EMERGENCY: self.emergency_unassigned_multiplier,
+            WorkType.CONNECTION: self.connection_unassigned_multiplier,
+            WorkType.LOCAL: self.local_unassigned_multiplier,
+            WorkType.EQUIPMENT_ORDER: self.equipment_order_unassigned_multiplier,
+        }
+        if task.work_type is not None:
+            return by_work_type[task.work_type]
+        return (
+            self.urgent_unassigned_multiplier
+            if task.priority == Priority.URGENT
+            else self.normal_unassigned_multiplier
+        )

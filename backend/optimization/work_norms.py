@@ -1,18 +1,7 @@
 """Официальные нормативы работ после прибытия инженера на объект."""
 
 from dataclasses import dataclass
-from enum import Enum
-
-from .models import Skill
-
-
-class WorkType(str, Enum):
-    """Тип работы, который выбирает диспетчер при создании заявки."""
-
-    CONNECTION = "CONNECTION"
-    EMERGENCY = "EMERGENCY"
-    EQUIPMENT_ORDER = "EQUIPMENT_ORDER"
-    LOCAL = "LOCAL"
+from .models import Skill, WorkType
 
 
 @dataclass(frozen=True, slots=True)

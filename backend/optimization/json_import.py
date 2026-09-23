@@ -22,6 +22,7 @@ from .models import (
     Task,
     TaskStatus,
     VehicleType,
+    WorkType,
 )
 from .routing_provider import RoutingProvider
 
@@ -53,6 +54,31 @@ _STATUS_CODES = {
     "отменена": TaskStatus.CANCELLED,
     "просрочена": TaskStatus.OVERDUE,
 }
+_WORK_TYPE_CODES = {
+    "connection": WorkType.CONNECTION,
+    "emergency": WorkType.EMERGENCY,
+    "equipment_order": WorkType.EQUIPMENT_ORDER,
+    "local": WorkType.LOCAL,
+}
+
+
+def _work_type(job: Mapping[str, Any]) -> WorkType:
+    """Определяет тип работ из норматива, сохраняя старые JSON без этого поля."""
+    code = str(job.get("time_norm_code", "")).strip().lower()
+    if code in _WORK_TYPE_CODES:
+        return _WORK_TYPE_CODES[code]
+    skill_code = str(job.get("skill_required", "")).strip().lower()
+    if skill_code == "emergency_works":
+        return WorkType.EMERGENCY
+    if skill_code == "local_works":
+        return WorkType.LOCAL
+    # Подключение и дозаказ используют один навык. В старом формате их
+    # различает официальный норматив работы после прибытия: 70 и 20 минут.
+    return (
+        WorkType.EQUIPMENT_ORDER
+        if job.get("duration_min") == 20
+        else WorkType.CONNECTION
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -65,6 +91,8 @@ class JsonScenario:
     tasks: tuple[Task, ...]  # Заявки в том же порядке, в котором они записаны в JSON.
     location_coordinates: dict[str, tuple[float, float]]  # Координаты каждой локации: latitude, longitude.
     office_address: str | None = None  # Человекочитаемый адрес общей стартовой точки.
+    office_latitude: float | None = None  # Широта офиса для отдельного маркера карты.
+    office_longitude: float | None = None  # Долгота офиса для отдельного маркера карты.
     reference_engineer_by_task: dict[str, str] = field(default_factory=dict)  # Ручной исполнитель из исходного JSON, если он указан.
     reference_status_by_task: dict[str, TaskStatus] = field(default_factory=dict)  # Исходный статус заявки для контрольного плана.
     control_request_id_by_task: dict[str, str] = field(default_factory=dict)  # Номер заявки из контрольного CSV, если он отличается от синтетического номера.
@@ -177,6 +205,10 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
         engineer_data = _mapping_value(item, "engineer")
         engineer_id = _string(engineer_data, "engineer_id")
         start_lat, start_lon = _coordinates(engineer_data, "start_lat", "start_lon")
+        # Старт — свойство инженера, а не офиса. Отдельный ID не позволяет
+        # матрице маршрутизации слить разные домашние/полевые точки в один узел.
+        start_location_id = f"engineer_start:{engineer_id}"
+        location_coordinates[start_location_id] = (start_lat, start_lon)
         engineers.append(
             Engineer(
                 id=engineer_id,
@@ -185,7 +217,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
                     _mapped_value(code, _SKILL_CODES, "skill")
                     for code in _list(engineer_data, "skills")
                 ),
-                start_location_id=office_location_id,
+                start_location_id=start_location_id,
                 vehicle_type=_mapped_value(
                     _string(engineer_data, "vehicle_type"),
                     _VEHICLE_CODES,
@@ -243,6 +275,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
                 duration_minutes=_integer(job, "duration_min"),
                 window_start=_string(job, "window_start"),
                 window_end=_string(job, "window_end"),
+                work_type=_work_type(job),
                 priority=_mapped_value(
                     _string(job, "priority"), _PRIORITY_CODES, "priority"
                 ),
@@ -281,6 +314,8 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
         tasks=tuple(tasks),
         location_coordinates=location_coordinates,
         office_address=office_address,
+        office_latitude=office_coordinates[0],
+        office_longitude=office_coordinates[1],
         reference_engineer_by_task=reference_engineer_by_task,
         reference_status_by_task=reference_status_by_task,
         control_request_id_by_task=control_request_id_by_task,
