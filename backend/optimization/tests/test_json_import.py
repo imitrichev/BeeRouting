@@ -59,6 +59,20 @@ def test_engineers_can_start_from_different_locations_than_office() -> None:
     assert first.start_location_id != second.start_location_id
 
 
+def test_started_tasks_have_known_current_engineers_in_all_regions() -> None:
+    """EN_ROUTE/IN_PROGRESS всегда ссылаются на инженера своего района."""
+    root = Path(__file__).parents[3]
+    for filename in ("Восток.json", "Юго-восток.json", "Югоцентр.json"):
+        scenario = load_json_scenario(root / filename)
+        engineer_ids = {engineer.id for engineer in scenario.engineers}
+        started = [
+            task for task in scenario.tasks
+            if task.status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}
+        ]
+        assert started
+        assert all(task.current_engineer_id in engineer_ids for task in started)
+
+
 def test_yugo_center_json_loads_into_domain_models() -> None:
     """JSON преобразуется в инженеров, смены, заявки и координаты."""
     scenario = load_json_scenario(JSON_PATH)
@@ -242,10 +256,19 @@ def test_engineers_csv_contains_start_address_and_coordinates() -> None:
     assert "start_address" in header
     assert "start_lat" in header
     assert "start_lon" in header
+    territory_index = header.index("territory_code")
     lat_index = header.index("start_lat")
     lon_index = header.index("start_lon")
-    assert all(float(row.split(";")[lat_index]) == 55.6638404 for row in rows[1:])
-    assert all(float(row.split(";")[lon_index]) == 37.6138686 for row in rows[1:])
+    expected = {
+        "vostok": (55.7022013, 37.7739593),
+        "yugo_vostok": (55.5868278, 37.6654561),
+        "yugo_tsentr": (55.6638404, 37.6138686),
+    }
+    for raw_row in rows[1:]:
+        row = raw_row.split(";")
+        assert (float(row[lat_index]), float(row[lon_index])) == expected[
+            row[territory_index]
+        ]
 
 
 def test_address_normalization_does_not_truncate_moscow() -> None:

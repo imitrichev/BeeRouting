@@ -26,10 +26,6 @@
         "connection_orders",
         "local_works"
       ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
       "vehicle_type": "car"
     },
     {
@@ -42,10 +38,6 @@
       "skills": [
         "connection_orders",
         "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
       ],
       "vehicle_type": "foot"
     },
@@ -61,11 +53,6 @@
         "emergency_works",
         "local_works"
       ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Аварийные работы",
-        "Локальные работы"
-      ],
       "vehicle_type": "car"
     },
     {
@@ -77,9 +64,6 @@
       "shift_end": "22:00",
       "skills": [
         "connection_orders"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы"
       ],
       "vehicle_type": "public_transport"
     },
@@ -94,10 +78,6 @@
         "connection_orders",
         "local_works"
       ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
       "vehicle_type": "car"
     },
     {
@@ -110,10 +90,6 @@
       "skills": [
         "connection_orders",
         "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
       ],
       "vehicle_type": "foot"
     },
@@ -128,10 +104,6 @@
         "connection_orders",
         "local_works"
       ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
       "vehicle_type": "bicycle"
     },
     {
@@ -144,10 +116,6 @@
       "skills": [
         "connection_orders",
         "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
       ],
       "vehicle_type": "public_transport"
     },
@@ -162,10 +130,6 @@
         "connection_orders",
         "local_works"
       ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
       "vehicle_type": "car"
     },
     {
@@ -179,10 +143,6 @@
         "connection_orders",
         "local_works"
       ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
       "vehicle_type": "foot"
     },
     {
@@ -194,9 +154,6 @@
       "shift_end": "22:00",
       "skills": [
         "connection_orders"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы"
       ],
       "vehicle_type": "bicycle"
     }

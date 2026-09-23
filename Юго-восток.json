@@ -16,42 +16,8 @@
   },
   "engineers": [
     {
-      "engineer_id": "yugo_tsentr-E01",
-      "name": "Бахарев Андрей",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
-      "skills": [
-        "connection_orders",
-        "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
-      "vehicle_type": "car"
-    },
-    {
-      "engineer_id": "yugo_tsentr-E02",
-      "name": "Брюзгин Ярослав",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
-      "skills": [
-        "connection_orders",
-        "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
-      "vehicle_type": "foot"
-    },
-    {
-      "engineer_id": "yugo_tsentr-E03",
-      "name": "Выговский Сергей",
+      "engineer_id": "yugo_vostok-E01",
+      "name": "Бригада Паршин",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
       "shift_start": "09:00",
@@ -61,16 +27,91 @@
         "emergency_works",
         "local_works"
       ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Аварийные работы",
-        "Локальные работы"
+      "vehicle_type": "car"
+    },
+    {
+      "engineer_id": "yugo_vostok-E02",
+      "name": "Бригада Андреев",
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
+      "shift_start": "09:00",
+      "shift_end": "22:00",
+      "skills": [
+        "connection_orders",
+        "local_works"
+      ],
+      "vehicle_type": "foot"
+    },
+    {
+      "engineer_id": "yugo_vostok-E03",
+      "name": "Бригада Белоновский",
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
+      "shift_start": "09:00",
+      "shift_end": "22:00",
+      "skills": [
+        "connection_orders",
+        "local_works"
       ],
       "vehicle_type": "car"
     },
     {
-      "engineer_id": "yugo_tsentr-E04",
-      "name": "Данилов Даниил",
+      "engineer_id": "yugo_vostok-E04",
+      "name": "Бригада Рыбин",
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
+      "shift_start": "09:00",
+      "shift_end": "22:00",
+      "skills": [
+        "connection_orders",
+        "local_works"
+      ],
+      "vehicle_type": "public_transport"
+    },
+    {
+      "engineer_id": "yugo_vostok-E05",
+      "name": "Бригада Горбанев",
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
+      "shift_start": "09:00",
+      "shift_end": "22:00",
+      "skills": [
+        "connection_orders",
+        "emergency_works",
+        "local_works"
+      ],
+      "vehicle_type": "car"
+    },
+    {
+      "engineer_id": "yugo_vostok-E06",
+      "name": "Бригада Бузань",
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
+      "shift_start": "09:00",
+      "shift_end": "22:00",
+      "skills": [
+        "connection_orders",
+        "local_works"
+      ],
+      "vehicle_type": "foot"
+    },
+    {
+      "engineer_id": "yugo_vostok-E07",
+      "name": "Бригада Козырь",
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
+      "shift_start": "09:00",
+      "shift_end": "22:00",
+      "skills": [
+        "connection_orders",
+        "emergency_works",
+        "local_works"
+      ],
+      "vehicle_type": "bicycle"
+    },
+    {
+      "engineer_id": "yugo_vostok-E08",
+      "name": "Бригада Царьков",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
       "shift_start": "09:00",
@@ -78,31 +119,25 @@
       "skills": [
         "connection_orders"
       ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы"
-      ],
       "vehicle_type": "public_transport"
     },
     {
-      "engineer_id": "yugo_tsentr-E05",
-      "name": "Ионов Геннадий",
+      "engineer_id": "yugo_vostok-E09",
+      "name": "Бригада Саламатин",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
       "shift_start": "09:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
+        "emergency_works",
         "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
       ],
       "vehicle_type": "car"
     },
     {
-      "engineer_id": "yugo_tsentr-E06",
-      "name": "Исхаков Денис",
+      "engineer_id": "yugo_vostok-E10",
+      "name": "Бригада Макаров",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
       "shift_start": "09:00",
@@ -110,84 +145,12 @@
       "skills": [
         "connection_orders",
         "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
       ],
       "vehicle_type": "foot"
     },
     {
-      "engineer_id": "yugo_tsentr-E07",
-      "name": "Капитанчук Александр",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
-      "skills": [
-        "connection_orders",
-        "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
-      "vehicle_type": "bicycle"
-    },
-    {
-      "engineer_id": "yugo_tsentr-E08",
-      "name": "Переладов Алексей",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
-      "skills": [
-        "connection_orders",
-        "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
-      "vehicle_type": "public_transport"
-    },
-    {
-      "engineer_id": "yugo_tsentr-E09",
-      "name": "Прокопенко Вячеслав",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
-      "skills": [
-        "connection_orders",
-        "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
-      "vehicle_type": "car"
-    },
-    {
-      "engineer_id": "yugo_tsentr-E10",
-      "name": "Рыбалкин Егор",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
-      "skills": [
-        "connection_orders",
-        "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
-      "vehicle_type": "foot"
-    },
-    {
-      "engineer_id": "yugo_tsentr-E11",
-      "name": "Сакур Тимофей",
+      "engineer_id": "yugo_vostok-E11",
+      "name": "Бригада Каушнян",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
       "shift_start": "09:00",
@@ -195,10 +158,19 @@
       "skills": [
         "connection_orders"
       ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы"
-      ],
       "vehicle_type": "bicycle"
+    },
+    {
+      "engineer_id": "yugo_vostok-E12",
+      "name": "Бригада Демин",
+      "start_lat": 55.5868278,
+      "start_lon": 37.6654561,
+      "shift_start": "09:00",
+      "shift_end": "22:00",
+      "skills": [
+        "local_works"
+      ],
+      "vehicle_type": "car"
     }
   ],
   "jobs": [

@@ -549,8 +549,9 @@ def _territory_metadata(path: Path) -> tuple[str, str, str]:
 def _engineers_from_csv(
     path: Path,
     geocoder: Callable[[str], tuple[float, float]],
+    territory_code: str,
 ) -> list[dict[str, Any]]:
-    """Читает инженеров только из engineers.csv.
+    """Читает из engineers.csv инженеров выбранной территории.
 
     У инженера может быть start_address; при его наличии координаты тоже
     ищутся через кэш Nominatim или новый запрос. Иначе используются
@@ -564,6 +565,9 @@ def _engineers_from_csv(
     }
     engineers: list[dict[str, Any]] = []
     for index, row in enumerate(rows, start=1):
+        row_territory = _first_value(row, "territory_code", "Код территории")
+        if row_territory and row_territory != territory_code:
+            continue
         name = _first_value(row, "name", "ФИО", "Фамилия Имя", "Инженер", "Бригада")
         if not name:
             continue
@@ -634,9 +638,9 @@ def generate_dataset(
         office, geocode, f"офис района {synthetic_path.stem}"
     )
     office_point = {"lat": office_lat, "lon": office_lon, "address": office}
-    engineers = _engineers_from_csv(engineers_path, geocode)
-    jobs: list[dict[str, Any]] = []
     territory_code, territory_name, scenario_name = _territory_metadata(synthetic_path)
+    engineers = _engineers_from_csv(engineers_path, geocode, territory_code)
+    jobs: list[dict[str, Any]] = []
     for synthetic, control in zip(synthetic_rows, control_matches):
         request_id = synthetic["Заявка"].strip()
         kind = _work_kind(synthetic["Тип заявки BK"])

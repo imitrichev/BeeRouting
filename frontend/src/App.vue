@@ -630,14 +630,24 @@ async function confirmManualReassignment(): Promise<void> {
   }
 }
 
+function hasFiniteCoordinates(
+  latitude: number | null | undefined,
+  longitude: number | null | undefined,
+): latitude is number {
+  return Number.isFinite(latitude) && Number.isFinite(longitude)
+}
+
 function routeCoordinates(route: EngineerRoute): [number, number][] {
   const coordinates: [number, number][] = []
-  if (route.start_longitude !== null && route.start_latitude !== null) {
-    coordinates.push([route.start_longitude, route.start_latitude])
+  if (hasFiniteCoordinates(route.start_latitude, route.start_longitude)) {
+    coordinates.push([
+      route.start_longitude as number,
+      route.start_latitude as number,
+    ])
   }
   route.stops.forEach((stop) => {
-    if (stop.longitude !== null && stop.latitude !== null) {
-      coordinates.push([stop.longitude, stop.latitude])
+    if (hasFiniteCoordinates(stop.latitude, stop.longitude)) {
+      coordinates.push([stop.longitude as number, stop.latitude as number])
     }
   })
   return coordinates
@@ -656,11 +666,6 @@ function drawMap() {
   )
   const activeRouteByTask = new globalThis.Map(
     routes.flatMap((route) =>
-      route.stops.map((stop) => [stop.task_id, route] as const),
-    ),
-  )
-  const assignedRouteByTask = new globalThis.Map(
-    allRoutes.flatMap((route) =>
       route.stops.map((stop) => [stop.task_id, route] as const),
     ),
   )
@@ -701,14 +706,16 @@ function drawMap() {
   const office = dataset.value
   if (
     office &&
-    office.office_longitude !== null &&
-    office.office_latitude !== null
+    hasFiniteCoordinates(office.office_latitude, office.office_longitude)
   ) {
     const depotMarker = new maplibregl.Marker({
       element: createDepotMarkerElement(),
       anchor: 'bottom',
     })
-      .setLngLat([office.office_longitude, office.office_latitude])
+      .setLngLat([
+        office.office_longitude as number,
+        office.office_latitude as number,
+      ])
       .setPopup(
         new maplibregl.Popup({ offset: 16 }).setHTML(
           '<strong>Офис</strong><br>' +
@@ -722,9 +729,9 @@ function drawMap() {
   // Заявки показываются уже после загрузки dataset. После выбора инженера
   // только его маркеры получают цвет и номер остановки.
   dataset.value?.tasks.forEach((task) => {
-    if (task.longitude === null || task.latitude === null) return
+    if (!hasFiniteCoordinates(task.latitude, task.longitude)) return
     const route = activeRouteByTask.get(task.id)
-    const assignedRoute = assignedRouteByTask.get(task.id)
+    const assignedEngineerName = assignmentByTask.value[task.id]
     const marker = new maplibregl.Marker({
       // После расчёта route содержит только выбранного инженера, поэтому
       // заявки остальных инженеров и неназначенные заявки остаются серыми.
@@ -734,12 +741,12 @@ function drawMap() {
       ),
       anchor: 'bottom',
     })
-      .setLngLat([task.longitude, task.latitude])
+      .setLngLat([task.longitude as number, task.latitude as number])
       .setPopup(
         new maplibregl.Popup({ offset: 16 }).setHTML(
           `<strong>${escapeHtml(task.id)}</strong><br>` +
             `${escapeHtml(task.address ?? 'Адрес не указан')}<br>` +
-            `${escapeHtml(assignedRoute ? assignedRoute.engineer_name : 'Пока не назначена')}<br>` +
+            `${escapeHtml(assignedEngineerName ?? 'Пока не назначена')}<br>` +
             `${task.window_start}–${task.window_end}<br>` +
             `${task.duration_minutes} мин`,
         ),
@@ -750,10 +757,13 @@ function drawMap() {
 
   const allCoordinates = [
     ...(dataset.value?.tasks ?? [])
-      .filter((task) => task.longitude !== null && task.latitude !== null)
+      .filter((task) => hasFiniteCoordinates(task.latitude, task.longitude))
       .map((task) => [task.longitude as number, task.latitude as number] as [number, number]),
     ...(dataset.value?.engineers ?? [])
-      .filter((engineer) => engineer.start_longitude !== null && engineer.start_latitude !== null)
+      .filter((engineer) => hasFiniteCoordinates(
+        engineer.start_latitude,
+        engineer.start_longitude,
+      ))
       .map((engineer) => [engineer.start_longitude as number, engineer.start_latitude as number] as [number, number]),
   ]
   if (allCoordinates.length > 0) {
