@@ -101,6 +101,8 @@ export interface ExplanationResponse {
 }
 
 export interface ApiResponse {
+  territory_code?: string
+  planning_options?: { ignore_task_statuses: boolean }
   dataset: Dataset
   result?: OptimizationResult
 }

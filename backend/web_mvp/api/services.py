@@ -33,7 +33,7 @@ from backend.optimization import (
 )
 from backend.optimization.scripts.generate_dataset_json import NominatimGeocoder
 from backend.optimization.constraints import engineer_has_required_equipment
-from .serializers import OptimizationResultSerializer, DatasetSerializer
+from backend.web_mvp.api_v2.serializers.optimization import OptimizationResultSerializer, DatasetSerializer
 
 
 OFFICIAL_DATASET_PATH = Path(__file__).resolve().parents[3] / "Югоцентр.json"

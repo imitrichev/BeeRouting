@@ -12,6 +12,41 @@ import type {
   Task,
 } from './types'
 
+const territories = ref<{ code: string; name: string }[]>([])
+const territoryCode = ref('')
+
+// Район передаётся явно в каждом запросе; переключение не меняет чужие планы.
+function apiFetch(path: string, options?: RequestInit): Promise<Response> {
+  const url = path.replace('/api/', '/api/v2/')
+  return fetch(`${url}?territory=${encodeURIComponent(territoryCode.value)}`, options)
+}
+
+async function refreshTerritories(): Promise<void> {
+  const response = await fetch('/api/v2/territories/')
+  if (!response.ok) throw new Error('Не удалось загрузить список районов')
+  territories.value = await response.json()
+}
+
+async function switchTerritory(code: string): Promise<void> {
+  loading.value = true
+  errorMessage.value = ''
+  try {
+    const response = await fetch(`/api/v2/dataset/?territory=${encodeURIComponent(code)}`)
+    const payload = await readResponse(response)
+    territoryCode.value = code
+    dataset.value = payload.dataset
+    result.value = payload.result ?? null
+    ignoreTaskStatuses.value = payload.planning_options?.ignore_task_statuses ?? true
+    selectedEngineerId.value = ''
+    selectedEngineerIds.value = []
+    reassignmentOpen.value = false
+    explanationOpen.value = false
+    await refreshMap()
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : 'Ошибка загрузки района'
+  } finally { loading.value = false }
+}
+
 const dataset = ref<Dataset | null>(null)
 const result = ref<OptimizationResult | null>(null)
 const selectedFile = ref<File | null>(null)
@@ -235,10 +270,12 @@ async function loadOfficialDataset() {
   loading.value = true
   errorMessage.value = ''
   try {
-    const response = await fetch('/api/dataset/official/')
+    const response = await apiFetch('/api/dataset/official/')
     const payload = await readResponse(response)
     dataset.value = payload.dataset
-    result.value = null
+    if (payload.territory_code) territoryCode.value = payload.territory_code
+    await refreshTerritories()
+    result.value = payload.result ?? null
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
     await refreshMap()
@@ -261,13 +298,15 @@ async function uploadDataset() {
   try {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
-    const response = await fetch('/api/dataset/upload/', {
+    const response = await apiFetch('/api/dataset/upload/', {
       method: 'POST',
       body: formData,
     })
     const payload = await readResponse(response)
     dataset.value = payload.dataset
-    result.value = null
+    if (payload.territory_code) territoryCode.value = payload.territory_code
+    await refreshTerritories()
+    result.value = payload.result ?? null
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
     await refreshMap()
@@ -282,7 +321,7 @@ async function optimize() {
   optimizing.value = true
   errorMessage.value = ''
   try {
-    const response = await fetch('/api/optimize/', {
+    const response = await apiFetch('/api/optimize/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -311,7 +350,7 @@ async function createTask(): Promise<void> {
   creatingTask.value = true
   errorMessage.value = ''
   try {
-    const response = await fetch('/api/tasks/', {
+    const response = await apiFetch('/api/tasks/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -359,7 +398,7 @@ async function geocodeTaskAddress(): Promise<void> {
   newTask.value.latitude = null
   newTask.value.longitude = null
   try {
-    const response = await fetch('/api/geocode/', {
+    const response = await apiFetch('/api/geocode/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address: newTask.value.address }),
@@ -439,7 +478,7 @@ async function replan(): Promise<void> {
         status: 'NOT_SENT',
       }
     }
-    const response = await fetch('/api/replan/', {
+    const response = await apiFetch('/api/replan/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -466,7 +505,7 @@ async function explainTask(taskId: string): Promise<void> {
   explanationDeveloperMode.value = false
   errorMessage.value = ''
   try {
-    const response = await fetch(`/api/explain/${encodeURIComponent(taskId)}/`, {
+    const response = await apiFetch(`/api/explain/${encodeURIComponent(taskId)}/`, {
       method: 'POST',
     })
     const payload = await response.json()
@@ -499,7 +538,7 @@ async function previewManualReassignment(): Promise<void> {
   reassignmentError.value = ''
   reassignmentPreview.value = null
   try {
-    const response = await fetch('/api/manual-reassignment/preview/', {
+    const response = await apiFetch('/api/manual-reassignment/preview/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -526,7 +565,7 @@ async function confirmManualReassignment(): Promise<void> {
   reassignmentLoading.value = true
   reassignmentError.value = ''
   try {
-    const response = await fetch('/api/manual-reassignment/confirm/', {
+    const response = await apiFetch('/api/manual-reassignment/confirm/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ proposal_id: proposalId }),
@@ -740,8 +779,13 @@ async function refreshMap() {
   drawMap()
 }
 
-onMounted(() => {
-  loadOfficialDataset()
+onMounted(async () => {
+  try {
+    await refreshTerritories()
+    const first = territories.value[0]
+    if (first) await switchTerritory(first.code)
+    else await loadOfficialDataset()
+  } catch (error) { errorMessage.value = String(error) }
 })
 
 // Срабатывает после появления/замены dataset и гарантирует, что ref карты
@@ -782,6 +826,15 @@ onBeforeUnmount(() => {
           {{ errorMessage }}
         </v-alert>
 
+        <v-select
+          :model-value="territoryCode"
+          :items="territories"
+          item-title="name"
+          item-value="code"
+          label="Район обслуживания"
+          :disabled="loading || optimizing || replanning || reassignmentLoading || creatingTask"
+          @update:model-value="switchTerritory"
+        />
         <v-card class="mb-4" variant="outlined">
           <v-card-text class="d-flex flex-wrap align-center ga-3">
             <v-btn color="primary" :loading="loading" @click="loadOfficialDataset">

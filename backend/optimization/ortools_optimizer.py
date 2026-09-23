@@ -708,6 +708,8 @@ class ORToolsOptimizer(RouteOptimizer):
         ``equipment_resource_ids``; это позволяет сохранить простой сценарий
         без бронирования ресурсов.
         """
+        if engineer.id in problem.unavailable_engineer_ids:
+            return False
         equipment_by_id = {
             resource.id: resource for resource in problem.equipment_resources
         }
