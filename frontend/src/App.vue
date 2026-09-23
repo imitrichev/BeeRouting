@@ -178,6 +178,12 @@ const assignmentByTask = computed(() => {
 
 const formatNumber = (value: number, digits = 1) => value.toFixed(digits)
 
+function escapeHtml(value: string): string {
+  const element = document.createElement('div')
+  element.textContent = value
+  return element.innerHTML
+}
+
 const plannableTaskCount = computed(
   () => dataset.value?.tasks.filter((task) => task.is_plannable).length ?? 0,
 )
@@ -619,7 +625,12 @@ function drawMap() {
       anchor: 'bottom',
     })
       .setLngLat([depotEngineer.start_longitude, depotEngineer.start_latitude])
-      .setPopup(new maplibregl.Popup({ offset: 16 }).setText('Депо'))
+      .setPopup(
+        new maplibregl.Popup({ offset: 16 }).setHTML(
+          '<strong>Офис</strong><br>' +
+          escapeHtml(depotEngineer.start_address ?? 'Адрес не указан'),
+        ),
+      )
       .addTo(map as MapLibreMap)
     markers.push(depotMarker)
   }
@@ -642,8 +653,9 @@ function drawMap() {
       .setLngLat([task.longitude, task.latitude])
       .setPopup(
         new maplibregl.Popup({ offset: 16 }).setHTML(
-          `<strong>${task.id}</strong><br>` +
-            `${assignedRoute ? assignedRoute.engineer_name : 'Пока не назначена'}<br>` +
+          `<strong>${escapeHtml(task.id)}</strong><br>` +
+            `${escapeHtml(task.address ?? 'Адрес не указан')}<br>` +
+            `${escapeHtml(assignedRoute ? assignedRoute.engineer_name : 'Пока не назначена')}<br>` +
             `${task.window_start}–${task.window_end}<br>` +
             `${task.duration_minutes} мин`,
         ),

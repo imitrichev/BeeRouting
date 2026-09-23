@@ -212,13 +212,29 @@ def test_engineers_csv_contains_start_address_instead_of_coordinates() -> None:
 
 
 def test_address_normalization_does_not_truncate_moscow() -> None:
-    """Нормализация удаляет квартиру, но сохраняет название города."""
+    """Нормализация удаляет квартиру и лишние служебные маркеры города."""
     assert _normalise_address("Город Москва, ул. Примерная, д. 9") == (
-        "город москва, ул. примерная, д. 9"
+        "москва, ул. примерная, д. 9"
     )
     assert _normalise_address("Город Москва, ул. Примерная, д. 9, кв. 47") == (
-        "город москва, ул. примерная, д. 9"
+        "москва, ул. примерная, д. 9"
     )
+    assert _normalise_address("г.Город Москва, ул. Примерная, д. 9") == (
+        "москва, ул. примерная, д. 9"
+    )
+    assert _normalise_address("Москва, ул. Примерная, д. 9") == (
+        "москва, ул. примерная, д. 9"
+    )
+
+
+def test_query_variants_preserve_explicit_city() -> None:
+    """Геокодер не приписывает Москву адресу из Домодедова."""
+    variants = NominatimGeocoder._query_variants(
+        "Домодедово, ул.1-я Коммунистическая, д. 39"
+    )
+
+    assert "домодедово, 1-я коммунистическая улица, 39" in variants
+    assert all(not variant.startswith("москва") for variant in variants)
 
 
 def test_building_marker_is_normalized_to_k() -> None:

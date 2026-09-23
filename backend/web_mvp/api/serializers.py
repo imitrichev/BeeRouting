@@ -387,6 +387,7 @@ class DatasetEngineerSerializer(serializers.Serializer):
     vehicle_type = serializers.SerializerMethodField()
 
     start_location_id = serializers.ReadOnlyField()
+    start_address = serializers.SerializerMethodField()
     start_latitude = serializers.FloatField(read_only=True)
     start_longitude = serializers.FloatField(read_only=True)
 
@@ -403,6 +404,10 @@ class DatasetEngineerSerializer(serializers.Serializer):
     @staticmethod
     def get_vehicle_type(engineer: Any) -> str:
         return engineer.vehicle_type.value
+
+    def get_start_address(self, engineer: Any) -> str | None:
+        """Возвращает адрес офиса из корневого JSON-сценария."""
+        return self.root.instance.office_address
 
     def get_available_from(self, engineer: Any) -> Any:
         availability = self._get_availability(engineer.id)

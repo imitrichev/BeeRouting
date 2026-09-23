@@ -4,6 +4,7 @@ export interface Engineer {
   qualifications: string[]
   vehicle_type: string
   start_location_id: string
+  start_address: string | null
   start_latitude: number | null
   start_longitude: number | null
   available_from: string

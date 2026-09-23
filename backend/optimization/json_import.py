@@ -64,6 +64,7 @@ class JsonScenario:
     availabilities: tuple[EngineerAvailability, ...]  # Рабочие смены инженеров.
     tasks: tuple[Task, ...]  # Заявки в том же порядке, в котором они записаны в JSON.
     location_coordinates: dict[str, tuple[float, float]]  # Координаты каждой локации: latitude, longitude.
+    office_address: str | None = None  # Человекочитаемый адрес общей стартовой точки.
     reference_engineer_by_task: dict[str, str] = field(default_factory=dict)  # Ручной исполнитель из исходного JSON, если он указан.
     reference_status_by_task: dict[str, TaskStatus] = field(default_factory=dict)  # Исходный статус заявки для контрольного плана.
     control_request_id_by_task: dict[str, str] = field(default_factory=dict)  # Номер заявки из контрольного CSV, если он отличается от синтетического номера.
@@ -163,6 +164,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
 
     office = _mapping(payload, "office_start_point")
     office_coordinates = _coordinates(office, "lat", "lon")
+    office_address = str(office.get("address") or "").strip() or None
     office_location_id = "office_start"
     location_coordinates: dict[str, tuple[float, float]] = {
         office_location_id: office_coordinates
@@ -278,6 +280,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
         availabilities=tuple(availabilities),
         tasks=tuple(tasks),
         location_coordinates=location_coordinates,
+        office_address=office_address,
         reference_engineer_by_task=reference_engineer_by_task,
         reference_status_by_task=reference_status_by_task,
         control_request_id_by_task=control_request_id_by_task,

@@ -102,6 +102,13 @@ def _normalise_address(value: str) -> str:
     Поэтому ``д. 9, кв. 47`` и ``д. 9`` сопоставляются с одной точкой дома.
     """
     value = value.lower().replace("ё", "е")
+    # Источники записывают один и тот же город как «Москва», «Город Москва»
+    # и даже «г.Город Москва». Служебные маркеры города не являются частью
+    # адреса и мешают как поиску Nominatim, так и ключам локального кэша.
+    # «город» проверяется раньше короткого «г», иначе регулярное выражение
+    # съест только первую букву слова и оставит ошибочное «ород москва».
+    value = re.sub(r"^(?:(?:город|г\.?)\s*)+", "", value)
+    value = re.sub(r",\s*(?:(?:город|г\.?)\s*)+", ", ", value)
     # Маркер квартиры должен быть отдельным словом. Иначе последовательность
     # «кв» внутри слова «Москва» ошибочно удаляет оставшуюся часть адреса.
     value = re.sub(
@@ -225,7 +232,7 @@ class NominatimGeocoder:
                 else {}
             )
             self._cache: dict[str, tuple[float, float]] = {
-                str(key): (float(value[0]), float(value[1]))
+                _normalise_address(str(key)): (float(value[0]), float(value[1]))
                 for key, value in loaded.items()
             }
         except (OSError, ValueError, TypeError, KeyError, IndexError):
@@ -406,11 +413,31 @@ class NominatimGeocoder:
         """
         normalized = _normalise_address(address)
         variants: list[str] = [normalized]
-        without_city = re.sub(
-            r"^(?:(?:г\.?|город)\s*)+москва\s*,?\s*",
-            "",
-            normalized,
-        )
+
+        # Первый компонент до запятой является населённым пунктом. Поэтому
+        # «Домодедово, ...» нельзя превращать в «Москва, Домодедово, ...».
+        # Если город в источнике отсутствует, для наших трёх московских
+        # датасетов используется Москва.
+        parts = [part.strip() for part in normalized.split(",")]
+        region_markers = {"мо", "московская область", "обл.московская область"}
+        first_part = parts[0] if parts else ""
+        if first_part in region_markers and len(parts) > 1:
+            # В форме «МО, Кашира Центральная ул. ...» название города —
+            # первое слово следующего компонента.
+            city, _, tail = parts[1].partition(" ")
+            without_city = ", ".join(filter(None, (tail, *parts[2:])))
+        elif len(parts) > 1 and not re.match(
+            r"^(?:ул\.?|улица|проезд|пр-кт|проспект|пер\.?|переулок|наб\.?|б-р)",
+            first_part,
+        ):
+            city = first_part
+            without_city = ", ".join(parts[1:])
+        elif re.match(r"^москва\s+", first_part):
+            city = "москва"
+            without_city = normalized[len("москва") :].strip(" ,")
+        else:
+            city = "москва"
+            without_city = normalized
         street_types = {
             "ул": "улица",
             "улица": "улица",
@@ -430,7 +457,7 @@ class NominatimGeocoder:
             without_city,
         )
         without_city = re.sub(r"\s+", " ", without_city).strip(" ,")
-        variants.append(f"Москва, {without_city}")
+        variants.append(f"{city}, {without_city}")
         house_match = re.match(r"^(.+?),\s*д\.?\s*(.+)$", without_city)
         if house_match:
             street, house = house_match.groups()
@@ -441,7 +468,7 @@ class NominatimGeocoder:
             if type_match:
                 street_type, street_name = type_match.groups()
                 variants.append(
-                    f"Москва, {street_name} {street_types[street_type]}, {house}"
+                    f"{city}, {street_name} {street_types[street_type]}, {house}"
                 )
         # Nominatim часто лучше понимает короткую запись без служебных
         # сокращений и знаков препинания: «Москва 60-летия Октября 18 к 2».
@@ -453,7 +480,7 @@ class NominatimGeocoder:
         compact = re.sub(r"[,.;]", " ", compact)
         compact = re.sub(r"\s+", " ", compact).strip()
         if compact:
-            variants.append(f"Москва {compact}")
+            variants.append(f"{city} {compact}")
         # Для российского адресного формата дополнительно пробуем вариант
         # с точкой после сокращения: «к. 2». Развёрнутая форма намеренно
         # не используется.
