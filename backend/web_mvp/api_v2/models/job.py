@@ -17,14 +17,14 @@ class Job(models.Model):
         (STATUS_DONE, STATUS_DONE),
     ]
 
-    job_id = models.CharField(max_length=64, unique=True)
+    job_id = models.CharField(max_length=64)
     territory = models.ForeignKey(
         "Territory", on_delete=models.CASCADE, related_name="jobs",
     )
 
     request_id = models.BigIntegerField()
     control_request_id = models.BigIntegerField(
-        null=True, blank=True, unique=True,
+        null=True, blank=True,
         help_text="Факт. ID заявки в контрольных данных",
     )
 
@@ -74,7 +74,13 @@ class Job(models.Model):
 
     gigabit = models.BooleanField(default=False)
 
+    current_status = models.CharField(max_length=32, default='NOT_SENT')
+    current_engineer = models.ForeignKey('Engineer', null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='current_jobs')
+    required_equipment = models.JSONField(default=list)
+
     class Meta:
+        unique_together = ('territory', 'job_id')
         verbose_name = "Заявка"
         verbose_name_plural = "Заявки"
         indexes = [

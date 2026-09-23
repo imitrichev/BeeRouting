@@ -21,6 +21,13 @@ class Territory(models.Model):
         help_text="office_start_point.lon",
     )
 
+    office_address = models.CharField(max_length=500, blank=True)
+    source_name = models.CharField(max_length=255, blank=True)
+    source_payload = models.JSONField(default=dict)  # Неизменённый контрольный источник.
+    state = models.JSONField(default=dict)  # Версионированный снимок domain-состояния.
+    response = models.JSONField(default=dict)  # Готовые маршруты с геометрией для карты.
+    revision = models.PositiveIntegerField(default=0)  # Защита от устаревшего подтверждения.
+
     class Meta:
         verbose_name = "Территория"
         verbose_name_plural = "Территории"

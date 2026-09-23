@@ -6,7 +6,7 @@ from django.db import models
 class Engineer(models.Model):
     """Инженер/бригада (`engineers[]`)."""
 
-    engineer_id = models.CharField(max_length=64, unique=True)
+    engineer_id = models.CharField(max_length=64)
     territory = models.ForeignKey(
         "Territory", on_delete=models.CASCADE, related_name="engineers",
     )
@@ -26,7 +26,11 @@ class Engineer(models.Model):
         "VehicleType", on_delete=models.PROTECT, related_name="engineers",
     )
 
+    available_equipment = models.JSONField(default=list)
+    start_address = models.CharField(max_length=500, blank=True)
+
     class Meta:
+        unique_together = ('territory', 'engineer_id')
         verbose_name = "Инженер"
         verbose_name_plural = "Инженеры"
 

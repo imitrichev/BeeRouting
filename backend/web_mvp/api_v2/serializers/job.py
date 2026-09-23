@@ -1,141 +1,111 @@
-"""Сериалайзеры для сущности Job"""
-
+"""Контракты API: job."""
 from __future__ import annotations
 
 from typing import Any
-
 from rest_framework import serializers
-
-from ..models import (
-    District,
-    Engineer,
-    Job,
-    Priority,
-    RescheduleEvent,
-    Skill,
-    Territory,
-    TimeNorm,
-    VehicleType,
-)
-
-from .helpers import (
-    DistrictSerializer,
-    SkillSerializer,
-    VehicleTypeSerializer,
-    PrioritySerializer,
-    TimeNormSerializer,
-    EngineerBriefSerializer,
-)
-
-TIME_INPUT_FORMATS = ["%H:%M", "%H:%M:%S"]
+from backend.optimization import Priority, TaskStatus, VehicleType, WorkType, hhmm_to_minutes
 
 
-# ---------------------------------------------------------------------------
-# Job (заявка)
-# ---------------------------------------------------------------------------
+class TaskCreateSerializer(serializers.Serializer):
+    """Проверяет поля новой заявки до передачи в domain-модель."""
 
-class JobSerializer(serializers.ModelSerializer):
-    """Чтение заявки с развёрнутыми связанными сущностями."""
-
-    territory = serializers.SlugRelatedField(slug_field="code", read_only=True)
-    district = DistrictSerializer(read_only=True)
-    skill_required = SkillSerializer(read_only=True)
-    priority = PrioritySerializer(read_only=True)
-    required_vehicle = VehicleTypeSerializer(read_only=True)
-    time_norm = TimeNormSerializer(read_only=True)
-    reference_engineer = EngineerBriefSerializer(read_only=True)
-
-    window_start = serializers.TimeField(format="%H:%M")
-    window_end = serializers.TimeField(format="%H:%M")
-
-    class Meta:
-        model = Job
-        fields = [
-            "id", "job_id", "territory", "request_id", "control_request_id",
-            "skill_required", "request_type_bk", "request_type_hd",
-            "district", "address", "lat", "lon",
-            "window_start", "window_end", "duration_min", "time_norm",
-            "priority", "required_vehicle", "reference_status",
-            "reference_engineer", "gigabit",
-        ]
-
-
-class JobCreateSerializer(serializers.ModelSerializer):
-    """Создание/обновление заявки по "человеческим" ключам связей.
-
-    Территория, навык, приоритет, транспорт и норматив передаются кодами
-    (``territory``, ``skill_required`` и т.д.), район — названием (создаётся
-    автоматически при отсутствии), инженер — его ``engineer_id``.
-    """
-
-    territory = serializers.SlugRelatedField(
-        slug_field="code", queryset=Territory.objects.all(),
+    id = serializers.CharField(max_length=120)
+    address = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    latitude = serializers.FloatField(min_value=-90, max_value=90)
+    longitude = serializers.FloatField(min_value=-180, max_value=180)
+    work_type = serializers.ChoiceField(choices=[item.value for item in WorkType])
+    window_start = serializers.RegexField(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    window_end = serializers.RegexField(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+    priority = serializers.ChoiceField(
+        choices=[item.value for item in Priority], default=Priority.NORMAL.value
     )
-    skill_required = serializers.SlugRelatedField(
-        slug_field="code", queryset=Skill.objects.all(),
+    required_vehicle_type = serializers.ChoiceField(
+        choices=[item.value for item in VehicleType], required=False, allow_null=True
     )
-    priority = serializers.SlugRelatedField(
-        slug_field="code", queryset=Priority.objects.all(),
+    required_equipment = serializers.ListField(
+        child=serializers.CharField(max_length=100), required=False, default=list
     )
-    required_vehicle = serializers.SlugRelatedField(
-        slug_field="code", queryset=VehicleType.objects.all(),
-        required=False, allow_null=True,
+    status = serializers.ChoiceField(
+        choices=[TaskStatus.NOT_SENT.value, TaskStatus.OVERDUE.value],
+        default=TaskStatus.NOT_SENT.value,
     )
-    time_norm = serializers.SlugRelatedField(
-        slug_field="code", queryset=TimeNorm.objects.all(),
-        required=False, allow_null=True,
-    )
-    reference_engineer = serializers.SlugRelatedField(
-        slug_field="engineer_id", queryset=Engineer.objects.all(),
-        required=False, allow_null=True,
-    )
-    district = serializers.CharField(
-        write_only=True, help_text="Название района; создаётся при отсутствии",
-    )
-
-    window_start = serializers.TimeField(input_formats=TIME_INPUT_FORMATS)
-    window_end = serializers.TimeField(input_formats=TIME_INPUT_FORMATS)
-
-    class Meta:
-        model = Job
-        fields = [
-            "job_id", "territory", "request_id", "control_request_id",
-            "skill_required", "request_type_bk", "request_type_hd",
-            "district", "address", "lat", "lon",
-            "window_start", "window_end", "duration_min", "time_norm",
-            "priority", "required_vehicle", "reference_status",
-            "reference_engineer", "gigabit",
-        ]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
-        window_start = attrs.get("window_start", getattr(self.instance, "window_start", None))
-        window_end = attrs.get("window_end", getattr(self.instance, "window_end", None))
-        if window_start and window_end and window_start >= window_end:
+        """Проверяет настоящее время в 24-часовом формате и порядок окна."""
+        try:
+            start = hhmm_to_minutes(attrs["window_start"])
+            end = hhmm_to_minutes(attrs["window_end"])
+        except ValueError as exc:
             raise serializers.ValidationError(
-                "window_end должен быть позже window_start."
+                {"window_start": "Используйте время HH:MM в 24-часовом формате."}
+            ) from exc
+        if end <= start:
+            raise serializers.ValidationError(
+                {"window_end": "Конец окна должен быть позже начала."}
             )
         return attrs
 
-    def create(self, validated_data: dict[str, Any]) -> Job:
-        district_name = validated_data.pop("district")
-        district, _ = District.objects.get_or_create(
-            territory=validated_data["territory"], name=district_name,
+
+class DatasetTaskSerializer(serializers.Serializer):
+    id = serializers.ReadOnlyField()
+    location_id = serializers.ReadOnlyField()
+    status = serializers.SerializerMethodField()
+    current_engineer_id = serializers.ReadOnlyField()
+
+    latitude = serializers.FloatField(read_only=True)
+    longitude = serializers.FloatField(read_only=True)
+    address = serializers.CharField(read_only=True, allow_null=True)
+
+    required_skill = serializers.SerializerMethodField()
+    duration_minutes = serializers.IntegerField(read_only=True)
+
+    window_start = serializers.ReadOnlyField()
+    window_end = serializers.ReadOnlyField()
+
+    priority = serializers.SerializerMethodField()
+    required_vehicle_type = serializers.SerializerMethodField()
+    required_equipment = serializers.SerializerMethodField()
+    is_plannable = serializers.SerializerMethodField()
+    assignment_locked = serializers.SerializerMethodField()
+
+    @staticmethod
+    def get_required_skill(task: Any) -> str:
+        return next(iter(task.required_skills)).value
+
+    @staticmethod
+    def get_status(task: Any) -> str:
+        """Возвращает нормализованный статус domain-модели для API."""
+        return task.status.value
+
+    def get_is_plannable(self, task: Any) -> bool:
+        """Показывает, участвует ли заявка в выбранном режиме расчёта."""
+        if self.context.get("ignore_task_statuses", False):
+            return True
+        return task.status.value not in {"CANCELLED", "COMPLETED"}
+
+    def get_assignment_locked(self, task: Any) -> bool:
+        """Показывает, запрещено ли solver менять текущего исполнителя."""
+        if self.context.get("ignore_task_statuses", False):
+            return False
+        if task.status.value in {"EN_ROUTE", "IN_PROGRESS"}:
+            return True
+        return bool(
+            self.context.get("preserve_assigned_tasks", False)
+            and task.status.value == "ASSIGNED"
         )
-        return Job.objects.create(district=district, **validated_data)
 
-    def update(self, instance: Job, validated_data: dict[str, Any]) -> Job:
-        district_name = validated_data.pop("district", None)
-        if district_name is not None:
-            territory = validated_data.get("territory", instance.territory)
-            district, _ = District.objects.get_or_create(
-                territory=territory, name=district_name,
-            )
-            instance.district = district
-        for field, value in validated_data.items():
-            setattr(instance, field, value)
-        instance.save()
-        return instance
+    @staticmethod
+    def get_priority(task: Any) -> str:
+        return task.priority.value
 
-    def to_representation(self, instance: Job) -> dict[str, Any]:
-        """После создания/обновления отдаём полное read-представление."""
-        return JobSerializer(instance, context=self.context).data
+    @staticmethod
+    def get_required_vehicle_type(task: Any) -> str | None:
+        if task.required_vehicle_type is None:
+            return None
+
+        return task.required_vehicle_type.value
+
+    @staticmethod
+    def get_required_equipment(task: Any) -> list[str]:
+        """Возвращает стабильный список обязательного оборудования."""
+        return sorted(task.required_equipment)

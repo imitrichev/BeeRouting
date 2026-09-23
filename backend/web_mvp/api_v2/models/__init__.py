@@ -7,3 +7,5 @@ from .time_norm import TimeNorm
 from .engineer import Engineer
 from .job import Job
 from .reschedule_event import RescheduleEvent
+
+from .proposal import ReassignmentProposal
