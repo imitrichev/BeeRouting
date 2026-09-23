@@ -6,6 +6,7 @@ from .interfaces import RouteOptimizer
 from .models import (
     Engineer,
     EngineerAvailability,
+    EngineerOperationalState,
     EngineerRoute,
     EquipmentResource,
     OptimizationProblem,
@@ -48,10 +49,13 @@ from .json_import import (
     load_json_scenario_data,
     load_problem_from_json,
 )
+from .explanation import ExplanationEngine
+from .work_norms import WORK_NORMS, WorkNorm, WorkType
 
 __all__ = [
     "Engineer",
     "EngineerAvailability",
+    "EngineerOperationalState",
     "EngineerRoute",
     "EquipmentResource",
     "OptimizerConfig",
@@ -91,4 +95,8 @@ __all__ = [
     "load_json_scenario",
     "load_json_scenario_data",
     "load_problem_from_json",
+    "ExplanationEngine",
+    "WORK_NORMS",
+    "WorkNorm",
+    "WorkType",
 ]

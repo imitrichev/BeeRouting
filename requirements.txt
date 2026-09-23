@@ -1,0 +1,4 @@
+# Основное окружение web MVP: Django/DRF, API и Optimization Engine.
+# Timefold намеренно устанавливается отдельно: ему нужен совместимый Python
+# 3.10–3.12 и JVM 17+.
+-r backend/web_mvp/requirements.txt

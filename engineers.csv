@@ -1,12 +1,12 @@
-engineer_id;name;vehicle_type;skills;start_lat;start_lon;shift_start;shift_end
-yugo_tsentr-E01;Бахарев Андрей;car;connection_orders|local_works;55.617;37.61;09:00;22:00
-yugo_tsentr-E02;Брюзгин Ярослав;foot;connection_orders|local_works;55.617;37.61;09:00;22:00
-yugo_tsentr-E03;Выговский Сергей;car;connection_orders|emergency_works|local_works;55.617;37.61;09:00;22:00
-yugo_tsentr-E04;Данилов Даниил;public_transport;connection_orders;55.617;37.61;09:00;22:00
-yugo_tsentr-E05;Ионов Геннадий;car;connection_orders|local_works;55.617;37.61;09:00;22:00
-yugo_tsentr-E06;Исхаков Денис;foot;connection_orders|local_works;55.617;37.61;09:00;22:00
-yugo_tsentr-E07;Капитанчук Александр;bicycle;connection_orders|local_works;55.617;37.61;09:00;22:00
-yugo_tsentr-E08;Переладов Алексей;public_transport;connection_orders|local_works;55.617;37.61;09:00;22:00
-yugo_tsentr-E09;Прокопенко Вячеслав;car;connection_orders|local_works;55.617;37.61;09:00;22:00
-yugo_tsentr-E10;Рыбалкин Егор;foot;connection_orders|local_works;55.617;37.61;09:00;22:00
-yugo_tsentr-E11;Сакур Тимофей;bicycle;connection_orders;55.617;37.61;09:00;22:00
+engineer_id;name;vehicle_type;skills;start_address;shift_start;shift_end
+yugo_tsentr-E01;Бахарев Андрей;car;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E02;Брюзгин Ярослав;foot;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E03;Выговский Сергей;car;connection_orders|emergency_works|local_works;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E04;Данилов Даниил;public_transport;connection_orders;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E05;Ионов Геннадий;car;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E06;Исхаков Денис;foot;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E07;Капитанчук Александр;bicycle;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E08;Переладов Алексей;public_transport;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E09;Прокопенко Вячеслав;car;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E10;Рыбалкин Егор;foot;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;09:00;22:00
+yugo_tsentr-E11;Сакур Тимофей;bicycle;connection_orders;г.Москва проезд Симферопольский, д.7;09:00;22:00

@@ -75,9 +75,34 @@ Python-пакет Timefold работает через JVM, поэтому дл�
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install -r backend/optimization/requirements.txt
+.venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -m pytest backend/optimization -q
 ```
+
+Математическое ядро можно устанавливать отдельно от web-слоя:
+
+```bash
+.venv/bin/python -m pip install -r backend/optimization/requirements.txt
+```
+
+Timefold — дополнительный solver для сравнения на защите. Он не входит в
+основное окружение: Python-пакет Timefold рассчитан на Python 3.10–3.12 и
+требует JDK 17 или новее. В проекте используется JDK 21, но можно указать
+другую совместимую JVM через `JAVA_HOME`:
+
+```bash
+python3.12 -m venv .timefold-venv
+.timefold-venv/bin/python -m pip install -r backend/optimization/requirements-timefold.txt
+JAVA_HOME="$PWD/.tools/jdk-21.0.2" \
+PATH="$JAVA_HOME/bin:$PATH" \
+PYTHONPATH="$PWD" \
+.timefold-venv/bin/python -m backend.optimization.benchmarks.benchmark_yugo_center \
+  --routing-provider coordinate --iterations 1 --timefold-time-limit-seconds 20
+```
+
+Без `JAVA_HOME` Timefold использует Java из `PATH`. Если пакет или JVM не
+установлены, benchmark всё равно запускает Baseline и OR-Tools, а в колонке
+Timefold печатает причину недоступности.
 
 Запуск benchmark текущей производительности:
 
@@ -94,6 +119,16 @@ PATH="$JAVA_HOME/bin:$PATH" \
 PYTHONPATH="$PWD" \
 .timefold-venv/bin/python -m backend.optimization.benchmarks.benchmark_yugo_center \
   --routing-provider coordinate --iterations 1 --timefold-time-limit-seconds 1
+```
+
+По умолчанию benchmark учитывает статусы dataset: `CANCELLED` и `COMPLETED`
+не входят в новый план, `EN_ROUTE` и `IN_PROGRESS` закрепляются за текущим
+инженером, а `ASSIGNED` можно перенести. Для отдельного сравнения полного
+утреннего перераспределения используется флаг:
+
+```bash
+... -m backend.optimization.benchmarks.benchmark_yugo_center \
+  --routing-provider coordinate --iterations 1 --ignore-task-statuses
 ```
 
 В таблице `Timefold` измеряется холодным запуском JVM; для остальных двух

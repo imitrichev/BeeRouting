@@ -15,6 +15,7 @@ from typing import Any, Iterable, Mapping
 from .models import (
     Engineer,
     EngineerAvailability,
+    EngineerOperationalState,
     OptimizationProblem,
     Priority,
     Skill,
@@ -43,10 +44,14 @@ _PRIORITY_CODES = {
     "urgent": Priority.URGENT,
 }
 _STATUS_CODES = {
-    "отправлена": TaskStatus.SENT,
+    "не отправлена": TaskStatus.NOT_SENT,
+    "отправлена": TaskStatus.ASSIGNED,
+    "назначена": TaskStatus.ASSIGNED,
+    "в пути": TaskStatus.EN_ROUTE,
     "в работе": TaskStatus.IN_PROGRESS,
     "выполнена": TaskStatus.COMPLETED,
     "отменена": TaskStatus.CANCELLED,
+    "просрочена": TaskStatus.OVERDUE,
 }
 
 
@@ -67,6 +72,11 @@ class JsonScenario:
         self,
         routing_provider: RoutingProvider,
         vehicle_types: Iterable[VehicleType] | None = None,
+        preserve_assigned_tasks: bool = False,
+        ignore_task_statuses: bool = False,
+        planning_time: str | None = None,
+        operational_states: Iterable[EngineerOperationalState] = (),
+        unavailable_engineer_ids: Iterable[str] = (),
     ) -> OptimizationProblem:
         """Добавляет внешние матрицы и создаёт ``OptimizationProblem``.
 
@@ -78,6 +88,7 @@ class JsonScenario:
             dict.fromkeys(
                 [engineer.start_location_id for engineer in self.engineers]
                 + [task.location_id for task in self.tasks]
+                + [state.current_location_id for state in operational_states]
             )
         )
         # Если вызывающий код не передал профили явно, запрашиваем все типы,
@@ -126,6 +137,11 @@ class JsonScenario:
             ),
             travel_time_matrices_by_vehicle=time_matrices_by_vehicle,
             travel_distance_matrices_by_vehicle=distance_matrices_by_vehicle,
+            preserve_assigned_tasks=preserve_assigned_tasks,
+            ignore_task_statuses=ignore_task_statuses,
+            planning_time=planning_time,
+            operational_states=tuple(operational_states),
+            unavailable_engineer_ids=frozenset(unavailable_engineer_ids),
         )
 
 
@@ -185,6 +201,8 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
             )
         )
 
+    engineer_id_by_name = {engineer.name: engineer.id for engineer in engineers}
+
     tasks: list[Task] = []
     reference_engineer_by_task: dict[str, str] = {}
     reference_status_by_task: dict[str, TaskStatus] = {}
@@ -195,6 +213,18 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
         task_lat, task_lon = _coordinates(job, "lat", "lon")
         location_coordinates[task_id] = (task_lat, task_lon)
         required_vehicle = job.get("required_vehicle")
+        reference_crew = job.get("reference_crew", "")
+        if not isinstance(reference_crew, str):
+            raise ValueError("Поле 'reference_crew' должно быть строкой")
+        reference_crew = reference_crew.strip()
+        current_engineer_id = None
+        if reference_crew:
+            current_engineer_id = engineer_id_by_name.get(reference_crew)
+            # Контрольные файлы других районов могут ссылаться на бригады,
+            # которых ещё нет в переданном справочнике engineers. Сам JSON при
+            # этом остаётся доступен для просмотра; построение problem выдаст
+            # отдельную ошибку только если неизвестного инженера требуется
+            # зафиксировать для EN_ROUTE/IN_PROGRESS.
         tasks.append(
             Task(
                 id=task_id,
@@ -219,6 +249,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
                     _STATUS_CODES,
                     "reference_status",
                 ),
+                current_engineer_id=current_engineer_id,
                 required_vehicle_type=(
                     None
                     if required_vehicle is None
@@ -230,9 +261,13 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
                 ),
                 latitude=task_lat,
                 longitude=task_lon,
+                address=str(job.get("address", "")).strip() or None,
             )
         )
-        reference_engineer_by_task[task_id] = _string(job, "reference_crew")
+        # У неназначенной заявки (`Не отправлена`) исполнителя ещё нет.
+        # Пустое значение сохраняем как пустую строку; для назначенных заявок
+        # контрольный план по-прежнему проверит имя инженера отдельно.
+        reference_engineer_by_task[task_id] = reference_crew
         reference_status_by_task[task_id] = tasks[-1].status
         if job.get("control_request_id") is not None:
             control_request_id_by_task[task_id] = str(job["control_request_id"])

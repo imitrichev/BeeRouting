@@ -25,6 +25,7 @@ from .models import (
     OptimizationResult,
     RouteStop,
     Task,
+    TaskStatus,
     UnassignedReason,
     UnassignedReasonCode,
     VehicleType,
@@ -158,6 +159,8 @@ def _build_timefold_model(
         available_from_minutes: int
         available_until_minutes: int
         compatible_task_ids: list[str]
+        fixed_task_ids: list[str]
+        started_task_id: str | None
         travel_time_matrix: dict[str, dict[str, int]]
         travel_distance_matrix: dict[str, dict[str, float]]
         resource_ids_by_task: dict[str, list[str]]
@@ -182,6 +185,27 @@ def _build_timefold_model(
                 if item.task_id not in self.compatible_task_ids:
                     violations += 1
             return violations
+
+        def missing_fixed_count(self) -> int:
+            """Считает закреплённые заявки, потерянные из маршрута.
+
+            В отличие от обычной заявки, ``EN_ROUTE``/``IN_PROGRESS`` (и
+            ``ASSIGNED`` в режиме сохранения) должны остаться назначенными
+            своему инженеру. Отдельное hard-правило не даёт Timefold
+            случайно получить хороший score, оставив такую заявку без
+            маршрута.
+            """
+            task_ids = {item.task_id for item in self.tasks}
+            return sum(task_id not in task_ids for task_id in self.fixed_task_ids)
+
+        def started_order_violation_count(self) -> int:
+            """Возвращает единицу, если начатая заявка не стоит первой."""
+            if self.started_task_id is None:
+                return 0
+            return int(
+                len(self.tasks) == 0
+                or self.tasks[0].task_id != self.started_task_id
+            )
 
         def time_violation_count(self) -> int:
             """Возвращает единицу за нарушение окна или смены.
@@ -283,6 +307,14 @@ def _build_timefold_model(
             .filter(lambda engineer: engineer.compatible_count() > 0)
             .penalize(hard_score, lambda engineer: engineer.compatible_count())
             .as_constraint("Hard resource compatibility"),
+            factory.for_each(PlanningEngineer)
+            .filter(lambda engineer: engineer.missing_fixed_count() > 0)
+            .penalize(hard_score, lambda engineer: engineer.missing_fixed_count())
+            .as_constraint("Hard fixed status assignment"),
+            factory.for_each(PlanningEngineer)
+            .filter(lambda engineer: engineer.started_order_violation_count() > 0)
+            .penalize(hard_score, lambda engineer: engineer.started_order_violation_count())
+            .as_constraint("Hard started task order"),
             factory.for_each(PlanningEngineer)
             .filter(lambda engineer: engineer.time_violation_count() > 0)
             .penalize(hard_score, lambda engineer: engineer.time_violation_count())
@@ -387,7 +419,7 @@ class TimefoldOptimizer(RouteOptimizer):
             has_limited_resources = any(
                 resource_ids_used_for_task(problem, engineer, task)
                 for engineer in problem.engineers
-                for task in problem.tasks
+                for task in problem.planning_tasks
             )
             PlanningTask, PlanningEngineer, PlanningSolution, constraints = _build_timefold_model(
                 api,
@@ -416,7 +448,7 @@ class TimefoldOptimizer(RouteOptimizer):
                 ),
                 task=task,
             )
-            for task in problem.tasks
+            for task in problem.planning_tasks
         ]
         entities = [
             PlanningEngineer(
@@ -431,9 +463,25 @@ class TimefoldOptimizer(RouteOptimizer):
                 ),
                 compatible_task_ids=[
                     task.id
-                    for task in problem.tasks
+                    for task in problem.planning_tasks
                     if engineer_can_execute_task(problem, engineer, task)
+                    and problem.fixed_task_engineer_by_id.get(task.id, engineer.id)
+                    == engineer.id
                 ],
+                fixed_task_ids=[
+                    task_id
+                    for task_id, fixed_engineer_id in problem.fixed_task_engineer_by_id.items()
+                    if fixed_engineer_id == engineer.id
+                ],
+                started_task_id=next(
+                    (
+                        task.id
+                        for task in problem.planning_tasks
+                        if task.status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}
+                        and problem.fixed_task_engineer_by_id.get(task.id) == engineer.id
+                    ),
+                    None,
+                ),
                 travel_time_matrix={
                     source: dict(destinations)
                     for source, destinations in (
@@ -452,7 +500,7 @@ class TimefoldOptimizer(RouteOptimizer):
                 },
                 resource_ids_by_task={
                     task.id: list(resource_ids_used_for_task(problem, engineer, task))
-                    for task in problem.tasks
+                    for task in problem.planning_tasks
                 },
             )
             for engineer in problem.engineers
@@ -516,8 +564,34 @@ class TimefoldOptimizer(RouteOptimizer):
         после этого могут менять и исполнителя, и порядок.
         """
         resource_intervals: dict[str, list[tuple[str, int, int]]] = {}
+        started_task_ids: set[str] = set()
+        # Начатая работа уже идёт. Ставим её первой в начальное решение,
+        # чтобы construction heuristic и последующий local search начинали
+        # с физически осмысленного маршрута инженера.
+        for entity in entities:
+            if entity.started_task_id is None:
+                continue
+            task = next(
+                item.task
+                for item in planning_task_by_id.values()
+                if item.task.id == entity.started_task_id
+            )
+            schedule = _schedule_tasks(
+                problem, entity.engineer, entity.availability, [task]
+            )
+            if schedule is not None:
+                entity.tasks.append(planning_task_by_id[task.id])
+                started_task_ids.add(task.id)
+                for resource_id in resource_ids_used_for_task(problem, entity.engineer, task):
+                    resource_intervals.setdefault(resource_id, []).append(
+                        (
+                            entity.engineer.id,
+                            schedule[0].service_start_time,
+                            schedule[0].service_end_time,
+                        )
+                    )
         for task in sorted(
-            problem.tasks,
+            problem.planning_tasks,
             key=lambda item: (
                 item.priority.value != "URGENT",
                 hhmm_to_minutes(item.window_start),
@@ -525,6 +599,8 @@ class TimefoldOptimizer(RouteOptimizer):
                 item.id,
             ),
         ):
+            if task.id in started_task_ids:
+                continue
             candidates: list[tuple[int, float, str, Any, _ScheduledStop]] = []
             for entity in entities:
                 if task.id not in entity.compatible_task_ids:
@@ -635,14 +711,14 @@ class TimefoldOptimizer(RouteOptimizer):
             routes[entity.engineer.id] = route
             assigned_ids.update(stop.task.id for stop in schedule)
 
-        for task in problem.tasks:
+        for task in problem.planning_tasks:
             if task.id not in assigned_ids:
                 unassigned_reasons.setdefault(
                     task.id, self._reason_for_unassigned(problem, task)
                 )
 
         unassigned_task_ids = tuple(
-            task.id for task in problem.tasks if task.id in unassigned_reasons
+            task.id for task in problem.planning_tasks if task.id in unassigned_reasons
         )
         return _build_result(
             problem,
@@ -843,7 +919,7 @@ def _build_result(
         config.unassigned_penalty
         * (
             config.urgent_unassigned_multiplier
-            if next(task for task in problem.tasks if task.id == task_id).priority.value == "URGENT"
+            if next(task for task in problem.planning_tasks if task.id == task_id).priority.value == "URGENT"
             else config.normal_unassigned_multiplier
         )
         for task_id in unassigned_task_ids

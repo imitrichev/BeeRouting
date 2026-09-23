@@ -100,6 +100,31 @@ class ManualAssignmentPlan:
         оборудование, транспорт, окна, смены и ограниченные ресурсы. Исходный
         план изменяется только при отсутствии нарушений.
         """
+        tasks_by_id = {task.id: task for task in problem.tasks}
+        task = tasks_by_id.get(task_id)
+        if task is None:
+            raise ManualAssignmentError(
+                (
+                    ManualAssignmentViolation(
+                        task_id,
+                        engineer_id,
+                        "unknown_task",
+                        f"Заявка {task_id!r} отсутствует в задаче.",
+                    ),
+                )
+            )
+        if task_id not in {item.id for item in problem.planning_tasks}:
+            raise ManualAssignmentError(
+                (
+                    ManualAssignmentViolation(
+                        task_id,
+                        engineer_id,
+                        "inactive_task",
+                        f"Заявка {task_id} уже завершена или отменена и не может "
+                        "быть добавлена в новый маршрут.",
+                    ),
+                )
+            )
         candidate = {
             current_engineer_id: list(task_ids)
             for current_engineer_id, task_ids in self.assignments_by_engineer.items()
@@ -188,6 +213,7 @@ class ManualAssignmentPlanner(RouteOptimizer):
         """Проверяет ручные назначения без запуска OR-Tools и без мутаций."""
         engineers_by_id = {engineer.id: engineer for engineer in problem.engineers}
         tasks_by_id = {task.id: task for task in problem.tasks}
+        planning_task_ids = {task.id for task in problem.planning_tasks}
         availability_by_engineer = {
             availability.engineer_id: availability
             for availability in problem.availabilities
@@ -224,6 +250,12 @@ class ManualAssignmentPlanner(RouteOptimizer):
                         )
                     )
                     continue
+                # Статусная политика едина для всех planner'ов: выполненные и
+                # отменённые заявки известны системе, но не входят в новый
+                # маршрут. Поэтому строка контрольного плана не считается ни
+                # назначением, ни ошибкой hard constraints.
+                if task_id not in planning_task_ids:
+                    continue
                 if task_id in assigned_task_ids:
                     violations.append(
                         ManualAssignmentViolation(
@@ -234,12 +266,6 @@ class ManualAssignmentPlanner(RouteOptimizer):
                         )
                     )
                 assigned_task_ids.add(task_id)
-
-                # Отменённая заявка остаётся в контрольном распределении, но
-                # не занимает время: после неё инженер может выполнить другую
-                # заявку в том же временном окне.
-                if task.status == TaskStatus.CANCELLED:
-                    continue
 
                 violation = self._compatibility_violation(problem, engineer, task)
                 if violation is not None:
@@ -308,6 +334,7 @@ class ManualAssignmentPlanner(RouteOptimizer):
             raise ManualAssignmentError(validation.violations)
 
         tasks_by_id = {task.id: task for task in problem.tasks}
+        planning_task_ids = {task.id for task in problem.planning_tasks}
         availability_by_engineer = {
             availability.engineer_id: availability
             for availability in problem.availabilities
@@ -318,7 +345,7 @@ class ManualAssignmentPlanner(RouteOptimizer):
             route_tasks = [
                 tasks_by_id[task_id]
                 for task_id in self.assignments_by_engineer.get(engineer.id, ())
-                if tasks_by_id[task_id].status != TaskStatus.CANCELLED
+                if task_id in planning_task_ids
             ]
             routes[engineer.id] = self._build_route(
                 engineer,
@@ -330,8 +357,8 @@ class ManualAssignmentPlanner(RouteOptimizer):
 
         unassigned_task_ids = tuple(
             task.id
-            for task in problem.tasks
-            if task.status != TaskStatus.CANCELLED and task.id not in assigned_task_ids
+            for task in problem.planning_tasks
+            if task.id not in assigned_task_ids
         )
         unassigned_reasons = {
             task_id: UnassignedReason(
@@ -474,10 +501,14 @@ class ManualAssignmentPlanner(RouteOptimizer):
 
 
 _CSV_STATUS = {
-    "отправлена": TaskStatus.SENT,
+    "не отправлена": TaskStatus.NOT_SENT,
+    "отправлена": TaskStatus.ASSIGNED,
+    "назначена": TaskStatus.ASSIGNED,
+    "в пути": TaskStatus.EN_ROUTE,
     "в работе": TaskStatus.IN_PROGRESS,
     "выполнена": TaskStatus.COMPLETED,
     "отменена": TaskStatus.CANCELLED,
+    "просрочена": TaskStatus.OVERDUE,
 }
 
 

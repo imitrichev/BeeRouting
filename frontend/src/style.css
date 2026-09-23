@@ -87,6 +87,25 @@ body {
   margin-bottom: 4px;
 }
 
+.explanation-text {
+  white-space: pre-wrap;
+  line-height: 1.55;
+}
+
+.explanation-action-cell {
+  min-width: 112px;
+}
+
+.explanation-debug {
+  margin-top: 20px;
+}
+
+.explanation-debug pre {
+  max-height: 360px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
 .engineer-color-dot {
   border-radius: 50%;
   display: inline-block;

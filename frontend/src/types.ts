@@ -15,12 +15,18 @@ export interface Task {
   location_id: string
   latitude: number | null
   longitude: number | null
+  address: string | null
   required_skill: string
   duration_minutes: number
   window_start: string
   window_end: string
   priority: string
   required_vehicle_type: string | null
+  required_equipment: string[]
+  status: string
+  current_engineer_id: string | null
+  is_plannable: boolean
+  assignment_locked: boolean
 }
 
 export interface Dataset {
@@ -67,6 +73,9 @@ export interface Metrics {
   used_engineers_penalty: number
   distance_penalty: number
   travel_time_penalty: number
+  plan_disruption_penalty: number
+  reassigned_task_count: number
+  reordered_task_count: number
 }
 
 export interface UnassignedTask {
@@ -83,7 +92,32 @@ export interface OptimizationResult {
   unassigned: UnassignedTask[]
 }
 
+export interface ExplanationResponse {
+  task_id: string
+  decision_trace?: Record<string, unknown>
+  explanation: string
+  developer_mode: boolean
+}
+
 export interface ApiResponse {
   dataset: Dataset
   result?: OptimizationResult
+}
+
+export interface ReassignmentMetrics {
+  used_engineers_count: number
+  total_distance_km: number
+}
+
+export interface ManualReassignmentPreview {
+  feasible: boolean
+  proposal_id?: string
+  task_id?: string
+  reason_code?: string
+  message?: string
+  old_engineer?: { id: string; name: string } | null
+  new_engineer?: { id: string; name: string }
+  before?: ReassignmentMetrics
+  after?: ReassignmentMetrics
+  delta?: ReassignmentMetrics
 }

@@ -22,11 +22,33 @@ npm run dev
 
 Откройте <http://localhost:5173>.
 
+## Режим интерфейса
+
+Режим задаётся переменной `BEEROUTING_MODE`:
+
+```bash
+# Локальная разработка: JSON-проверки доступны во всплывающем объяснении.
+BEEROUTING_MODE=developer .venv/bin/python backend/web_mvp/manage.py runserver 8000
+
+# Production: JSON-проверки не передаются frontend через API.
+BEEROUTING_MODE=production .venv/bin/python backend/web_mvp/manage.py runserver 8000
+```
+
+По умолчанию используется `developer`. Значение можно записать в корневой
+файл `.env`; Django загружает его при запуске.
+
+На панели оптимизации переключатель «Игнорировать статусы и перераспределить
+все заявки» включён по умолчанию. В этом режиме строится новый план по всему
+dataset. Если выключить переключатель, `CANCELLED` и `COMPLETED` исключаются,
+`EN_ROUTE` и `IN_PROGRESS` фиксируются, а обычные `ASSIGNED` сохраняются за
+текущими инженерами.
+
 ## API
 
 - `GET /api/dataset/official/` — открыть `Югоцентр.json`;
 - `POST /api/dataset/upload/` — загрузить JSON в поле `file`;
-- `POST /api/optimize/` — запустить OR-Tools для текущего dataset.
+- `POST /api/optimize/` — запустить OR-Tools для текущего dataset;
+- `POST /api/explain/<task_id>/` — получить объяснение назначения заявки.
 
 По умолчанию API использует `OSRMRoutingProvider`. Он запрашивает у OSRM
 матрицу времени и расстояний через [Table service](https://project-osrm.org/docs/v5.22.0/api/#table-service),
