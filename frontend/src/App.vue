@@ -241,6 +241,13 @@ const assignmentByTask = computed(() => {
 
 const formatNumber = (value: number, digits = 1) => value.toFixed(digits)
 
+const explanationTitle = computed(() => {
+  const engineerName = assignmentByTask.value[explanationTaskId.value]
+  return engineerName
+    ? `Причины назначения заявки ${explanationTaskId.value} инженеру ${engineerName}`
+    : `Причины неназначения заявки ${explanationTaskId.value}`
+})
+
 function escapeHtml(value: string): string {
   const element = document.createElement('div')
   element.textContent = value
@@ -1228,7 +1235,7 @@ onBeforeUnmount(() => {
 
             <v-dialog v-model="explanationOpen" max-width="760">
               <v-card>
-                <v-card-title>Причины назначения</v-card-title>
+                <v-card-title>{{ explanationTitle }}</v-card-title>
                 <v-card-text>
                   <div class="explanation-text">{{ explanationText }}</div>
                   <details

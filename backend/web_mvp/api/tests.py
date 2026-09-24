@@ -151,6 +151,68 @@ class OptimizationApiTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
 
+    def test_late_manual_task_cannot_activate_new_engineer(self) -> None:
+        """После условных 14:00 новый план не вызывает инженера из дома."""
+        initial = self.client.post(
+            "/api/optimize/",
+            {"ignore_task_statuses": True},
+            format="json",
+        )
+        self.assertEqual(initial.status_code, 200)
+        created = self.client.post(
+            "/api/tasks/",
+            {
+                "id": "LATE-NEW",
+                "latitude": 55.75,
+                "longitude": 37.61,
+                "work_type": "LOCAL",
+                "window_start": "16:00",
+                "window_end": "18:00",
+            },
+            format="json",
+        )
+        self.assertEqual(created.status_code, 201)
+        self.assertIn("LATE-NEW", optimization_service._late_day_manual_task_ids)
+
+        # Имитируем результат, который потребовал бы вызвать любого инженера,
+        # отсутствовавшего в исходном составе на линии.
+        optimization_service._late_day_active_engineer_ids.clear()
+        rejected = self.client.post(
+            "/api/optimize/",
+            {"ignore_task_statuses": True},
+            format="json",
+        )
+
+        self.assertEqual(rejected.status_code, 422)
+        self.assertIn("После условных 14:00", rejected.data["error"])
+        task = next(
+            item
+            for item in self.client.get("/api/dataset/").data["dataset"]["tasks"]
+            if item["id"] == "LATE-NEW"
+        )
+        self.assertEqual(task["status"], "NOT_SENT")
+
+    def test_late_emergency_can_activate_new_engineer(self) -> None:
+        """Авария не включает запрет вызова дополнительной бригады."""
+        created = self.client.post(
+            "/api/tasks/",
+            {
+                "id": "LATE-EMERGENCY",
+                "latitude": 55.75,
+                "longitude": 37.61,
+                "work_type": "EMERGENCY",
+                "window_start": "16:00",
+                "window_end": "18:00",
+            },
+            format="json",
+        )
+
+        self.assertEqual(created.status_code, 201)
+        self.assertNotIn(
+            "LATE-EMERGENCY",
+            optimization_service._late_day_manual_task_ids,
+        )
+
     def test_task_window_rejects_non_24_hour_time(self) -> None:
         """Форма не принимает часы за пределами 00:00–23:59."""
         response = self.client.post(
@@ -361,7 +423,7 @@ class OptimizationApiTests(TestCase):
         self.assertEqual(response.data["task_id"], task_id)
         self.assertEqual(
             response.data["explanation"],
-            f"Заявка {task_id} назначена инженеру Иванов. Заявка назначена Иванову.",
+            "Заявка назначена Иванову.",
         )
         self.assertTrue(response.data["developer_mode"])
         self.assertEqual(
@@ -394,4 +456,4 @@ class OptimizationApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.data["developer_mode"])
         self.assertNotIn("decision_trace", response.data)
-        self.assertTrue(response.data["explanation"].startswith(f"Заявка {task_id}"))
+        self.assertEqual(response.data["explanation"], "Причины назначения.")

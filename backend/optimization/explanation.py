@@ -9,10 +9,18 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from .config import OptimizerConfig
-from .models import Engineer, OptimizationProblem, OptimizationResult, Task, hhmm_to_minutes
+from .models import (
+    Engineer,
+    OptimizationProblem,
+    OptimizationResult,
+    Task,
+    TaskStatus,
+    hhmm_to_minutes,
+)
 from .ortools_optimizer import ORToolsOptimizer
 
 
@@ -56,6 +64,28 @@ class ExplanationEngine:
         assessments: list[dict[str, Any]] = []
         for engineer in problem.engineers:
             hard_reasons = self._hard_reasons(problem, engineer, task)
+            if (
+                task.status
+                in {
+                    TaskStatus.CANCELLED,
+                    TaskStatus.COMPLETED,
+                    TaskStatus.EN_ROUTE,
+                    TaskStatus.IN_PROGRESS,
+                }
+                and assigned_engineer_id is not None
+                and engineer.id != assigned_engineer_id
+            ):
+                hard_reasons.append(
+                    {
+                        "event_type": "HARD_CONSTRAINT",
+                        "code": "TASK_STATUS_LOCKED",
+                        "message": (
+                            f"Статус {task.status.value} запрещает перенос заявки "
+                            "другому инженеру."
+                        ),
+                        "must_mention": True,
+                    }
+                )
             candidate_routes = {
                 engineer_id: list(task_ids)
                 for engineer_id, task_ids in routes.items()
@@ -194,6 +224,8 @@ class ExplanationEngine:
             "explanation_policy": {
                 "distance_threshold_km": self.config.explanation_distance_threshold_km,
                 "travel_time_threshold_minutes": self.config.explanation_travel_time_threshold_minutes,
+                "free_reassignments": self.config.explanation_free_reassignments,
+                "reassignment_penalty": self.config.explanation_reassignment_penalty,
             },
         }
         return trace
@@ -446,11 +478,48 @@ class ExplanationEngine:
         initial_routes: dict[str, list[str]],
     ) -> dict[str, Any]:
         """Пересчитывает допустимую альтернативу коротким OR-Tools запуском."""
+        current_routes = {
+            engineer_id: tuple(stop.task_id for stop in route.stops)
+            for engineer_id, route in current_result.routes.items()
+        }
+        current_engineer_by_task = {
+            task_id: engineer_id
+            for engineer_id, task_ids in current_routes.items()
+            for task_id in task_ids
+        }
+        # Закрытые и уже выполняемые работы не должны «переезжать» между
+        # инженерами во время объясняющего расчёта, даже если основной план
+        # был построен в демонстрационном режиме игнорирования статусов.
+        frozen_statuses = {
+            "CANCELLED",
+            "COMPLETED",
+            "EN_ROUTE",
+            "IN_PROGRESS",
+        }
+        forced_assignments = {
+            item.id: current_engineer_by_task[item.id]
+            for item in problem.tasks
+            if item.status.value in frozen_statuses
+            and item.id in current_engineer_by_task
+        }
+        forced_assignments[task.id] = engineer.id
+
+        # Для объяснений цена переноса существенно ниже рабочего штрафа
+        # перепланирования: 300 баллов соответствуют примерно 3 км. Изменение
+        # порядка отдельно не штрафуется, поскольку диспетчеру важнее число
+        # заявок, сменивших исполнителя.
+        counterfactual_config = replace(
+            self.config,
+            reassignment_penalty=self.config.explanation_reassignment_penalty,
+            route_order_change_penalty=0,
+        )
+        counterfactual_optimizer = ORToolsOptimizer(counterfactual_config)
         try:
-            alternative = self.optimizer.optimize(
+            alternative = counterfactual_optimizer.optimize(
                 problem,
-                forced_task_engineer_by_id={task.id: engineer.id},
+                forced_task_engineer_by_id=forced_assignments,
                 initial_routes_by_engineer=initial_routes,
+                reference_routes_by_engineer=current_routes,
                 time_limit_seconds=self.config.explanation_time_limit_seconds,
             )
         except (ValueError, KeyError) as exc:
@@ -475,7 +544,23 @@ class ExplanationEngine:
             }
         distance_delta = alternative.total_distance - current_result.total_distance
         travel_delta = alternative.total_travel_time - current_result.total_travel_time
-        objective_delta = alternative.total_objective - current_result.total_objective
+        # Первые два переноса считаются допустимой локальной корректировкой.
+        # OR-Tools во время поиска начисляет 300 за каждый перенос; здесь
+        # вычитаем бесплатный порог из итоговой декомпозиции.
+        charged_reassignments = max(
+            0,
+            alternative.reassigned_task_count
+            - self.config.explanation_free_reassignments,
+        )
+        plan_disruption_penalty = (
+            self.config.explanation_plan_disruption_penalty(
+                alternative.reassigned_task_count
+            )
+        )
+        current_core_objective = self._core_objective(current_result)
+        alternative_core_objective = self._core_objective(alternative)
+        alternative_objective = alternative_core_objective + plan_disruption_penalty
+        objective_delta = alternative_objective - current_core_objective
         current_engineer_id = self._assigned_engineer_id(
             current_result,
             task.id,
@@ -522,9 +607,20 @@ class ExplanationEngine:
             # видит цену нового маршрута, а не только выигрыш по расстоянию.
             "current_used_engineers_count": current_result.used_engineers_count,
             "alternative_used_engineers_count": alternative.used_engineers_count,
+            "reassigned_task_count": alternative.reassigned_task_count,
+            "free_reassignments_count": self.config.explanation_free_reassignments,
+            "charged_reassignments_count": charged_reassignments,
             "objective": {
-                "current": self._objective_components(current_result),
-                "alternative": self._objective_components(alternative),
+                "current": self._objective_components(
+                    current_result,
+                    plan_disruption_penalty=0,
+                    total_objective=current_core_objective,
+                ),
+                "alternative": self._objective_components(
+                    alternative,
+                    plan_disruption_penalty=plan_disruption_penalty,
+                    total_objective=alternative_objective,
+                ),
                 "delta": {
                     "unassigned_penalty": alternative.unassigned_penalty
                     - current_result.unassigned_penalty,
@@ -534,25 +630,46 @@ class ExplanationEngine:
                     - current_result.distance_penalty,
                     "travel_time_penalty": alternative.travel_time_penalty
                     - current_result.travel_time_penalty,
+                    "plan_disruption_penalty": plan_disruption_penalty,
                     "total_objective": objective_delta,
                 },
             },
             "must_mention": (
-                abs(distance_delta) >= self.config.explanation_distance_threshold_km
-                or abs(travel_delta) >= self.config.explanation_travel_time_threshold_minutes
-                or alternative.used_engineers_count != current_result.used_engineers_count
+                objective_delta < 0
+                and (
+                    abs(distance_delta) >= self.config.explanation_distance_threshold_km
+                    or abs(travel_delta) >= self.config.explanation_travel_time_threshold_minutes
+                    or alternative.used_engineers_count != current_result.used_engineers_count
+                    or alternative.reassigned_task_count > 0
+                )
             ),
         }
 
     @staticmethod
-    def _objective_components(result: OptimizationResult) -> dict[str, int]:
-        """Возвращает те же четыре компонента objective, что и основной solver."""
+    def _core_objective(result: OptimizationResult) -> int:
+        """Возвращает objective маршрута без штрафа относительно старого плана."""
+        return (
+            result.unassigned_penalty
+            + result.used_engineers_penalty
+            + result.distance_penalty
+            + result.travel_time_penalty
+        )
+
+    @staticmethod
+    def _objective_components(
+        result: OptimizationResult,
+        *,
+        plan_disruption_penalty: int,
+        total_objective: int,
+    ) -> dict[str, int]:
+        """Возвращает полную декомпозицию objective объясняющего расчёта."""
         return {
             "unassigned_penalty": result.unassigned_penalty,
             "used_engineers_penalty": result.used_engineers_penalty,
             "distance_penalty": result.distance_penalty,
             "travel_time_penalty": result.travel_time_penalty,
-            "total_objective": result.total_objective,
+            "plan_disruption_penalty": plan_disruption_penalty,
+            "total_objective": total_objective,
         }
 
     def _impact(
@@ -583,6 +700,10 @@ class ExplanationEngine:
             direction = "worse"
         else:
             direction = "same"
+        # Ухудшающие альтернативы доступны разработчику в stage_2, но не
+        # должны отвлекать диспетчера отдельной рекомендацией.
+        if direction != "better":
+            return None
         return {
             "event_type": "OBJECTIVE_IMPACT",
             "distance_difference_km": round(distance_delta, 3),

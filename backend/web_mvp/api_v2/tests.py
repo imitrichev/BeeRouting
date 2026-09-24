@@ -92,7 +92,9 @@ class PersistentPlanningTests(TestCase):
         with patch('LLM.query.explain_assignment', return_value='Проверенное объяснение.'):
             explanation = self.client.post(self.url('explain/URGENT'), {}, format='json')
         self.assertEqual(explanation.status_code, 200, explanation.data)
-        self.assertIn('URGENT', explanation.data['explanation'])
+        # Номер заявки и исполнитель теперь находятся в заголовке окна Vue,
+        # поэтому API не дублирует их в тексте LLM.
+        self.assertEqual(explanation.data['explanation'], 'Проверенное объяснение.')
 
     def test_failed_event_does_not_change_saved_state(self):
         old = self.client.get(self.url('dataset')).data

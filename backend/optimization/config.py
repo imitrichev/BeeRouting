@@ -30,6 +30,8 @@ class OptimizerConfig:
     explanation_time_limit_seconds: int = 2  # Лимит одного counterfactual-расчёта для объяснения.
     explanation_distance_threshold_km: float = 1.0  # Минимальная существенная разница пробега для текста объяснения.
     explanation_travel_time_threshold_minutes: int = 5  # Минимальная существенная разница времени движения.
+    explanation_free_reassignments: int = 2  # Сколько переносов допускается в counterfactual-проверке без штрафа.
+    explanation_reassignment_penalty: int = 300  # Цена каждого переноса сверх бесплатного порога; 300 соответствует примерно 3 км пробега.
 
     def __post_init__(self) -> None:
         """Проверяет числовые параметры конфигурации."""
@@ -77,6 +79,10 @@ class OptimizerConfig:
             raise ValueError(
                 "explanation_travel_time_threshold_minutes не может быть отрицательным"
             )
+        if self.explanation_free_reassignments < 0:
+            raise ValueError("explanation_free_reassignments не может быть отрицательным")
+        if self.explanation_reassignment_penalty < 0:
+            raise ValueError("explanation_reassignment_penalty не может быть отрицательным")
 
     def unassigned_multiplier(self, task: Task) -> int:
         """Возвращает множитель потери заявки по типу выполняемых работ.
@@ -97,3 +103,11 @@ class OptimizerConfig:
             if task.priority == Priority.URGENT
             else self.normal_unassigned_multiplier
         )
+
+    def explanation_plan_disruption_penalty(self, reassigned_task_count: int) -> int:
+        """Считает штраф stage 2 только за переносы сверх бесплатного порога."""
+        charged_count = max(
+            0,
+            reassigned_task_count - self.explanation_free_reassignments,
+        )
+        return charged_count * self.explanation_reassignment_penalty

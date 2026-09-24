@@ -64,6 +64,10 @@ class OptimizationWebService:
         self._unavailable_engineer_ids: set[str] = set()
         self._geocoder: NominatimGeocoder | None = None
         self._manual_reassignment_proposals: dict[str, dict[str, Any]] = {}
+        # После условных 14:00 новые обычные заявки разрешено распределять
+        # только между инженерами, которые уже находились на линии.
+        self._late_day_manual_task_ids: set[str] = set()
+        self._late_day_active_engineer_ids: set[str] = set()
 
     def reset(self) -> None:
         """Очищает dataset; используется тестами и локальной перезагрузкой."""
@@ -76,6 +80,8 @@ class OptimizationWebService:
         self._ignore_task_statuses = False
         self._unavailable_engineer_ids = set()
         self._manual_reassignment_proposals.clear()
+        self._late_day_manual_task_ids.clear()
+        self._late_day_active_engineer_ids.clear()
 
     def load_official_dataset(self) -> JsonScenario:
         """Загружает официальный демонстрационный JSON из корня проекта."""
@@ -88,6 +94,8 @@ class OptimizationWebService:
         self._ignore_task_statuses = False
         self._unavailable_engineer_ids = set()
         self._manual_reassignment_proposals.clear()
+        self._late_day_manual_task_ids.clear()
+        self._late_day_active_engineer_ids.clear()
         # У нового dataset другой набор координат, поэтому старый provider и
         # его кэш ответов больше нельзя использовать.
         self.routing_provider = None
@@ -108,6 +116,8 @@ class OptimizationWebService:
         self._preserve_assigned_tasks = False
         self.routing_provider = None
         self._manual_reassignment_proposals.clear()
+        self._late_day_manual_task_ids.clear()
+        self._late_day_active_engineer_ids.clear()
         return scenario
 
     def current_dataset(self) -> JsonScenario:
@@ -156,6 +166,7 @@ class OptimizationWebService:
             initial_routes_by_engineer=initial_routes_by_engineer,
             reference_routes_by_engineer=reference_routes_by_engineer,
         )
+        self._validate_late_day_engineer_activation(scenario, result)
         self._problem = problem
         self._result = result
         self._manual_reassignment_proposals.clear()
@@ -508,6 +519,7 @@ class OptimizationWebService:
             longitude=data["longitude"],
             address=data.get("address", "").strip() or None,
         )
+        self._register_late_day_manual_task(scenario, task)
         coordinates = dict(scenario.location_coordinates)
         new_coordinates = (task.latitude, task.longitude)
         if location_id in coordinates and coordinates[location_id] != new_coordinates:
@@ -525,6 +537,78 @@ class OptimizationWebService:
         self._manual_reassignment_proposals.clear()
         self.routing_provider = None
         return self._scenario
+
+    @staticmethod
+    def _is_late_day(scenario: JsonScenario) -> bool:
+        """Определяет наступление условных 14:00 по фактическим статусам."""
+        return any(
+            task.window_start >= "14:00"
+            and task.status in {TaskStatus.IN_PROGRESS, TaskStatus.COMPLETED}
+            for task in scenario.tasks
+        )
+
+    def _register_late_day_manual_task(
+        self,
+        scenario: JsonScenario,
+        task: Task,
+    ) -> None:
+        """Запоминает доступный после 14:00 состав инженеров на линии."""
+        # Авария является форс-мажором и может потребовать вызова ещё одной
+        # бригады; запрет применяется только к обычным ручным заявкам.
+        if task.work_type == WorkType.EMERGENCY:
+            return
+        if not self._late_day_manual_task_ids and not self._is_late_day(scenario):
+            return
+        if not self._late_day_manual_task_ids:
+            active_engineers = {
+                engineer_id
+                for engineer_id, route in (
+                    self._result.routes.items() if self._result is not None else ()
+                )
+                if route.stops
+            }
+            active_engineers.update(
+                item.current_engineer_id
+                for item in scenario.tasks
+                if item.current_engineer_id is not None
+                and item.status
+                in {
+                    TaskStatus.ASSIGNED,
+                    TaskStatus.EN_ROUTE,
+                    TaskStatus.IN_PROGRESS,
+                    TaskStatus.COMPLETED,
+                }
+            )
+            self._late_day_active_engineer_ids = active_engineers
+        self._late_day_manual_task_ids.add(task.id)
+
+    def _validate_late_day_engineer_activation(
+        self,
+        scenario: JsonScenario,
+        result: OptimizationResult,
+    ) -> None:
+        """Отклоняет план, вызывающий после 14:00 нового инженера из дома."""
+        if not self._late_day_manual_task_ids:
+            return
+        used_engineer_ids = {
+            engineer_id
+            for engineer_id, route in result.routes.items()
+            if route.stops
+        }
+        newly_activated = used_engineer_ids - self._late_day_active_engineer_ids
+        if not newly_activated:
+            return
+        engineers_by_id = {item.id: item for item in scenario.engineers}
+        names = ", ".join(
+            engineers_by_id[engineer_id].name
+            for engineer_id in sorted(newly_activated)
+        )
+        task_ids = ", ".join(sorted(self._late_day_manual_task_ids))
+        raise ValueError(
+            "После условных 14:00 нельзя вызывать на линию нового инженера "
+            f"для вручную созданных заявок {task_ids}. Новый план потребовал "
+            f"бы инженеров: {names}. План отклонён; заявки остаются не назначены."
+        )
 
     def geocode_address(self, address: str) -> tuple[float, float]:
         """Находит точный адрес через локальный или публичный Nominatim."""
@@ -572,29 +656,7 @@ class OptimizationWebService:
             explanation = (
                 "Текстовое объяснение LLM временно недоступно."
             )
-        return trace, self._add_explanation_subject(task_id, trace, explanation)
-
-    @staticmethod
-    def _add_explanation_subject(
-        task_id: str,
-        trace: dict[str, Any],
-        explanation: str,
-    ) -> str:
-        """Гарантирует, что объяснение начинается с заявки и назначения."""
-        assignment = trace.get("assignment") or {}
-        engineer = assignment.get("engineer") or {}
-        engineer_name = engineer.get("name")
-        if assignment.get("status") == "assigned" and engineer_name:
-            prefix = f"Заявка {task_id} назначена инженеру {engineer_name}."
-        elif assignment.get("status") == "unassigned":
-            prefix = f"Заявка {task_id} не назначена."
-        else:
-            prefix = f"Заявка {task_id}."
-
-        normalized = explanation.strip()
-        if normalized.casefold().startswith(prefix.casefold()):
-            return normalized
-        return f"{prefix} {normalized}".strip()
+        return trace, explanation.strip()
 
     def _build_problem(
         self,

@@ -17,7 +17,8 @@ from .state import encode, decode
 from .repository import sync_entities
 
 STATE_FIELDS = ('_scenario', '_problem', '_result', '_preserve_assigned_tasks',
-                '_ignore_task_statuses', '_unavailable_engineer_ids', '_source_name')
+                '_ignore_task_statuses', '_unavailable_engineer_ids', '_source_name',
+                '_late_day_manual_task_ids', '_late_day_active_engineer_ids')
 
 
 class OptimizationWebService(BaseOptimizationWebService):
