@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import BasicCard from '@/templates/BasicCard.vue'
 import type { Task } from '@/types/entities.ts'
-import { ref, watch } from 'vue'
-import { PRIORITY_TYPE_MAP, SKILL_TYPE_MAP, VEHICLE_TYPE_MAP } from '@/utils/consts.ts'
-import type { PriorityType, SkillType, VehicleType } from '@/types/utils.ts'
 import { useCurrentStateStore } from '@/stores/state.ts'
+import { storeToRefs } from 'pinia'
+import {
+  getPriorityTranslation,
+  getSkillTranslation,
+  getVehicleTypeTranslation,
+} from '@/utils/translations.ts'
 
 interface IProps {
   loading: boolean
@@ -15,25 +18,7 @@ const props = defineProps<IProps>()
 
 const store = useCurrentStateStore()
 
-const tasks = ref<Task[]>([])
-
-watch(
-  () => [...props.tasks],
-  (nVal) => {
-    tasks.value = nVal
-  },
-)
-
-const getSkillTranslation = (skill: string): string => {
-  if (!Object.keys(SKILL_TYPE_MAP).includes(skill)) return skill
-  return SKILL_TYPE_MAP[skill as SkillType]
-}
-
-const getVehicleTypeTranslation = (type: string | null): string => {
-  if (!type) return 'Не указан'
-  if (!Object.keys(VEHICLE_TYPE_MAP).includes(type)) return 'Неизвестно'
-  return VEHICLE_TYPE_MAP[type as VehicleType]
-}
+const { getTasks } = storeToRefs(store)
 
 const getSubtitle = (item: Task): string => {
   const skill = getSkillTranslation(item.required_skill)
@@ -42,25 +27,20 @@ const getSubtitle = (item: Task): string => {
   return `${skill} • ${start}-${end} • ${item.duration_minutes} мин.`
 }
 
-const getPriorityTranslation = (priority: string): string => {
-  if (!Object.keys(PRIORITY_TYPE_MAP).includes(priority)) return priority
-  return PRIORITY_TYPE_MAP[priority as PriorityType]
-}
-
 const getPriorityColor = (priority: string): string => {
   return priority === 'URGENT' ? 'error' : 'default'
 }
 </script>
 
 <template>
-  <basic-card title="Список заявок" :loading="props.loading">
+  <basic-card title="Заявки" :loading="props.loading">
     <template #loading>
       <v-skeleton-loader type="list-item-two-line" />
     </template>
 
     <v-list class="overflow-list" density="compact">
       <v-list-group
-        v-for="item in tasks"
+        v-for="item in getTasks"
         :key="item.id"
         :model-value="store.getExpandedTaskIds.includes(item.id)"
         @update:model-value="() => store.toggleExpandedTask(item.id)"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AppHeader from '@/components/AppHeader.vue'
-import FileUpload from '@/components/FileUpload.vue'
+import ControlRow from '@/components/ControlRow.vue'
 import AppTasks from '@/components/AppTasks.vue'
 import AppEngineers from '@/components/AppEngineers.vue'
 import AppMap from '@/components/AppMap.vue'
@@ -64,7 +64,7 @@ onMounted(() => {
           <v-col cols="12">
             <v-row no-gutters>
               <v-col cols="12" class="mb-3">
-                <file-upload :loading="getLoading" />
+                <control-row :loading="getLoading" />
               </v-col>
             </v-row>
             <v-row no-gutters>

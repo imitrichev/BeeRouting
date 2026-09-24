@@ -69,9 +69,9 @@ const renderTasks = () => {
     const popupContent = `
       <div style="font-size: 13px; line-height: 1.4;">
         <strong>Task ${task.id}</strong><br/>
-        <b>Skill:</b> ${task.required_skill}<br/>
-        <b>Duration:</b> ${task.duration_minutes} min<br/>
-        <b>Window:</b> ${new Date(task.window_start).toLocaleString()} — ${new Date(task.window_end).toLocaleString()}<br/>
+        <b>Тип:</b> ${task.required_skill}<br/>
+        <b>Длительность:</b> ${task.duration_minutes} мин.<br/>
+        <b>Window:</b> ${task.window_start} — ${task.window_end}<br/>
         <b>Priority:</b> ${task.priority}<br/>
         ${task.required_vehicle_type ? `<b>Vehicle:</b> ${task.required_vehicle_type}<br/>` : ''}
       </div>

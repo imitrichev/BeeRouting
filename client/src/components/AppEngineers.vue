@@ -2,9 +2,9 @@
 import BasicCard from '@/templates/BasicCard.vue'
 import type { Engineer } from '@/types/entities.ts'
 import { ref, watch } from 'vue'
-import { SKILL_TYPE_MAP, VEHICLE_TYPE_MAP } from '@/utils/consts.ts'
-import type { SkillType, VehicleType } from '@/types/utils.ts'
 import { useCurrentStateStore } from '@/stores/state.ts'
+import { getEngineerColor } from '@/utils/map.ts'
+import { getSkillTranslation, getVehicleTypeTranslation } from '@/utils/translations.ts'
 
 interface IProps {
   loading: boolean
@@ -24,44 +24,17 @@ watch(
   },
 )
 
-const getVehicleTypeTranslation = (type: string): string => {
-  if (!Object.keys(VEHICLE_TYPE_MAP).includes(type)) return 'Неизвестно'
-  return VEHICLE_TYPE_MAP[type as VehicleType]
-}
-
-const getSkillTranslation = (type: string): string => {
-  if (!Object.keys(SKILL_TYPE_MAP).includes(type)) return 'Неизвестно'
-  return SKILL_TYPE_MAP[type as SkillType]
-}
-
 const getSubtitle = (item: Engineer): string => {
   return `${getVehicleTypeTranslation(item.vehicle_type)} • ${item.available_from} - ${item.available_until}`
-}
-
-const getColor = (item: Engineer): string => {
-  const hashString = (str: string): number => {
-    let hash = 2166136248
-    for (let i = 0; i < str.length; i++) {
-      hash ^= str.charCodeAt(i)
-      hash = Math.imul(hash, 16777619)
-    }
-    return hash >>> 0
-  }
-  const hash = hashString(item.id)
-  const hue = (hash * 0.61803398875 * 360) % 360
-
-  const saturation = 60 + (hash % 3) * 10
-  const lightness = 45 + ((hash >> 4) % 3) * 10
-
-  return `hsl(${hue.toFixed(1)}, ${saturation}%, ${lightness}%)`
 }
 </script>
 
 <template>
-  <basic-card title="Список работников" :loading="props.loading">
+  <basic-card title="Инженеры" :loading="props.loading">
     <template #loading>
       <v-skeleton-loader type="list-item-two-line" />
     </template>
+    <template #toolbarAppend> </template>
     <v-list class="overflow-list" density="compact">
       <v-list-group
         v-for="item in engineers"
@@ -72,7 +45,7 @@ const getColor = (item: Engineer): string => {
         <template #activator="{ props: activatorProps }">
           <v-list-item v-bind="activatorProps" :title="item.name" :subtitle="getSubtitle(item)">
             <template #prepend>
-              <v-avatar :color="getColor(item)"></v-avatar>
+              <v-avatar :color="getEngineerColor(item.id)"></v-avatar>
             </template>
           </v-list-item>
         </template>

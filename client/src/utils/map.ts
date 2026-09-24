@@ -1,4 +1,4 @@
-import type { Task } from '@/types/entities.ts'
+import type { Engineer, Task } from '@/types/entities.ts'
 import type { Feature, FeatureCollection, Point } from 'geojson'
 
 export type TaskFeatureProperties = {
@@ -37,4 +37,22 @@ export const tasksToFeatureCollection = (
     }))
 
   return { type: 'FeatureCollection', features }
+}
+
+export const getEngineerColor = (engineerId: string): string => {
+  const hashString = (str: string): number => {
+    let hash = 2166136248
+    for (let i = 0; i < str.length; i++) {
+      hash ^= str.charCodeAt(i)
+      hash = Math.imul(hash, 16777619)
+    }
+    return hash >>> 0
+  }
+  const hash = hashString(engineerId)
+  const hue = (hash * 0.61803398875 * 360) % 360
+
+  const saturation = 60 + (hash % 3) * 10
+  const lightness = 45 + ((hash >> 4) % 3) * 10
+
+  return `hsl(${hue.toFixed(1)}, ${saturation}%, ${lightness}%)`
 }
