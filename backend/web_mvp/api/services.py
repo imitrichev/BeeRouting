@@ -535,7 +535,20 @@ class OptimizationWebService:
                 cache_path=cache_path,
                 allow_street_fallback=False,
             )
-        return self._geocoder(address)
+        reference_coordinates = None
+        if (
+            self._scenario is not None
+            and self._scenario.office_latitude is not None
+            and self._scenario.office_longitude is not None
+        ):
+            reference_coordinates = (
+                self._scenario.office_latitude,
+                self._scenario.office_longitude,
+            )
+        return self._geocoder(
+            address,
+            reference_coordinates=reference_coordinates,
+        )
 
     def explain_current_task(self, task_id: str) -> tuple[dict[str, Any], str]:
         """Строит decision trace и получает его объяснение от LLM."""

@@ -28,7 +28,7 @@ CONTROL_CSV_PATH = Path(__file__).parents[3] / "Югоцентр Контрол�
 
 
 def test_each_region_uses_its_own_office_as_engineer_start() -> None:
-    """Дублированные координаты инженера не подменяют офис другого района."""
+    """Офис и старты инженеров загружаются из своего районного JSON."""
     root = Path(__file__).parents[3]
     for filename in ("Восток.json", "Юго-восток.json", "Югоцентр.json"):
         payload = json.loads((root / filename).read_text(encoding="utf-8"))
@@ -36,8 +36,13 @@ def test_each_region_uses_its_own_office_as_engineer_start() -> None:
         office = payload["office_start_point"]
         expected = (office["lat"], office["lon"])
         assert scenario.location_coordinates["office_start"] == expected
+        expected_starts = {
+            engineer["engineer_id"]: (engineer["start_lat"], engineer["start_lon"])
+            for engineer in payload["engineers"]
+        }
         assert all(
-            (engineer.start_latitude, engineer.start_longitude) == expected
+            (engineer.start_latitude, engineer.start_longitude)
+            == expected_starts[engineer.id]
             for engineer in scenario.engineers
         )
 
@@ -53,7 +58,11 @@ def test_engineers_can_start_from_different_locations_than_office() -> None:
     scenario = load_json_scenario_data(payload)
 
     first, second = scenario.engineers[:2]
-    assert scenario.location_coordinates["office_start"] == (55.6638404, 37.6138686)
+    office = payload["office_start_point"]
+    assert scenario.location_coordinates["office_start"] == (
+        office["lat"],
+        office["lon"],
+    )
     assert scenario.location_coordinates[first.start_location_id] == (55.71, 37.61)
     assert scenario.location_coordinates[second.start_location_id] == (55.72, 37.62)
     assert first.start_location_id != second.start_location_id
@@ -86,7 +95,12 @@ def test_yugo_center_json_loads_into_domain_models() -> None:
     assert scenario.engineers[0].vehicle_type == VehicleType.CAR
     assert scenario.tasks[0].duration_minutes == 70
     assert scenario.tasks[0].window_start == "18:00"
-    assert scenario.location_coordinates["office_start"] == (55.6638404, 37.6138686)
+    payload = json.loads(JSON_PATH.read_text(encoding="utf-8"))
+    office = payload["office_start_point"]
+    assert scenario.location_coordinates["office_start"] == (
+        office["lat"],
+        office["lon"],
+    )
 
 
 def test_imported_scenario_builds_problem_from_routing_provider() -> None:
@@ -320,6 +334,48 @@ def test_nominatim_delay_depends_on_endpoint(tmp_path: Path) -> None:
     assert local.min_interval_seconds == 0
     assert not remote.is_local
     assert remote.min_interval_seconds == 1.1
+
+
+def test_nominatim_selects_result_nearest_to_office() -> None:
+    """Одноимённый дом выбирается по близости к офису обслуживаемого района."""
+    tagansky = {"lat": "55.737", "lon": "37.674"}
+    shcherbinka = {"lat": "55.510", "lon": "37.570"}
+
+    selected = NominatimGeocoder._nearest_result(
+        [shcherbinka, tagansky],
+        (55.74, 37.66),
+    )
+
+    assert selected is tagansky
+
+
+def test_query_variants_keep_intermediate_locality() -> None:
+    """Название Щербинки не удаляется из адреса между Москвой и улицей."""
+    variants = NominatimGeocoder._query_variants(
+        "Москва, Щербинка, ул. Талалихина, д. 16"
+    )
+
+    assert any("щербинка" in variant for variant in variants)
+
+
+def test_query_variants_try_exact_house_fallbacks_before_street() -> None:
+    """Геокодер умеет исправлять распространённые формы адресов из CSV."""
+    cases = {
+        "Город Москва, ул.Машкова, д. 13 стр. 1": "москва, машкова улица, 13с1",
+        "Город Москва, ул.Дубининская, д. 59 к 2": "москва, дубининская улица, 59",
+        "Город Москва, б-р.Смоленский, д. 17 стр. 1": "москва, смоленский бульвар, 17с1",
+        "МО, г. Кашира Кржижановского ул. д. 5/2": "кашира, улица кржижановского, 5к2",
+        (
+            "обл.Московская область, г.Домодедово, пгт.Востряково-1, "
+            "ул.Жуковского, д. 14/18"
+        ): "домодедово, улица жуковского, 14/18",
+        "Домодедово, проезд.Советский 1-й, д. 1А": (
+            "домодедово, 1-й советский проезд, 1а"
+        ),
+    }
+
+    for address, expected in cases.items():
+        assert expected in NominatimGeocoder._query_variants(address)
 
 
 def test_unresolved_address_gets_visible_default(capsys) -> None:
