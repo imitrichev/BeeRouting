@@ -4,6 +4,7 @@ export interface Engineer {
   qualifications: string[]
   vehicle_type: string
   start_location_id: string
+  start_address: string | null
   start_latitude: number | null
   start_longitude: number | null
   available_from: string
@@ -32,6 +33,9 @@ export interface Task {
 export interface Dataset {
   source_name: string | null
   scenario_name: string
+  office_address: string | null
+  office_latitude: number | null
+  office_longitude: number | null
   engineers: Engineer[]
   tasks: Task[]
 }
@@ -100,6 +104,11 @@ export interface ExplanationResponse {
 }
 
 export interface ApiResponse {
+  territory_code?: string
+  planning_options?: {
+    ignore_task_statuses: boolean
+    planning_time?: string | null
+  }
   dataset: Dataset
   result?: OptimizationResult
 }

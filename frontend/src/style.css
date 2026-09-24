@@ -57,6 +57,16 @@ body {
 
 .depot-marker {
   align-items: center;
+  display: flex;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+
+/* MapLibre задаёт transform внешнему .depot-marker. Собственный поворот
+   капли находится внутри и поэтому не конфликтует с позиционированием карты. */
+.depot-marker-shape {
+  align-items: center;
   background: #fff;
   border: 2px solid #37474f;
   border-radius: 50% 50% 50% 0;
@@ -68,7 +78,7 @@ body {
   width: 32px;
 }
 
-.depot-marker svg {
+.depot-marker-shape svg {
   fill: #37474f;
   height: 20px;
   transform: rotate(45deg);

@@ -121,9 +121,7 @@ class OptimizationApiTests(TestCase):
                 "work_type": "LOCAL",
                 "window_start": "12:00",
                 "window_end": "14:00",
-                "priority": "URGENT",
                 "required_equipment": ["multimeter"],
-                "status": "NOT_SENT",
             },
             format="json",
         )
@@ -133,7 +131,8 @@ class OptimizationApiTests(TestCase):
         self.assertEqual(created["id"], "NEW-1")
         self.assertEqual(created["required_skill"], "LOCAL_WORKS")
         self.assertEqual(created["duration_minutes"], 30)
-        self.assertEqual(created["priority"], "URGENT")
+        self.assertEqual(created["priority"], "NORMAL")
+        self.assertEqual(created["status"], "NOT_SENT")
 
     def test_duplicate_task_is_rejected(self) -> None:
         """API не позволяет затереть существующую заявку тем же ID."""

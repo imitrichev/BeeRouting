@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'drf_spectacular_extras',
     "backend.web_mvp.api",
+    "backend.web_mvp.api_v2",
 ]
 
 MIDDLEWARE = [

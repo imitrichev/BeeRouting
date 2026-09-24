@@ -38,7 +38,7 @@ Google OR-Tools и хочет понять, откуда берутся назн
 обслуживания влияют на допустимость маршрута, но не входят в компонент
 Компоненты `total_objective` включают штраф за неназначение, число инженеров,
 расстояние и travel time. Если заявка не может быть назначена, к стоимости
-добавляется настроенный `unassigned_penalty` с учётом приоритета.
+добавляется настроенный `unassigned_penalty` с учётом типа работ.
 Возвращение на стартовую локацию после последней заявки в модель не входит.
 
 Неназначенные заявки возвращаются в `unassigned_task_ids`, а в
@@ -661,7 +661,7 @@ service_end_time   = 400
 ```python
 routing.AddDisjunction(
     [task_index],
-    config.unassigned_penalty * priority_multiplier(task.priority),
+    config.unassigned_penalty * config.unassigned_multiplier(task),
 )
 ```
 
@@ -676,8 +676,23 @@ routing.AddDisjunction(
 - `CumulVar(...).SetRange(...)` запрещает недопустимое время;
 - `AddDisjunction(...)` разрешает отказаться от всей заявки за штраф.
 
-Неназначение заявки с приоритетом `URGENT` дороже неназначения заявки с
-приоритетом `NORMAL` согласно `urgent_unassigned_multiplier` в конфигурации.
+Публичный справочник по-прежнему содержит только `NORMAL` и `URGENT`, однако
+официальный порядок важности детальнее: авария → подключение → ремонт/дозаказ.
+Поэтому `Task` также хранит `work_type`, а `OptimizerConfig` задаёт отдельные
+множители штрафа за неназначение:
+
+```python
+emergency_unassigned_multiplier = 4
+connection_unassigned_multiplier = 2
+local_unassigned_multiplier = 1
+equipment_order_unassigned_multiplier = 1
+```
+
+Эти коэффициенты используются только тогда, когда заявку приходится оставить
+неназначенной. Они не заставляют solver ставить подключение раньше ремонта в
+одном допустимом маршруте. Для старых объектов `Task` без `work_type` сохранён
+fallback через `normal_unassigned_multiplier` и
+`urgent_unassigned_multiplier`.
 
 ### 14. Настройки поиска
 
@@ -902,8 +917,11 @@ end(B) <= start(A)
 
 #### Приоритет
 
-`Priority.NORMAL` и `Priority.URGENT` влияют на штраф за неназначение через
-`urgent_unassigned_multiplier`. Сроки SLA в текущем алгоритме отсутствуют.
+`Priority.NORMAL` и `Priority.URGENT` остаются внешним контрактом. Основной
+штраф за неназначение определяется `WorkType`: авария имеет вес 4, подключение
+— 2, ремонт и дозаказ — 1. Это выбирает более важную заявку при нехватке
+ресурсов, но не вводит обязательный порядок посещения. Сроки SLA в текущем
+алгоритме отсутствуют.
 
 ### 21. Benchmark и запуск
 
@@ -938,7 +956,7 @@ Benchmark не является тестом производительност�
 Штраф за неназначенные заявки:
 
 ```text
-Σ_t (1 - z(t)) × unassigned_penalty × priority_multiplier(t)
+Σ_t (1 - z(t)) × unassigned_penalty × work_type_multiplier(t)
 ```
 
 При этом действуют жёсткие ограничения:

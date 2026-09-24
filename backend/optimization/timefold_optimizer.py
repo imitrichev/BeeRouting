@@ -442,9 +442,7 @@ class TimefoldOptimizer(RouteOptimizer):
                 window_end_minutes=hhmm_to_minutes(task.window_end),
                 duration_minutes=task.duration_minutes,
                 priority_multiplier=(
-                    self.config.urgent_unassigned_multiplier
-                    if task.priority.value == "URGENT"
-                    else self.config.normal_unassigned_multiplier
+                    self.config.unassigned_multiplier(task)
                 ),
                 task=task,
             )
@@ -917,10 +915,8 @@ def _build_result(
     used_engineers_count = sum(bool(route.stops) for route in routes.values())
     unassigned_penalty = sum(
         config.unassigned_penalty
-        * (
-            config.urgent_unassigned_multiplier
-            if next(task for task in problem.planning_tasks if task.id == task_id).priority.value == "URGENT"
-            else config.normal_unassigned_multiplier
+        * config.unassigned_multiplier(
+            next(task for task in problem.planning_tasks if task.id == task_id)
         )
         for task_id in unassigned_task_ids
     )

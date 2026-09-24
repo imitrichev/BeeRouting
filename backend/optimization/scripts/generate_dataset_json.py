@@ -18,6 +18,7 @@ import csv
 from collections import defaultdict, deque
 from datetime import datetime
 import json
+import math
 from pathlib import Path
 import re
 import time
@@ -102,6 +103,13 @@ def _normalise_address(value: str) -> str:
     Поэтому ``д. 9, кв. 47`` и ``д. 9`` сопоставляются с одной точкой дома.
     """
     value = value.lower().replace("ё", "е")
+    # Источники записывают один и тот же город как «Москва», «Город Москва»
+    # и даже «г.Город Москва». Служебные маркеры города не являются частью
+    # адреса и мешают как поиску Nominatim, так и ключам локального кэша.
+    # «город» проверяется раньше короткого «г», иначе регулярное выражение
+    # съест только первую букву слова и оставит ошибочное «ород москва».
+    value = re.sub(r"^(?:(?:город|г\.?)\s*)+", "", value)
+    value = re.sub(r",\s*(?:(?:город|г\.?)\s*)+", ", ", value)
     # Маркер квартиры должен быть отдельным словом. Иначе последовательность
     # «кв» внутри слова «Москва» ошибочно удаляет оставшуюся часть адреса.
     value = re.sub(
@@ -225,7 +233,7 @@ class NominatimGeocoder:
                 else {}
             )
             self._cache: dict[str, tuple[float, float]] = {
-                str(key): (float(value[0]), float(value[1]))
+                _normalise_address(str(key)): (float(value[0]), float(value[1]))
                 for key, value in loaded.items()
             }
         except (OSError, ValueError, TypeError, KeyError, IndexError):
@@ -251,11 +259,22 @@ class NominatimGeocoder:
             pass
         return REMOTE_NOMINATIM_ENDPOINT, False
 
-    def __call__(self, address: str) -> tuple[float, float]:
-        """Возвращает координаты дома или сообщает, что Nominatim его не нашёл."""
+    def __call__(
+        self,
+        address: str,
+        *,
+        reference_coordinates: tuple[float, float] | None = None,
+    ) -> tuple[float, float]:
+        """Возвращает координаты дома, ближайшего к опорной точке района.
+
+        Nominatim иногда возвращает одноимённый адрес из удалённой части
+        Москвы первым. Поэтому для заявок запрашиваются два результата, а
+        среди точных домов выбирается ближайший к офису обслуживаемого района.
+        """
         key = _normalise_address(address)
-        if key in self._cache:
-            return self._cache[key]
+        cache_key = self._cache_key(key, reference_coordinates)
+        if cache_key in self._cache:
+            return self._cache[cache_key]
         fallback_address = _replace_building_marker(address)
         fallback_key = _normalise_address(fallback_address)
         original_query_addresses = list(self._query_variants(address))
@@ -272,16 +291,20 @@ class NominatimGeocoder:
             if (
                 query_index == len(original_query_addresses)
                 and fallback_key != key
-                and fallback_key in self._cache
+                and self._cache_key(fallback_key, reference_coordinates) in self._cache
             ):
-                return self._cache[fallback_key]
+                return self._cache[
+                    self._cache_key(fallback_key, reference_coordinates)
+                ]
             results = self._request(query_address, address)
             if not results:
                 continue
-            if not self._is_precise_result(results[0]):
+            precise_results = [result for result in results if self._is_precise_result(result)]
+            if not precise_results:
                 continue
-            coordinates = (float(results[0]["lat"]), float(results[0]["lon"]))
-            self._cache[key] = coordinates
+            selected = self._nearest_result(precise_results, reference_coordinates)
+            coordinates = (float(selected["lat"]), float(selected["lon"]))
+            self._cache[cache_key] = coordinates
             self._save_cache()
             return coordinates
         # Последняя осмысленная попытка — найти улицу без номера дома. Это
@@ -292,14 +315,48 @@ class NominatimGeocoder:
             results = self._request(street_query, address)
             if not results:
                 continue
-            coordinates = (float(results[0]["lat"]), float(results[0]["lon"]))
-            self._cache[key] = coordinates
+            selected = self._nearest_result(results, reference_coordinates)
+            coordinates = (float(selected["lat"]), float(selected["lon"]))
+            self._cache[cache_key] = coordinates
             self._save_cache()
             self.warnings.append(
                 f"Точный дом не найден: {address!r}; использованы координаты улицы по запросу {street_query!r}."
             )
             return coordinates
         raise ValueError(f"Nominatim не нашёл адрес дома: {address!r}")
+
+    @staticmethod
+    def _cache_key(
+        normalized_address: str,
+        reference_coordinates: tuple[float, float] | None,
+    ) -> str:
+        """Разделяет обычный кэш и выбор адреса относительно офиса района."""
+        if reference_coordinates is None:
+            return normalized_address
+        latitude, longitude = reference_coordinates
+        return f"{normalized_address} | near {latitude:.5f},{longitude:.5f}"
+
+    @staticmethod
+    def _nearest_result(
+        results: list[Mapping[str, Any]],
+        reference_coordinates: tuple[float, float] | None,
+    ) -> Mapping[str, Any]:
+        """Выбирает ближайший к офису результат Nominatim из точных домов."""
+        if reference_coordinates is None or len(results) == 1:
+            return results[0]
+        reference_latitude, reference_longitude = reference_coordinates
+
+        # Для сравнения двух близких точек достаточно евклидова расстояния с
+        # поправкой долготы на широту Москвы. Квадратный корень не нужен:
+        # порядок расстояний от него не меняется.
+        longitude_scale = math.cos(math.radians(reference_latitude))
+        return min(
+            results,
+            key=lambda result: (
+                (float(result["lat"]) - reference_latitude) ** 2
+                + ((float(result["lon"]) - reference_longitude) * longitude_scale) ** 2
+            ),
+        )
 
     def _request(self, query_address: str, original_address: str) -> list[dict[str, Any]]:
         """Выполняет один запрос, соблюдая паузу только удалённого сервиса."""
@@ -309,7 +366,7 @@ class NominatimGeocoder:
         query: dict[str, str] = {
             "q": query_address,
             "format": "jsonv2",
-            "limit": "1",
+            "limit": "2",
             "addressdetails": "0",
         }
         if self.email:
@@ -406,11 +463,31 @@ class NominatimGeocoder:
         """
         normalized = _normalise_address(address)
         variants: list[str] = [normalized]
-        without_city = re.sub(
-            r"^(?:(?:г\.?|город)\s*)+москва\s*,?\s*",
-            "",
-            normalized,
-        )
+
+        # Первый компонент до запятой является населённым пунктом. Поэтому
+        # «Домодедово, ...» нельзя превращать в «Москва, Домодедово, ...».
+        # Если город в источнике отсутствует, для наших трёх московских
+        # датасетов используется Москва.
+        parts = [part.strip() for part in normalized.split(",")]
+        region_markers = {"мо", "московская область", "обл.московская область"}
+        first_part = parts[0] if parts else ""
+        if first_part in region_markers and len(parts) > 1:
+            # В форме «МО, Кашира Центральная ул. ...» название города —
+            # первое слово следующего компонента.
+            city, _, tail = parts[1].partition(" ")
+            without_city = ", ".join(filter(None, (tail, *parts[2:])))
+        elif len(parts) > 1 and not re.match(
+            r"^(?:ул\.?|улица|проезд|пр-кт|проспект|пер\.?|переулок|наб\.?|б-р)",
+            first_part,
+        ):
+            city = first_part
+            without_city = ", ".join(parts[1:])
+        elif re.match(r"^москва\s+", first_part):
+            city = "москва"
+            without_city = normalized[len("москва") :].strip(" ,")
+        else:
+            city = "москва"
+            without_city = normalized
         street_types = {
             "ул": "улица",
             "улица": "улица",
@@ -430,7 +507,7 @@ class NominatimGeocoder:
             without_city,
         )
         without_city = re.sub(r"\s+", " ", without_city).strip(" ,")
-        variants.append(f"Москва, {without_city}")
+        variants.append(f"{city}, {without_city}")
         house_match = re.match(r"^(.+?),\s*д\.?\s*(.+)$", without_city)
         if house_match:
             street, house = house_match.groups()
@@ -441,7 +518,7 @@ class NominatimGeocoder:
             if type_match:
                 street_type, street_name = type_match.groups()
                 variants.append(
-                    f"Москва, {street_name} {street_types[street_type]}, {house}"
+                    f"{city}, {street_name} {street_types[street_type]}, {house}"
                 )
         # Nominatim часто лучше понимает короткую запись без служебных
         # сокращений и знаков препинания: «Москва 60-летия Октября 18 к 2».
@@ -453,13 +530,104 @@ class NominatimGeocoder:
         compact = re.sub(r"[,.;]", " ", compact)
         compact = re.sub(r"\s+", " ", compact).strip()
         if compact:
-            variants.append(f"Москва {compact}")
+            variants.append(f"{city} {compact}")
         # Для российского адресного формата дополнительно пробуем вариант
         # с точкой после сокращения: «к. 2». Развёрнутая форма намеренно
         # не используется.
         for variant in tuple(variants):
             dotted_corpus = re.sub(r"\s+к\.?\s*(?=\d)", " к. ", variant)
             variants.append(dotted_corpus)
+
+        # Дополнительные варианты российского адреса добавляются после
+        # исходных форм и до fallback на всю улицу. Они нужны, когда OSM
+        # хранит дом без служебных слов либо в другом порядке компонентов.
+        canonical_address = normalized
+        canonical_address = re.sub(
+            r"^(?:обл\.?\s*)?московская область\s*,\s*",
+            "",
+            canonical_address,
+        )
+        canonical_address = re.sub(r"^мо\s*,\s*", "", canonical_address)
+        canonical_address = re.sub(r"(^|,\s*)г\.?\s*", r"\1", canonical_address)
+        # Посёлок внутри городского округа иногда отсутствует в адресе OSM.
+        # Удаляем только промежуточный компонент, не название основного города.
+        without_settlement = re.sub(
+            r",\s*пгт\.?\s*[^,]+(?=,)",
+            "",
+            canonical_address,
+        )
+        for source in dict.fromkeys((canonical_address, without_settlement)):
+            source = re.sub(r"\s+", " ", source).strip(" ,")
+            source = re.sub(r"\bул(?:\.|\s)+", "улица ", source)
+            source = re.sub(r"\bб-р(?:\.|\s)+", "бульвар ", source)
+            source = re.sub(r"\bпр-зд(?:\.|\s)+", "проезд ", source)
+            source = re.sub(r"\bпроезд(?:\.|\s)+", "проезд ", source)
+            source = re.sub(r"\bд(?:\.|\s)+", "", source)
+
+            # «проезд Советский 1-й» в OSM записан как
+            # «1-й Советский проезд»; правило подходит и другим порядковым
+            # названиям проездов.
+            source = re.sub(
+                r"\bпроезд\s+([^,]+?)\s+(\d+-[йя])(?=,)",
+                r"\2 \1 проезд",
+                source,
+            )
+            # Поддерживаем тип улицы после названия: «Кржижановского ул.».
+            source = re.sub(
+                r"\b([^,]+?)\s+улица(?=,)",
+                r"улица \1",
+                source,
+            )
+            # В строках Каширы город и улица записаны одним компонентом:
+            # «Кашира Кржижановского ул.». Разделяем их явно.
+            source = re.sub(
+                r"^кашира\s+(.+?)\s+улица\s+",
+                r"кашира, улица \1, ",
+                source,
+            )
+            variants.append(source)
+
+            # Nominatim распознаёт строения в компактной форме 13с1 лучше,
+            # чем «13 стр. 1» или «13 строение 1».
+            compact_building = re.sub(
+                r"(\d+(?:/\d+)?)\s+(?:стр\.?|строение)\s*(\d+)",
+                r"\1с\2",
+                source,
+            )
+            variants.append(compact_building)
+
+            # Если конкретный корпус/строение отсутствует в OSM, ищем
+            # основной дом до перехода к неточной точке уровня улицы.
+            base_house = re.sub(
+                r"(\d+(?:/\d+)?)[а-я]?\s*(?:к\.?|корпус|с|стр\.?|строение)\s*\d+",
+                r"\1",
+                compact_building,
+            )
+            variants.append(base_house)
+
+            # В исходных данных Каширы дома комплекса на Кржижановского
+            # записаны как 5/1, 5/2 и 5/3, а OSM хранит их как корпуса.
+            if "кржижановского" in source:
+                variants.append(
+                    re.sub(r"(?<=\s)(\d+)/(\d+)(?=\s|,|$)", r"\1к\2", source)
+                )
+
+        # Применяем варианты строения и основного дома также к формам, где
+        # тип улицы уже переставлен после названия («Смоленский бульвар»).
+        for variant in tuple(variants):
+            compact_building = re.sub(
+                r"(\d+(?:/\d+)?)\s+(?:стр\.?|строение)\s*(\d+)",
+                r"\1с\2",
+                variant,
+            )
+            variants.append(compact_building)
+            variants.append(
+                re.sub(
+                    r"(\d+(?:/\d+)?)[а-я]?\s*(?:к\.?|корпус|с|стр\.?|строение)\s*\d+",
+                    r"\1",
+                    compact_building,
+                )
+            )
         return tuple(dict.fromkeys(variants))
 
 
@@ -467,6 +635,7 @@ def _resolve_coordinates(
     address: str,
     geocoder: Callable[[str], tuple[float, float]],
     subject: str,
+    reference_coordinates: tuple[float, float] | None = None,
 ) -> tuple[float, float]:
     """Возвращает координаты через кэш Nominatim или новый запрос.
 
@@ -475,6 +644,11 @@ def _resolve_coordinates(
     формированием запроса, а тестовый geocoder может проверить этот контракт.
     """
     try:
+        if isinstance(geocoder, NominatimGeocoder):
+            return geocoder(
+                address,
+                reference_coordinates=reference_coordinates,
+            )
         return geocoder(address)
     except ValueError as exc:
         message = (
@@ -522,8 +696,10 @@ def _territory_metadata(path: Path) -> tuple[str, str, str]:
 def _engineers_from_csv(
     path: Path,
     geocoder: Callable[[str], tuple[float, float]],
+    territory_code: str,
+    office_coordinates: tuple[float, float],
 ) -> list[dict[str, Any]]:
-    """Читает инженеров только из engineers.csv.
+    """Читает из engineers.csv инженеров выбранной территории.
 
     У инженера может быть start_address; при его наличии координаты тоже
     ищутся через кэш Nominatim или новый запрос. Иначе используются
@@ -537,6 +713,9 @@ def _engineers_from_csv(
     }
     engineers: list[dict[str, Any]] = []
     for index, row in enumerate(rows, start=1):
+        row_territory = _first_value(row, "territory_code", "Код территории")
+        if row_territory and row_territory != territory_code:
+            continue
         name = _first_value(row, "name", "ФИО", "Фамилия Имя", "Инженер", "Бригада")
         if not name:
             continue
@@ -545,12 +724,17 @@ def _engineers_from_csv(
             raise ValueError(
                 f"Для инженера {name!r} в {path} не задан start_address"
             )
-        # Координаты не читаются из engineers.csv. Даже если один и тот же
-        # офис встречается у нескольких инженеров, его точка определяется
-        # через общий Nominatim-кэш.
-        start_lat, start_lon = _resolve_coordinates(
-            start_address, geocoder, f"офис/точка старта инженера {name}"
-        )
+        raw_start_lat = _first_value(row, "start_lat", "Широта старта")
+        raw_start_lon = _first_value(row, "start_lon", "Долгота старта")
+        if raw_start_lat and raw_start_lon:
+            start_lat, start_lon = float(raw_start_lat), float(raw_start_lon)
+        else:
+            start_lat, start_lon = _resolve_coordinates(
+                start_address,
+                geocoder,
+                f"офис/точка старта инженера {name}",
+                office_coordinates,
+            )
         raw_skills = re.split(r"[,|;/]+", _first_value(row, "skills", "Навыки", "Квалификации"))
         raw_vehicle = _first_value(row, "vehicle_type", "Транспорт", "Тип транспорта").lower()
         skills = [skill.strip() for skill in raw_skills if skill.strip()]
@@ -605,10 +789,15 @@ def generate_dataset(
         office, geocode, f"офис района {synthetic_path.stem}"
     )
     office_point = {"lat": office_lat, "lon": office_lon, "address": office}
-    engineers = _engineers_from_csv(engineers_path, geocode)
-
-    jobs: list[dict[str, Any]] = []
     territory_code, territory_name, scenario_name = _territory_metadata(synthetic_path)
+    office_coordinates = (office_lat, office_lon)
+    engineers = _engineers_from_csv(
+        engineers_path,
+        geocode,
+        territory_code,
+        office_coordinates,
+    )
+    jobs: list[dict[str, Any]] = []
     for synthetic, control in zip(synthetic_rows, control_matches):
         request_id = synthetic["Заявка"].strip()
         kind = _work_kind(synthetic["Тип заявки BK"])
@@ -616,7 +805,10 @@ def generate_dataset(
         skill, skill_ru = _skill_for_kind(kind)
         address = synthetic["Адрес"].strip()
         latitude, longitude = _resolve_coordinates(
-            address, geocode, f"заявка {request_id}"
+            address,
+            geocode,
+            f"заявка {request_id}",
+            office_coordinates,
         )
         jobs.append(
             {

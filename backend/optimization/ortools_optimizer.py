@@ -668,10 +668,8 @@ class ORToolsOptimizer(RouteOptimizer):
         }
 
     def _priority_multiplier(self, task: Task) -> int:
-        """Возвращает вес неназначения для приоритета заявки."""
-        if task.priority.value == "URGENT":
-            return self.config.urgent_unassigned_multiplier
-        return self.config.normal_unassigned_multiplier
+        """Возвращает настроенный вес неназначения по типу работ."""
+        return self.config.unassigned_multiplier(task)
 
     @staticmethod
     def _distance(
@@ -708,6 +706,8 @@ class ORToolsOptimizer(RouteOptimizer):
         ``equipment_resource_ids``; это позволяет сохранить простой сценарий
         без бронирования ресурсов.
         """
+        if engineer.id in problem.unavailable_engineer_ids:
+            return False
         equipment_by_id = {
             resource.id: resource for resource in problem.equipment_resources
         }

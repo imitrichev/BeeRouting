@@ -52,6 +52,15 @@ class TaskStatus(str, Enum):
     OVERDUE = "OVERDUE"  # Заявка не была начата в установленный срок.
 
 
+class WorkType(str, Enum):
+    """Тип работ для норматива и приоритета назначения заявки."""
+
+    CONNECTION = "CONNECTION"
+    EMERGENCY = "EMERGENCY"
+    EQUIPMENT_ORDER = "EQUIPMENT_ORDER"
+    LOCAL = "LOCAL"
+
+
 def hhmm_to_minutes(value: str) -> int:
     """Преобразует строку ``HH:MM`` в минуты от начала суток."""
     if not isinstance(value, str):
@@ -219,6 +228,7 @@ class Task:
     duration_minutes: int  # Продолжительность обслуживания в целых минутах.
     window_start: str  # Самое раннее допустимое начало работы, HH:MM.
     window_end: str  # Самое позднее допустимое начало работы, HH:MM.
+    work_type: WorkType | None = None  # Тип работ для норматива и веса неназначения.
     priority: Priority = Priority.NORMAL  # Приоритет для штрафа неназначения.
     status: TaskStatus = TaskStatus.NOT_SENT  # Текущий статус; отменённая заявка не занимает маршрутное время.
     current_engineer_id: str | None = None  # Текущий исполнитель из оперативного/контрольного плана; нужен для фиксации начатой заявки.
@@ -251,6 +261,8 @@ class Task:
         object.__setattr__(self, "required_skills", skills)
         object.__setattr__(self, "window_start", window_start)
         object.__setattr__(self, "window_end", window_end)
+        if self.work_type is not None and not isinstance(self.work_type, WorkType):
+            raise ValueError("work_type должен быть значением WorkType или None")
         if not isinstance(self.priority, Priority):
             raise ValueError("priority должен быть значением Priority")
         if not isinstance(self.status, TaskStatus):

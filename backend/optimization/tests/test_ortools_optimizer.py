@@ -15,6 +15,7 @@ from backend.optimization import (
     UnassignedReasonCode,
     VehicleResource,
     VehicleType,
+    WorkType,
 )
 
 
@@ -74,6 +75,7 @@ def make_task(
     required_vehicle_type: VehicleType | None = None,
     required_equipment: frozenset[str] = frozenset(),
     priority: Priority = Priority.NORMAL,
+    work_type: WorkType | None = None,
 ) -> Task:
     """Создаёт заявку с одним официальным навыком."""
     return Task(
@@ -86,6 +88,7 @@ def make_task(
         required_vehicle_type=required_vehicle_type,
         required_equipment=required_equipment,
         priority=priority,
+        work_type=work_type,
     )
 
 
@@ -503,6 +506,34 @@ def test_urgent_unassigned_penalty_is_greater_than_normal() -> None:
 
     assert result.unassigned_task_ids == ("normal", "urgent")
     assert result.unassigned_penalty == 100 + 100 * config.urgent_unassigned_multiplier
+
+
+def test_connection_is_kept_before_local_when_only_one_task_can_fit() -> None:
+    """При дефиците времени подключение важнее ремонта, но порядок не фиксируется."""
+    local = make_task(
+        "local", Skill.LOCAL_WORKS, "local-place", duration_minutes=60,
+        window_end="09:00", work_type=WorkType.LOCAL,
+    )
+    connection = make_task(
+        "connection", Skill.CONNECTION_AND_UPSELL, "connection-place",
+        duration_minutes=60, window_end="09:00",
+        work_type=WorkType.CONNECTION,
+    )
+    locations = ("base", "local-place", "connection-place")
+    problem = OptimizationProblem(
+        engineers=(make_engineer(
+            skills=frozenset({Skill.LOCAL_WORKS, Skill.CONNECTION_AND_UPSELL})
+        ),),
+        availabilities=(EngineerAvailability("e1", "08:00", "09:00"),),
+        tasks=(local, connection),
+        travel_time_matrix=full_matrix(locations, 0),
+        travel_distance_matrix=full_distance_matrix(locations, 0.0),
+    )
+
+    result = ORToolsOptimizer().optimize(problem)
+
+    assert [stop.task_id for stop in result.routes["e1"].stops] == ["connection"]
+    assert result.unassigned_task_ids == ("local",)
 
 
 def test_priority_is_part_of_the_domain_objective() -> None:
