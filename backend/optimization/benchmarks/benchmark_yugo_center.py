@@ -1,4 +1,8 @@
-"""Сравнение контрольного распределения, Baseline и OR-Tools на dataset."""
+"""Сравнение контрольного плана и выбранных solver'ов на dataset.
+
+Baseline и OR-Tools запускаются всегда. Timefold и ICO-DE подключаются
+флагами ``--include-timefold`` и ``--include-ico-de``.
+"""
 
 from __future__ import annotations
 
@@ -11,11 +15,13 @@ import time
 from backend.optimization import (
     CoordinateRoutingProvider,
     GreedyBaselineOptimizer,
+    ICOOptimizer,
     JsonScenario,
     ManualAssignmentPlanner,
     OptimizationProblem,
     OptimizationResult,
     OptimizerConfig,
+    ICORoutingConfig,
     ORToolsOptimizer,
     OSRMRoutingProvider,
     create_osrm_provider_from_environment,
@@ -149,24 +155,34 @@ def _print_value_table(
             float | int | None,
             float | int | None,
             float | int | None,
+            float | int | None,
             int,
         ]
     ],
+    *,
+    include_ico: bool,
+    include_timefold: bool,
 ) -> None:
     """Печатает значения всех вариантов без абсолютных изменений."""
     print()
     print(
         f"{'Метрика':<30} {'Контрольное':>16} {'Baseline':>16} "
-        f"{'OR-Tools':>16} {'Timefold':>16}"
+        f"{'OR-Tools':>16}"
+        + (f" {'ICO-DE':>16}" if include_ico else "")
+        + (f" {'Timefold':>16}" if include_timefold else "")
     )
     print("-" * 100)
-    for name, control, baseline, ortools, timefold, decimals in rows:
-        print(
+    for name, control, baseline, ortools, ico, timefold, decimals in rows:
+        line = (
             f"{name:<30} {_format_value(control, decimals):>16} "
             f"{_format_value(baseline, decimals):>16} "
-            f"{_format_value(ortools, decimals):>16} "
-            f"{_format_value(timefold, decimals):>16}"
+            f"{_format_value(ortools, decimals):>16}"
         )
+        if include_ico:
+            line += f" {_format_value(ico, decimals):>16}"
+        if include_timefold:
+            line += f" {_format_value(timefold, decimals):>16}"
+        print(line)
 
 
 def _percent_change(value: float | int | None, reference: float | int | None) -> str:
@@ -201,18 +217,23 @@ def _print_percent_changes(
             float | int | None,
             float | int | None,
             float | int | None,
+            float | int | None,
             int,
         ]
     ],
 ) -> None:
-    """Печатает процентные изменения OR-Tools и Timefold ниже таблицы."""
+    """Печатает процентные изменения включённых solver'ов ниже таблицы."""
     print()
     print("Процентное изменение относительно Baseline и контрольного распределения")
-    for name, control, baseline, ortools, timefold, _ in rows:
+    for name, control, baseline, ortools, ico, timefold, _ in rows:
         print(f"  {_percent_phrase(name, ortools, baseline, 'OR-Tools', 'Baseline')}")
         print(f"  {_percent_phrase(name, ortools, control, 'OR-Tools', 'контрольного распределения')}")
-        print(f"  {_percent_phrase(name, timefold, baseline, 'Timefold', 'Baseline')}")
-        print(f"  {_percent_phrase(name, timefold, control, 'Timefold', 'контрольного распределения')}")
+        if ico is not None:
+            print(f"  {_percent_phrase(name, ico, baseline, 'ICO-DE', 'Baseline')}")
+            print(f"  {_percent_phrase(name, ico, control, 'ICO-DE', 'контрольного распределения')}")
+        if timefold is not None:
+            print(f"  {_percent_phrase(name, timefold, baseline, 'Timefold', 'Baseline')}")
+            print(f"  {_percent_phrase(name, timefold, control, 'Timefold', 'контрольного распределения')}")
 
 
 def _print_ortools_summary(
@@ -265,15 +286,21 @@ def _print_distance_by_engineer(
     control_result: OptimizationResult | None,
     baseline_result: OptimizationResult,
     ortools_result: OptimizationResult,
+    ico_result: OptimizationResult | None,
     timefold_result: OptimizationResult | None,
     problem: OptimizationProblem,
+    *,
+    include_ico: bool,
+    include_timefold: bool,
 ) -> None:
     """Печатает пробег каждого инженера для всех доступных вариантов."""
     print()
     print("Пробег по каждому инженеру, км")
     print(
         f"{'Инженер':<30} {'Контрольное':>16} {'Baseline':>16} "
-        f"{'OR-Tools':>16} {'Timefold':>16}"
+        f"{'OR-Tools':>16}"
+        + (f" {'ICO-DE':>16}" if include_ico else "")
+        + (f" {'Timefold':>16}" if include_timefold else "")
     )
     print("-" * 100)
     for engineer in problem.engineers:
@@ -282,17 +309,26 @@ def _print_distance_by_engineer(
             if control_result is None
             else control_result.distance_by_engineer[engineer.id]
         )
+        ico_distance = (
+            None
+            if ico_result is None
+            else ico_result.distance_by_engineer[engineer.id]
+        )
         timefold_distance = (
             None
             if timefold_result is None
             else timefold_result.distance_by_engineer[engineer.id]
         )
-        print(
+        line = (
             f"{engineer.id:<30} {_format_value(control_distance, 3):>16} "
             f"{baseline_result.distance_by_engineer[engineer.id]:>16.3f} "
-            f"{ortools_result.distance_by_engineer[engineer.id]:>16.3f} "
-            f"{_format_value(timefold_distance, 3):>16}"
+            f"{ortools_result.distance_by_engineer[engineer.id]:>16.3f}"
         )
+        if include_ico:
+            line += f" {_format_value(ico_distance, 3):>16}"
+        if include_timefold:
+            line += f" {_format_value(timefold_distance, 3):>16}"
+        print(line)
 
 
 def main() -> None:
@@ -325,6 +361,16 @@ def main() -> None:
         action="store_true",
         help="Учитывать расход ограниченного запаса роутеров у инженеров.",
     )
+    parser.add_argument(
+        "--include-timefold",
+        action="store_true",
+        help="Дополнительно запустить Timefold, если доступна Java и Python API.",
+    )
+    parser.add_argument(
+        "--include-ico-de",
+        action="store_true",
+        help="Дополнительно запустить экспериментальный ICO-DE solver.",
+    )
     args = parser.parse_args()
     if (
         args.iterations <= 0
@@ -355,21 +401,37 @@ def main() -> None:
         args.iterations,
     )
     _validate_status_contract("OR-Tools", problem, ortools_result)
-    timefold_measurements: list[float] = []
-    timefold_result: OptimizationResult | None = None
-    timefold_error: str | None = None
-    try:
-        timefold_measurements, timefold_result = _measure_timefold(
-            TimefoldOptimizer(
+    ico_measurements: list[float] = []
+    ico_result: OptimizationResult | None = None
+    if args.include_ico_de:
+        ico_measurements, ico_result = _measure_optimizer(
+            ICOOptimizer(
                 OptimizerConfig(time_limit_minutes=args.time_limit_minutes),
-                time_limit_seconds=args.timefold_time_limit_seconds,
+                ICORoutingConfig(),
             ),
             problem,
             args.iterations,
         )
-        _validate_status_contract("Timefold", problem, timefold_result)
-    except TimefoldUnavailableError as exc:
-        timefold_error = str(exc)
+        _validate_status_contract("ICO-DE", problem, ico_result)
+
+    timefold_measurements: list[float] = []
+    timefold_result: OptimizationResult | None = None
+    timefold_error: str | None = None
+    if args.include_timefold:
+        try:
+            timefold_measurements, timefold_result = _measure_timefold(
+                TimefoldOptimizer(
+                    OptimizerConfig(time_limit_minutes=args.time_limit_minutes),
+                    time_limit_seconds=args.timefold_time_limit_seconds,
+                ),
+                problem,
+                args.iterations,
+            )
+            _validate_status_contract("Timefold", problem, timefold_result)
+        except TimefoldUnavailableError as exc:
+            # Отсутствие Java/API не должно делать обязательные Baseline и
+            # OR-Tools результаты недоступными.
+            timefold_error = str(exc)
 
     control = load_control_dataset(args.control_csv, scenario)
     tasks_by_id = {task.id: task for task in problem.tasks}
@@ -423,10 +485,19 @@ def main() -> None:
     if args.routing_provider == "coordinate":
         print(f"Скорость демонстрационной матрицы: {DEMO_TRAVEL_SPEED_KM_PER_HOUR:g} км/ч")
     print(f"Измерений после прогрева Baseline/OR-Tools: {args.iterations}")
-    print(f"Лимит Timefold: {args.timefold_time_limit_seconds} с")
-    print("Timefold: замер включает холодный запуск JVM")
-    if timefold_error is not None:
-        print(f"Timefold: недоступен ({timefold_error})")
+    print(
+        "ICO-DE: "
+        + ("включён" if args.include_ico_de else "выключен; используйте --include-ico-de")
+    )
+    print(
+        "Timefold: "
+        + ("запрошен" if args.include_timefold else "выключен; используйте --include-timefold")
+    )
+    if args.include_timefold:
+        print(f"Лимит Timefold: {args.timefold_time_limit_seconds} с")
+        print("Timefold: замер включает холодный запуск JVM")
+        if timefold_error is not None:
+            print(f"Timefold: пропущен ({timefold_error})")
     print(f"CSV/JSON контроль согласован: {'да' if control.consistent else 'нет'}")
     print(f"Контрольный план соблюдает hard constraints: {'да' if control_validation.valid else 'нет'}")
 
@@ -438,21 +509,21 @@ def main() -> None:
             print(f"  {violation.task_id}: {violation.code} — {violation.message}")
 
     rows = [
-        ("Время расчёта, с", None if control_result is None else statistics.median(control_measurements), statistics.median(baseline_measurements), statistics.median(ortools_measurements), None if timefold_result is None else statistics.median(timefold_measurements), 6),
-        ("Назначено заявок", None if control_result is None else control_result.assigned_task_count, baseline_result.assigned_task_count, ortools_result.assigned_task_count, None if timefold_result is None else timefold_result.assigned_task_count, 0),
-        ("Неназначено заявок", None if control_result is None else control_result.unassigned_task_count, baseline_result.unassigned_task_count, ortools_result.unassigned_task_count, None if timefold_result is None else timefold_result.unassigned_task_count, 0),
-        ("Задействовано инженеров", None if control_result is None else control_result.used_engineers_count, baseline_result.used_engineers_count, ortools_result.used_engineers_count, None if timefold_result is None else timefold_result.used_engineers_count, 0),
-        ("Пробег, км", None if control_result is None else control_result.total_distance, baseline_result.total_distance, ortools_result.total_distance, None if timefold_result is None else timefold_result.total_distance, 3),
-        ("Время движения, мин", None if control_result is None else control_result.total_travel_time, baseline_result.total_travel_time, ortools_result.total_travel_time, None if timefold_result is None else timefold_result.total_travel_time, 0),
-        ("unassigned_penalty", None if control_result is None else control_result.unassigned_penalty, baseline_result.unassigned_penalty, ortools_result.unassigned_penalty, None if timefold_result is None else timefold_result.unassigned_penalty, 0),
-        ("used_engineers_penalty", None if control_result is None else control_result.used_engineers_penalty, baseline_result.used_engineers_penalty, ortools_result.used_engineers_penalty, None if timefold_result is None else timefold_result.used_engineers_penalty, 0),
-        ("distance_penalty", None if control_result is None else control_result.distance_penalty, baseline_result.distance_penalty, ortools_result.distance_penalty, None if timefold_result is None else timefold_result.distance_penalty, 0),
-        ("travel_time_penalty", None if control_result is None else control_result.travel_time_penalty, baseline_result.travel_time_penalty, ortools_result.travel_time_penalty, None if timefold_result is None else timefold_result.travel_time_penalty, 0),
-        ("total_objective", None if control_result is None else control_result.total_objective, baseline_result.total_objective, ortools_result.total_objective, None if timefold_result is None else timefold_result.total_objective, 0),
+        ("Время расчёта, с", None if control_result is None else statistics.median(control_measurements), statistics.median(baseline_measurements), statistics.median(ortools_measurements), None if ico_result is None else statistics.median(ico_measurements), None if timefold_result is None else statistics.median(timefold_measurements), 6),
+        ("Назначено заявок", None if control_result is None else control_result.assigned_task_count, baseline_result.assigned_task_count, ortools_result.assigned_task_count, None if ico_result is None else ico_result.assigned_task_count, None if timefold_result is None else timefold_result.assigned_task_count, 0),
+        ("Неназначено заявок", None if control_result is None else control_result.unassigned_task_count, baseline_result.unassigned_task_count, ortools_result.unassigned_task_count, None if ico_result is None else ico_result.unassigned_task_count, None if timefold_result is None else timefold_result.unassigned_task_count, 0),
+        ("Задействовано инженеров", None if control_result is None else control_result.used_engineers_count, baseline_result.used_engineers_count, ortools_result.used_engineers_count, None if ico_result is None else ico_result.used_engineers_count, None if timefold_result is None else timefold_result.used_engineers_count, 0),
+        ("Пробег, км", None if control_result is None else control_result.total_distance, baseline_result.total_distance, ortools_result.total_distance, None if ico_result is None else ico_result.total_distance, None if timefold_result is None else timefold_result.total_distance, 3),
+        ("Время движения, мин", None if control_result is None else control_result.total_travel_time, baseline_result.total_travel_time, ortools_result.total_travel_time, None if ico_result is None else ico_result.total_travel_time, None if timefold_result is None else timefold_result.total_travel_time, 0),
+        ("unassigned_penalty", None if control_result is None else control_result.unassigned_penalty, baseline_result.unassigned_penalty, ortools_result.unassigned_penalty, None if ico_result is None else ico_result.unassigned_penalty, None if timefold_result is None else timefold_result.unassigned_penalty, 0),
+        ("used_engineers_penalty", None if control_result is None else control_result.used_engineers_penalty, baseline_result.used_engineers_penalty, ortools_result.used_engineers_penalty, None if ico_result is None else ico_result.used_engineers_penalty, None if timefold_result is None else timefold_result.used_engineers_penalty, 0),
+        ("distance_penalty", None if control_result is None else control_result.distance_penalty, baseline_result.distance_penalty, ortools_result.distance_penalty, None if ico_result is None else ico_result.distance_penalty, None if timefold_result is None else timefold_result.distance_penalty, 0),
+        ("travel_time_penalty", None if control_result is None else control_result.travel_time_penalty, baseline_result.travel_time_penalty, ortools_result.travel_time_penalty, None if ico_result is None else ico_result.travel_time_penalty, None if timefold_result is None else timefold_result.travel_time_penalty, 0),
+        ("total_objective", None if control_result is None else control_result.total_objective, baseline_result.total_objective, ortools_result.total_objective, None if ico_result is None else ico_result.total_objective, None if timefold_result is None else timefold_result.total_objective, 0),
     ]
-    _print_value_table(rows)
+    _print_value_table(rows, include_ico=args.include_ico_de, include_timefold=args.include_timefold)
     _print_percent_changes(rows)
-    _print_distance_by_engineer(control_result, baseline_result, ortools_result, timefold_result, problem)
+    _print_distance_by_engineer(control_result, baseline_result, ortools_result, ico_result, timefold_result, problem, include_ico=args.include_ico_de, include_timefold=args.include_timefold)
     _print_ortools_summary(baseline_result, ortools_result, problem)
 
 

@@ -183,6 +183,22 @@ PYTHONPATH="$PWD" \
 | `--preserve-assigned` | выключен | Фиксация заявок `ASSIGNED` |
 | `--ignore-task-statuses` | выключен | Полное перераспределение всех заявок |
 | `--consider-equipment` | выключен | Учитывать суммарный расход роутеров по маршруту инженера |
+| `--include-ico-de` | выключен | Добавить экспериментальный ICO-DE в сравнение |
+| `--include-timefold` | выключен | Добавить Timefold, если доступны Python API и Java |
+
+Baseline и OR-Tools выполняются всегда. ICO-DE и Timefold по умолчанию не
+запускаются, чтобы обычный benchmark оставался коротким. Если указан
+`--include-timefold`, но Java или Python API Timefold недоступны, benchmark
+печатает причину и оставляет в таблице прочерк вместо Timefold; Baseline и
+OR-Tools при этом продолжают выполняться.
+
+Например, сравнение всех доступных вариантов:
+
+```bash
+.venv/bin/python -m backend.optimization.benchmarks.benchmark_yugo_center \
+  --include-ico-de --include-timefold \
+  --routing-provider osrm --iterations 1
+```
 
 Baseline и OR-Tools сначала запускаются один раз для прогрева, после чего
 измеряются `--iterations` раз. Timefold измеряется вместе с холодным запуском
