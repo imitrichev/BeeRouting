@@ -232,6 +232,7 @@ class DatasetTaskSerializer(serializers.Serializer):
     priority = serializers.SerializerMethodField()
     required_vehicle_type = serializers.SerializerMethodField()
     required_equipment = serializers.SerializerMethodField()
+    required_router_count = serializers.IntegerField(read_only=True)
     is_plannable = serializers.SerializerMethodField()
     assignment_locked = serializers.SerializerMethodField()
 
@@ -284,6 +285,7 @@ class DatasetEngineerSerializer(serializers.Serializer):
 
     qualifications = serializers.SerializerMethodField()
     vehicle_type = serializers.SerializerMethodField()
+    available_router_count = serializers.IntegerField(read_only=True)
 
     start_location_id = serializers.ReadOnlyField()
     start_address = serializers.SerializerMethodField()

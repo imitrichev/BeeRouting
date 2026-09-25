@@ -320,6 +320,11 @@ def main() -> None:
         action="store_true",
         help="Построить новый план по всем заявкам, игнорируя статусы dataset.",
     )
+    parser.add_argument(
+        "--consider-equipment",
+        action="store_true",
+        help="Учитывать расход ограниченного запаса роутеров у инженеров.",
+    )
     args = parser.parse_args()
     if (
         args.iterations <= 0
@@ -336,6 +341,7 @@ def main() -> None:
         provider,
         preserve_assigned_tasks=args.preserve_assigned and not args.ignore_task_statuses,
         ignore_task_statuses=args.ignore_task_statuses,
+        consider_equipment=args.consider_equipment,
     )
     load_seconds = time.perf_counter() - load_started_at
 
@@ -408,6 +414,10 @@ def main() -> None:
             if args.ignore_task_statuses
             else "статусы учитываются: CANCELLED/COMPLETED исключены, начатые закреплены"
         )
+    )
+    print(
+        "Учёт роутеров: "
+        + ("включён" if args.consider_equipment else "выключен")
     )
     print(f"Импорт и построение матриц: {load_seconds:.6f} с")
     if args.routing_provider == "coordinate":

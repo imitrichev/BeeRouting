@@ -30,7 +30,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "car"
+      "vehicle_type": "car",
+      "available_router_count": 5
     },
     {
       "engineer_id": "yugo_tsentr-E02",
@@ -47,7 +48,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot"
+      "vehicle_type": "foot",
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_tsentr-E03",
@@ -66,7 +68,8 @@
         "Аварийные работы",
         "Локальные работы"
       ],
-      "vehicle_type": "car"
+      "vehicle_type": "car",
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_tsentr-E04",
@@ -81,7 +84,8 @@
       "skills_ru": [
         "Работы на подключение и дозаказы"
       ],
-      "vehicle_type": "public_transport"
+      "vehicle_type": "public_transport",
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_tsentr-E05",
@@ -98,7 +102,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "car"
+      "vehicle_type": "car",
+      "available_router_count": 1
     },
     {
       "engineer_id": "yugo_tsentr-E06",
@@ -115,7 +120,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot"
+      "vehicle_type": "foot",
+      "available_router_count": 1
     },
     {
       "engineer_id": "yugo_tsentr-E07",
@@ -132,7 +138,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "bicycle"
+      "vehicle_type": "bicycle",
+      "available_router_count": 2
     },
     {
       "engineer_id": "yugo_tsentr-E08",
@@ -149,7 +156,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "public_transport"
+      "vehicle_type": "public_transport",
+      "available_router_count": 1
     },
     {
       "engineer_id": "yugo_tsentr-E09",
@@ -166,7 +174,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "car"
+      "vehicle_type": "car",
+      "available_router_count": 1
     },
     {
       "engineer_id": "yugo_tsentr-E10",
@@ -183,7 +192,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot"
+      "vehicle_type": "foot",
+      "available_router_count": 2
     },
     {
       "engineer_id": "yugo_tsentr-E11",
@@ -198,7 +208,8 @@
       "skills_ru": [
         "Работы на подключение и дозаказы"
       ],
-      "vehicle_type": "bicycle"
+      "vehicle_type": "bicycle",
+      "available_router_count": 3
     }
   ],
   "jobs": [
@@ -222,6 +233,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Капитанчук Александр",
       "gigabit": false
@@ -246,6 +258,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Капитанчук Александр",
       "gigabit": false
@@ -270,6 +283,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Исхаков Денис",
       "gigabit": false
@@ -294,6 +308,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Брюзгин Ярослав",
       "gigabit": false
@@ -318,6 +333,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бахарев Андрей",
       "gigabit": false
@@ -342,6 +358,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Прокопенко Вячеслав",
       "gigabit": false
@@ -366,6 +383,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Выговский Сергей",
       "gigabit": false
@@ -390,6 +408,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бахарев Андрей",
       "gigabit": false
@@ -414,6 +433,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Данилов Даниил",
       "gigabit": false
@@ -438,6 +458,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 2,
       "reference_status": "В работе",
       "reference_crew": "Выговский Сергей",
       "gigabit": false
@@ -462,6 +483,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Переладов Алексей",
       "gigabit": false
@@ -486,6 +508,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Сакур Тимофей",
       "gigabit": false
@@ -510,6 +533,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Прокопенко Вячеслав",
       "gigabit": false
@@ -534,6 +558,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
       "gigabit": false
@@ -558,6 +583,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
       "gigabit": false
@@ -582,6 +608,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
       "gigabit": false
@@ -606,6 +633,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
       "gigabit": false
@@ -630,6 +658,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
       "gigabit": false
@@ -654,6 +683,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
       "gigabit": false
@@ -678,6 +708,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
       "gigabit": false
@@ -702,6 +733,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
       "gigabit": false
@@ -726,6 +758,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
       "gigabit": false
@@ -750,6 +783,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
       "gigabit": false
@@ -774,6 +808,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
       "gigabit": false
@@ -798,6 +833,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Сакур Тимофей",
       "gigabit": false
@@ -822,6 +858,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Сакур Тимофей",
       "gigabit": false
@@ -846,6 +883,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Данилов Даниил",
       "gigabit": false
@@ -870,6 +908,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Данилов Даниил",
       "gigabit": false
@@ -894,6 +933,7 @@
       "time_norm_code": "equipment_order",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 2,
       "reference_status": "Отправлена",
       "reference_crew": "Брюзгин Ярослав",
       "gigabit": false
@@ -918,6 +958,7 @@
       "time_norm_code": "equipment_order",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 2,
       "reference_status": "Отменена",
       "reference_crew": "Бахарев Андрей",
       "gigabit": false
@@ -942,6 +983,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Выговский Сергей",
       "gigabit": false
@@ -966,6 +1008,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Рыбалкин Егор",
       "gigabit": false
@@ -990,6 +1033,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Брюзгин Ярослав",
       "gigabit": false
@@ -1014,6 +1058,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Переладов Алексей",
       "gigabit": false
@@ -1038,6 +1083,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Прокопенко Вячеслав",
       "gigabit": false
@@ -1062,6 +1108,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Прокопенко Вячеслав",
       "gigabit": false
@@ -1086,6 +1133,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
       "gigabit": false
@@ -1110,6 +1158,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
       "gigabit": false
@@ -1134,6 +1183,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
       "gigabit": false
@@ -1158,6 +1208,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
       "gigabit": false
@@ -1182,6 +1233,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
       "gigabit": false
@@ -1206,6 +1258,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
       "gigabit": false
@@ -1230,6 +1283,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
       "gigabit": false
@@ -1254,6 +1308,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
       "gigabit": false
@@ -1278,6 +1333,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
       "gigabit": false
@@ -1302,6 +1358,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
       "gigabit": false
@@ -1326,6 +1383,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
       "gigabit": false
@@ -1350,6 +1408,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
       "gigabit": false
@@ -1374,6 +1433,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
       "gigabit": false
@@ -1398,6 +1458,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
       "gigabit": false
@@ -1422,6 +1483,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
       "gigabit": false
@@ -1446,6 +1508,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
       "gigabit": false
@@ -1470,6 +1533,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
       "gigabit": false
@@ -1494,6 +1558,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
       "gigabit": false
@@ -1518,6 +1583,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
       "gigabit": false
@@ -1542,6 +1608,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Выговский Сергей",
       "gigabit": false

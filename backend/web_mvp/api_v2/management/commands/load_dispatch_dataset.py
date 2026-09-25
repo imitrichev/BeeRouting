@@ -254,6 +254,7 @@ class Command(BaseCommand):
                     "vehicle_type": vehicle,
                     "start_address": item.get("start_address", ""),
                     "available_equipment": item.get("available_equipment", []),
+                    "available_router_count": item.get("available_router_count", 0),
                 },
             )
 
@@ -338,6 +339,7 @@ class Command(BaseCommand):
             "current_status": item.get("status", "NOT_SENT"),
             "current_engineer": current_engineer,
             "required_equipment": item.get("required_equipment", []),
+            "required_router_count": item.get("required_router_count", 0),
         }
 
     def _load_jobs(

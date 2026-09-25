@@ -372,6 +372,23 @@ class ORToolsOptimizer(RouteOptimizer):
                 routing.Start(engineer_index_by_id[engineer_id])
             ).SetValue(task_index)
 
+        if problem.consider_equipment:
+            def router_demand_callback(index: int) -> int:
+                """Возвращает число роутеров, расходуемых в посещаемом узле."""
+                task = task_by_node.get(manager.IndexToNode(index))
+                return task.required_router_count if task is not None else 0
+
+            router_callback_index = routing.RegisterUnaryTransitCallback(
+                router_demand_callback
+            )
+            routing.AddDimensionWithVehicleCapacity(
+                router_callback_index,  # evaluator_index: расход роутеров в узле.
+                0,  # slack_max: запас не пополняется в течение дня.
+                [problem.available_router_count_for_planning(engineer) for engineer in problem.engineers],
+                True,  # fix_start_cumul_to_zero: утром ещё ничего не израсходовано.
+                "Routers",  # dimension_name: измерение дневного расхода оборудования.
+            )
+
         self._add_resource_constraints(
             # Добавляет дополнительные hard constraints для отдельных
             # экземпляров оборудования и транспорта, если они заданы.
@@ -526,13 +543,33 @@ class ORToolsOptimizer(RouteOptimizer):
         total_distance_km = math.fsum(
             route.total_distance_km for route in routes.values()
         )
+        routers_used_by_engineer = {
+            engineer_id: sum(
+                next(item for item in eligible_tasks if item.id == stop.task_id).required_router_count
+                for stop in route.stops
+            )
+            for engineer_id, route in routes.items()
+        }
 
         for task in eligible_tasks:
             task_index = manager.NodeToIndex(task_node_by_id[task.id])
             if solution.Value(routing.ActiveVar(task_index)) == 0:
-                unassigned_reasons[task.id] = self._time_unassigned_reason(
-                    problem, task
+                has_remaining_router_stock = any(
+                    self._engineer_can_execute_task(problem, engineer, task)
+                    and routers_used_by_engineer[engineer.id]
+                    + task.required_router_count
+                    <= problem.available_router_count_for_planning(engineer)
+                    for engineer in problem.engineers
                 )
+                if problem.consider_equipment and not has_remaining_router_stock:
+                    unassigned_reasons[task.id] = UnassignedReason(
+                        code=UnassignedReasonCode.MISSING_EQUIPMENT,
+                        message="В маршрутах подходящих инженеров закончился дневной запас роутеров.",
+                    )
+                else:
+                    unassigned_reasons[task.id] = self._time_unassigned_reason(
+                        problem, task
+                    )
 
         unassigned_task_ids = tuple(
             task.id for task in problem.planning_tasks if task.id in unassigned_reasons
@@ -722,9 +759,16 @@ class ORToolsOptimizer(RouteOptimizer):
                 resource.id: resource for resource in problem.vehicle_resources
             }
             vehicle_type = vehicle_by_id[engineer.vehicle_resource_id].vehicle_type
+        equipment_matches = (
+            not problem.consider_equipment
+            or (
+                task.required_router_count <= problem.available_router_count_for_planning(engineer)
+                and task.required_equipment.issubset(equipment_types)
+            )
+        )
         return (
             task.required_skills.issubset(engineer.qualifications)
-            and task.required_equipment.issubset(equipment_types)
+            and equipment_matches
             and (
                 task.required_vehicle_type is None
                 or vehicle_type == task.required_vehicle_type
@@ -746,7 +790,13 @@ class ORToolsOptimizer(RouteOptimizer):
             equipment_by_id[resource_id].equipment_type
             for resource_id in engineer.equipment_resource_ids
         )
-        return task.required_equipment.issubset(equipment_types)
+        return (
+            not problem.consider_equipment
+            or (
+                task.required_router_count <= problem.available_router_count_for_planning(engineer)
+                and task.required_equipment.issubset(equipment_types)
+            )
+        )
 
     @staticmethod
     def _resource_ids_used_for_task(
@@ -755,6 +805,8 @@ class ORToolsOptimizer(RouteOptimizer):
         task: Task,
     ) -> tuple[str, ...]:
         """Возвращает экземпляры ресурсов, занятые во время обслуживания."""
+        if not problem.consider_equipment:
+            return ()
         equipment_by_id = {
             resource.id: resource for resource in problem.equipment_resources
         }

@@ -78,6 +78,7 @@ class Job(models.Model):
     current_engineer = models.ForeignKey('Engineer', null=True, blank=True,
         on_delete=models.SET_NULL, related_name='current_jobs')
     required_equipment = models.JSONField(default=list)
+    required_router_count = models.PositiveIntegerField(default=0)
 
     class Meta:
         unique_together = ('territory', 'job_id')

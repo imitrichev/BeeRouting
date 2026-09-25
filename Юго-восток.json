@@ -32,7 +32,8 @@
         "Аварийные работы",
         "Локальные работы"
       ],
-      "vehicle_type": "car"
+      "vehicle_type": "car",
+      "available_router_count": 5
     },
     {
       "engineer_id": "yugo_vostok-E02",
@@ -49,7 +50,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot"
+      "vehicle_type": "foot",
+      "available_router_count": 4
     },
     {
       "engineer_id": "yugo_vostok-E03",
@@ -66,7 +68,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "car"
+      "vehicle_type": "car",
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E04",
@@ -83,7 +86,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "public_transport"
+      "vehicle_type": "public_transport",
+      "available_router_count": 4
     },
     {
       "engineer_id": "yugo_vostok-E05",
@@ -102,7 +106,8 @@
         "Аварийные работы",
         "Локальные работы"
       ],
-      "vehicle_type": "car"
+      "vehicle_type": "car",
+      "available_router_count": 4
     },
     {
       "engineer_id": "yugo_vostok-E06",
@@ -119,7 +124,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot"
+      "vehicle_type": "foot",
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E07",
@@ -138,7 +144,8 @@
         "Аварийные работы",
         "Локальные работы"
       ],
-      "vehicle_type": "bicycle"
+      "vehicle_type": "bicycle",
+      "available_router_count": 2
     },
     {
       "engineer_id": "yugo_vostok-E08",
@@ -153,7 +160,8 @@
       "skills_ru": [
         "Работы на подключение и дозаказы"
       ],
-      "vehicle_type": "public_transport"
+      "vehicle_type": "public_transport",
+      "available_router_count": 1
     },
     {
       "engineer_id": "yugo_vostok-E09",
@@ -172,7 +180,8 @@
         "Аварийные работы",
         "Локальные работы"
       ],
-      "vehicle_type": "car"
+      "vehicle_type": "car",
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E10",
@@ -189,7 +198,8 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot"
+      "vehicle_type": "foot",
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E11",
@@ -204,7 +214,8 @@
       "skills_ru": [
         "Работы на подключение и дозаказы"
       ],
-      "vehicle_type": "bicycle"
+      "vehicle_type": "bicycle",
+      "available_router_count": 1
     },
     {
       "engineer_id": "yugo_vostok-E12",
@@ -219,7 +230,8 @@
       "skills_ru": [
         "Локальные работы"
       ],
-      "vehicle_type": "car"
+      "vehicle_type": "car",
+      "available_router_count": 0
     }
   ],
   "jobs": [
@@ -243,6 +255,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -267,6 +280,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 2,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Андреев",
       "gigabit": false
@@ -291,6 +305,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Белоновский",
       "gigabit": false
@@ -315,6 +330,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "В пути",
       "reference_crew": "Бригада Рыбин",
       "gigabit": false
@@ -339,6 +355,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -363,6 +380,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -387,6 +405,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
       "gigabit": false
@@ -411,6 +430,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
       "gigabit": false
@@ -435,6 +455,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
       "gigabit": false
@@ -459,6 +480,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Козырь",
       "gigabit": false
@@ -483,6 +505,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Андреев",
       "gigabit": false
@@ -507,6 +530,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Белоновский",
       "gigabit": false
@@ -531,6 +555,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 2,
       "reference_status": "В работе",
       "reference_crew": "Бригада Белоновский",
       "gigabit": false
@@ -555,6 +580,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Царьков",
       "gigabit": false
@@ -579,6 +605,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -603,6 +630,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -627,6 +655,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -651,6 +680,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -675,6 +705,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -699,6 +730,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
       "gigabit": false
@@ -723,6 +755,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
       "gigabit": false
@@ -747,6 +780,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -771,6 +805,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -795,6 +830,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
       "gigabit": false
@@ -819,6 +855,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
       "gigabit": false
@@ -843,6 +880,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
       "gigabit": false
@@ -867,6 +905,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Козырь",
       "gigabit": false
@@ -891,6 +930,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Козырь",
       "gigabit": false
@@ -915,6 +955,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
       "gigabit": false
@@ -939,6 +980,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
       "gigabit": false
@@ -963,6 +1005,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
       "gigabit": false
@@ -987,6 +1030,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
       "gigabit": false
@@ -1011,6 +1055,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белоновский",
       "gigabit": false
@@ -1035,6 +1080,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
       "gigabit": false
@@ -1059,6 +1105,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -1083,6 +1130,7 @@
       "time_norm_code": "connection",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Белоновский",
       "gigabit": false
@@ -1107,6 +1155,7 @@
       "time_norm_code": "equipment_order",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -1131,6 +1180,7 @@
       "time_norm_code": "equipment_order",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Макаров",
       "gigabit": false
@@ -1155,6 +1205,7 @@
       "time_norm_code": "equipment_order",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Козырь",
       "gigabit": false
@@ -1179,6 +1230,7 @@
       "time_norm_code": "equipment_order",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -1203,6 +1255,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -1227,6 +1280,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -1251,6 +1305,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Макаров",
       "gigabit": false
@@ -1275,6 +1330,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Козырь",
       "gigabit": false
@@ -1299,6 +1355,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Андреев",
       "gigabit": false
@@ -1323,6 +1380,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Белоновский",
       "gigabit": false
@@ -1347,6 +1405,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Бузань",
       "gigabit": false
@@ -1371,6 +1430,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Андреев",
       "gigabit": false
@@ -1395,6 +1455,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -1419,6 +1480,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Козырь",
       "gigabit": false
@@ -1443,6 +1505,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -1467,6 +1530,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 1,
       "reference_status": "В работе",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -1491,6 +1555,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -1515,6 +1580,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -1539,6 +1605,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -1563,6 +1630,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -1587,6 +1655,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -1611,6 +1680,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -1635,6 +1705,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
       "gigabit": false
@@ -1659,6 +1730,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
       "gigabit": false
@@ -1683,6 +1755,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
       "gigabit": false
@@ -1707,6 +1780,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
       "gigabit": false
@@ -1731,6 +1805,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
       "gigabit": false
@@ -1755,6 +1830,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
       "gigabit": false
@@ -1779,6 +1855,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
       "gigabit": false
@@ -1803,6 +1880,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Демин",
       "gigabit": false
@@ -1827,6 +1905,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белоновский",
       "gigabit": false
@@ -1851,6 +1930,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -1875,6 +1955,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -1899,6 +1980,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Козырь",
       "gigabit": false
@@ -1923,6 +2005,7 @@
       "time_norm_code": "local",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Белоновский",
       "gigabit": false
@@ -1947,6 +2030,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
       "gigabit": false
@@ -1971,6 +2055,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -1995,6 +2080,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -2019,6 +2105,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -2043,6 +2130,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -2067,6 +2155,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -2091,6 +2180,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -2115,6 +2205,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Козырь",
       "gigabit": false
@@ -2139,6 +2230,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Козырь",
       "gigabit": false
@@ -2163,6 +2255,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Саламатин",
       "gigabit": false
@@ -2187,6 +2280,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false
@@ -2211,6 +2305,7 @@
       "time_norm_code": "emergency",
       "priority": "normal",
       "required_vehicle": null,
+      "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
       "gigabit": false

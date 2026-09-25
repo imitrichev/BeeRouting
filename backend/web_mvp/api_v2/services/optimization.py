@@ -17,7 +17,7 @@ from .state import encode, decode
 from .repository import sync_entities
 
 STATE_FIELDS = ('_scenario', '_problem', '_result', '_preserve_assigned_tasks',
-                '_ignore_task_statuses', '_unavailable_engineer_ids', '_source_name',
+                '_ignore_task_statuses', '_consider_equipment', '_unavailable_engineer_ids', '_source_name',
                 '_late_day_manual_task_ids', '_late_day_active_engineer_ids')
 
 
@@ -125,6 +125,7 @@ class OptimizationWebService(PlanningService):
                         item.vehicle_type.code
                     ),
                     "available_equipment": item.available_equipment,
+                    "available_router_count": item.available_router_count,
                 }
                 for item in engineers
             ],
@@ -161,6 +162,7 @@ class OptimizationWebService(PlanningService):
                 ) if job.required_vehicle else None
             ),
             "required_equipment": job.required_equipment,
+            "required_router_count": job.required_router_count,
             "status": OptimizationWebService._json_status(job.current_status),
             "current_engineer_id": (
                 job.current_engineer.engineer_id if job.current_engineer else None
@@ -228,6 +230,7 @@ def save(territory, service):
     response['planning_options'] = {
         'ignore_task_statuses': service._ignore_task_statuses,
         'preserve_assigned_tasks': service._preserve_assigned_tasks,
+        'consider_equipment': service._consider_equipment,
         'planning_time': (
             service._problem.planning_time if service._problem is not None else None
         ),

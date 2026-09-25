@@ -61,6 +61,7 @@ class GreedyBaselineOptimizer(RouteOptimizer):
             engineer.id: [] for engineer in problem.engineers
         }
         resource_intervals: dict[str, list[tuple[str, int, int]]] = {}
+        routers_used = {engineer.id: 0 for engineer in problem.engineers}
         unassigned_reasons: dict[str, UnassignedReason] = {}
 
         # Начатая заявка образует неизменяемый первый участок маршрута. После
@@ -83,6 +84,15 @@ class GreedyBaselineOptimizer(RouteOptimizer):
                     problem, task, availability_by_engineer
                 )
                 continue
+            if (
+                problem.consider_equipment
+                and routers_used[engineer.id] + task.required_router_count
+                > problem.available_router_count_for_planning(engineer)
+            ):
+                unassigned_reasons[task.id] = self._unassigned_reason(
+                    problem, task, availability_by_engineer
+                )
+                continue
             schedule = self._schedule(
                 problem,
                 engineer,
@@ -95,6 +105,7 @@ class GreedyBaselineOptimizer(RouteOptimizer):
                 )
                 continue
             tasks_by_engineer[engineer.id].append(task)
+            routers_used[engineer.id] += task.required_router_count
             candidate_stop = schedule[-1]
             for resource_id in resource_ids_used_for_task(problem, engineer, task):
                 resource_intervals.setdefault(resource_id, []).append(
@@ -123,6 +134,12 @@ class GreedyBaselineOptimizer(RouteOptimizer):
             for engineer in candidate_engineers:
                 if not engineer_can_execute_task(problem, engineer, task):
                     continue
+                if (
+                    problem.consider_equipment
+                    and routers_used[engineer.id] + task.required_router_count
+                    > problem.available_router_count_for_planning(engineer)
+                ):
+                    continue
                 candidate_tasks = tasks_by_engineer[engineer.id] + [task]
                 schedule = self._schedule(
                     problem,
@@ -144,6 +161,7 @@ class GreedyBaselineOptimizer(RouteOptimizer):
                     continue
 
                 tasks_by_engineer[engineer.id].append(task)
+                routers_used[engineer.id] += task.required_router_count
                 # Запоминаем сервисный интервал каждого ограниченного экземпляра,
                 # чтобы следующий инженер не получил его одновременно.
                 for resource_id in resource_ids_used_for_task(

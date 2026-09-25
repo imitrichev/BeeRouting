@@ -64,6 +64,7 @@ def optimize_view(request: Request) -> Response:
     preserve_assigned_tasks = request.data.get("preserve_assigned_tasks")
     ignore_task_statuses = request.data.get("ignore_task_statuses", False)
     planning_time = request.data.get("planning_time")
+    consider_equipment = request.data.get("consider_equipment", False)
     state_serializer = OperationalStateSerializer(
         data=request.data.get("operational_states", []), many=True
     )
@@ -83,12 +84,18 @@ def optimize_view(request: Request) -> Response:
             {"error": "ignore_task_statuses должен быть bool."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+    if not isinstance(consider_equipment, bool):
+        return Response(
+            {"error": "consider_equipment должен быть bool."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     try:
         scenario, result = optimization_service.optimize_current(
             preserve_assigned_tasks=preserve_assigned_tasks,
             ignore_task_statuses=ignore_task_statuses,
             planning_time=planning_time,
             operational_states=operational_states,
+            consider_equipment=consider_equipment,
         )
     except (ValueError, RoutingProviderError) as exc:
         return Response({"error": str(exc)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)

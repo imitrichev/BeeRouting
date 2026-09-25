@@ -23,6 +23,7 @@ def sync_entities(territory, service):
             ),
             'shift_start':shift.available_from, 'shift_end':shift.available_until,
             'available_equipment':sorted(item.available_equipment),
+            'available_router_count':item.available_router_count,
         })
         engineer.skills.set([Skill.objects.get_or_create(code=s.value, defaults={'name':s.value})[0] for s in item.qualifications])
         engineers[item.id] = engineer
@@ -49,6 +50,7 @@ def sync_entities(territory, service):
             'address':item.address or '', 'lat':item.latitude, 'lon':item.longitude,
             'window_start':item.window_start, 'window_end':item.window_end, 'duration_min':item.duration_minutes,
             'required_vehicle':vehicle, 'required_equipment':sorted(item.required_equipment),
+            'required_router_count':item.required_router_count,
             'reference_status':original.get('reference_status','Не отправлена'), 'reference_engineer':reference,
             'current_status':item.status.value, 'current_engineer':engineers.get(planned_engineers.get(item.id, item.current_engineer_id)),
             'gigabit':original.get('gigabit',False),

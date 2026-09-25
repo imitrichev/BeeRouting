@@ -164,6 +164,8 @@ def _build_timefold_model(
         travel_time_matrix: dict[str, dict[str, int]]
         travel_distance_matrix: dict[str, dict[str, float]]
         resource_ids_by_task: dict[str, list[str]]
+        available_router_count: int
+        consider_equipment: bool
         tasks: Annotated[list[PlanningTask], api.PlanningListVariable(allows_unassigned_values=True)] = field(default_factory=list)
 
         def domain_tasks(self) -> list[Task]:
@@ -185,6 +187,13 @@ def _build_timefold_model(
                 if item.task_id not in self.compatible_task_ids:
                     violations += 1
             return violations
+
+        def router_overuse_count(self) -> int:
+            """Возвращает превышение дневного запаса роутеров в штуках."""
+            if not self.consider_equipment:
+                return 0
+            used = sum(item.task.required_router_count for item in self.tasks)
+            return max(0, used - self.available_router_count)
 
         def missing_fixed_count(self) -> int:
             """Считает закреплённые заявки, потерянные из маршрута.
@@ -307,6 +316,10 @@ def _build_timefold_model(
             .filter(lambda engineer: engineer.compatible_count() > 0)
             .penalize(hard_score, lambda engineer: engineer.compatible_count())
             .as_constraint("Hard resource compatibility"),
+            factory.for_each(PlanningEngineer)
+            .filter(lambda engineer: engineer.router_overuse_count() > 0)
+            .penalize(hard_score, lambda engineer: engineer.router_overuse_count())
+            .as_constraint("Hard router stock"),
             factory.for_each(PlanningEngineer)
             .filter(lambda engineer: engineer.missing_fixed_count() > 0)
             .penalize(hard_score, lambda engineer: engineer.missing_fixed_count())
@@ -500,6 +513,8 @@ class TimefoldOptimizer(RouteOptimizer):
                     task.id: list(resource_ids_used_for_task(problem, engineer, task))
                     for task in problem.planning_tasks
                 },
+                available_router_count=problem.available_router_count_for_planning(engineer),
+                consider_equipment=problem.consider_equipment,
             )
             for engineer in problem.engineers
         ]

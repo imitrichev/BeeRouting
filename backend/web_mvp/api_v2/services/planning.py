@@ -62,6 +62,7 @@ class PlanningService:
         self._result: OptimizationResult | None = None
         self._preserve_assigned_tasks = False
         self._ignore_task_statuses = False
+        self._consider_equipment = False
         self._unavailable_engineer_ids: set[str] = set()
         self._geocoder: NominatimGeocoder | None = None
         self._manual_reassignment_proposals: dict[str, dict[str, Any]] = {}
@@ -79,6 +80,7 @@ class PlanningService:
         self._result = None
         self._preserve_assigned_tasks = False
         self._ignore_task_statuses = False
+        self._consider_equipment = False
         self._unavailable_engineer_ids = set()
         self._manual_reassignment_proposals.clear()
         self._late_day_manual_task_ids.clear()
@@ -135,6 +137,7 @@ class PlanningService:
         operational_states: tuple[EngineerOperationalState, ...] = (),
         initial_routes_by_engineer: dict[str, tuple[str, ...]] | None = None,
         reference_routes_by_engineer: dict[str, tuple[str, ...]] | None = None,
+        consider_equipment: bool = False,
     ) -> tuple[JsonScenario, OptimizationResult]:
         """Строит задачу и запускает OR-Tools для текущего dataset."""
         scenario = self.current_dataset()
@@ -150,6 +153,7 @@ class PlanningService:
             planning_time = max(active_window_starts, default=None)
         self._preserve_assigned_tasks = preserve_assigned_tasks
         self._ignore_task_statuses = ignore_task_statuses
+        self._consider_equipment = consider_equipment
         states = self._complete_operational_states(
             scenario, planning_time, operational_states
         )
@@ -233,6 +237,15 @@ class PlanningService:
             )
         if not engineer_has_required_equipment(self._problem, engineer, task):
             missing = ", ".join(sorted(task.required_equipment - engineer.available_equipment))
+            available_routers = self._problem.available_router_count_for_planning(
+                engineer
+            )
+            if task.required_router_count > available_routers:
+                return self._infeasible_reassignment(
+                    "MISSING_EQUIPMENT",
+                    f"Для заявки требуется {task.required_router_count} роутеров, "
+                    f"у инженера {engineer.name} доступно {available_routers}.",
+                )
             return self._infeasible_reassignment(
                 "MISSING_EQUIPMENT",
                 f"У инженера {engineer.name} нет обязательного оборудования: {missing}.",
@@ -459,6 +472,9 @@ class PlanningService:
             planning_time=event["planning_time"],
             initial_routes_by_engineer=initial_routes,
             reference_routes_by_engineer=reference_routes,
+            consider_equipment=bool(
+                event.get("consider_equipment", self._consider_equipment)
+            ),
         )
         return scenario, result, details
 
@@ -510,7 +526,7 @@ class PlanningService:
             priority=priority,
             # Созданная диспетчером заявка ещё никому не отправлена.
             status=TaskStatus.NOT_SENT,
-            required_equipment=frozenset(data.get("required_equipment", ())),
+            required_router_count=data.get("required_router_count", 0),
             required_vehicle_type=(
                 VehicleType(data["required_vehicle_type"])
                 if data.get("required_vehicle_type")
@@ -697,6 +713,7 @@ class PlanningService:
             planning_time=planning_time,
             operational_states=operational_states,
             unavailable_engineer_ids=self._unavailable_engineer_ids,
+            consider_equipment=getattr(self, "_consider_equipment", False),
         )
 
     def serialize_dataset(self, scenario: JsonScenario) -> dict[str, Any]:

@@ -320,6 +320,20 @@ class ExplanationEngine:
                     "must_mention": True,
                 }
             )
+        if (
+            problem.consider_equipment
+            and task.required_router_count > problem.available_router_count_for_planning(engineer)
+        ):
+            reasons.append(
+                {
+                    "event_type": "HARD_CONSTRAINT_FAILURE",
+                    "type": "MISSING_EQUIPMENT",
+                    "message": "У инженера недостаточно роутеров.",
+                    "required_router_count": task.required_router_count,
+                    "available_router_count": problem.available_router_count_for_planning(engineer),
+                    "must_mention": True,
+                }
+            )
 
         actual_vehicle = engineer.vehicle_type
         if engineer.vehicle_resource_id is not None:
@@ -393,6 +407,13 @@ class ExplanationEngine:
                 "message": single["message"],
                 "must_mention": True,
             }]
+        if single["failure_type"] == "equipment":
+            return [{
+                "event_type": "HARD_CONSTRAINT_FAILURE",
+                "type": "MISSING_EQUIPMENT",
+                "message": single["message"],
+                "must_mention": True,
+            }]
         trial = self._simulate_route(
             problem,
             engineer,
@@ -424,7 +445,21 @@ class ExplanationEngine:
         travel_time = 0
         distance = 0.0
         blocking_task_ids: list[str] = []
+        routers_used = 0
         for task in tasks:
+            if problem.consider_equipment:
+                routers_used += task.required_router_count
+                available_routers = problem.available_router_count_for_planning(engineer)
+                if routers_used > available_routers:
+                    return {
+                        "feasible": False,
+                        "failure_type": "equipment",
+                        "message": f"Для маршрута требуется {routers_used} роутеров, "
+                        f"а у инженера доступно {available_routers}.",
+                        "blocking_task_ids": blocking_task_ids,
+                        "travel_time_minutes": travel_time,
+                        "distance_km": distance,
+                    }
             travel = problem.travel_time_between(
                 previous_location,
                 task.location_id,

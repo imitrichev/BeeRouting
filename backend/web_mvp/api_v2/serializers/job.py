@@ -58,7 +58,7 @@ class JobSerializer(serializers.ModelSerializer):
             "window_start", "window_end", "duration_min", "time_norm",
             "priority", "required_vehicle", "reference_status",
             "reference_engineer", "gigabit",
-            "current_status", "current_engineer", "required_equipment",
+            "current_status", "current_engineer", "required_equipment", "required_router_count",
         ]
 
 
@@ -111,7 +111,7 @@ class JobCreateSerializer(serializers.ModelSerializer):
             "window_start", "window_end", "duration_min", "time_norm",
             "priority", "required_vehicle", "reference_status",
             "reference_engineer", "gigabit",
-            "current_status", "current_engineer", "required_equipment",
+            "current_status", "current_engineer", "required_equipment", "required_router_count",
         ]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:

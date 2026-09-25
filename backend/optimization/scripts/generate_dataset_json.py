@@ -171,6 +171,24 @@ def _skill_for_kind(kind: str) -> tuple[str, str]:
     return "connection_orders", "Работы на подключение и дозаказы"
 
 
+def _required_router_count(row: Mapping[str, str]) -> int:
+    """Читает сгенерированный количественный расход роутеров заявки."""
+    raw_value = _first_value(
+        row,
+        "Требуемое количество роутеров, шт.",
+        "required_router_count",
+    )
+    if not raw_value:
+        return 0
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise ValueError(f"Некорректное количество роутеров: {raw_value!r}") from exc
+    if value < 0:
+        raise ValueError("Количество требуемых роутеров не может быть отрицательным")
+    return value
+
+
 def _find_control_path(path: Path | None, synthetic_path: Path | None = None) -> Path | None:
     """Находит контрольный CSV для того же района, что и синтетические данные.
 
@@ -749,6 +767,14 @@ def _engineers_from_csv(
                 "skills": skills,
                 "skills_ru": [SKILL_NAMES_RU.get(skill, skill) for skill in skills],
                 "vehicle_type": vehicle_codes.get(raw_vehicle, raw_vehicle),
+                "available_router_count": int(
+                    _first_value(
+                        row,
+                        "available_router_count",
+                        "Роутеров в начале дня, шт.",
+                    )
+                    or 0
+                ),
             }
         )
     if not engineers:
@@ -831,6 +857,7 @@ def generate_dataset(
                 "time_norm_code": kind,
                 "priority": "normal",
                 "required_vehicle": None,
+                "required_router_count": _required_router_count(synthetic),
                 # Без контрольного распределения заявка ещё не назначена.
                 # «Не отправлена» импортируется как TaskStatus.NOT_SENT.
                 "reference_status": (control or {}).get("Статус BK", "Не отправлена"),

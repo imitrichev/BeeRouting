@@ -111,3 +111,34 @@ class OptimizerConfig:
             reassigned_task_count - self.explanation_free_reassignments,
         )
         return charged_count * self.explanation_reassignment_penalty
+
+
+@dataclass(frozen=True, slots=True)
+class ICORoutingConfig:
+    """Параметры популяционного поиска ICO для маршрутизации.
+
+    Веса целевой функции берутся из отдельного ``OptimizerConfig``. Этот
+    класс управляет только самим метаэвристическим поиском и потому не
+    дублирует бизнес-приоритеты назначения.
+    """
+
+    countries_count: int = 6  # Число независимых островов поиска.
+    country_population: int = 16  # Начальное число решений на одном острове.
+    maximum_iterations: int = 200  # Максимум поколений ICO/DE.
+    maximum_function_evaluations: int = 20_000  # Общий бюджет декодирований и оценок маршрута.
+    gray_country_fraction: float = 0.25  # Доля островов с Gray-кодированием; помогает менять дискретные корзины назначения.
+    random_seed: int | None = 42  # Seed для воспроизводимого результата; None включает случайный запуск.
+    printing: bool = False  # Печатать прогресс ICO каждые 50 поколений.
+
+    def __post_init__(self) -> None:
+        """Проверяет параметры популяционного поиска."""
+        if self.countries_count <= 0:
+            raise ValueError("countries_count должен быть положительным")
+        if self.country_population < 4:
+            raise ValueError("country_population должен быть не меньше 4 для DE")
+        if self.maximum_iterations <= 0:
+            raise ValueError("maximum_iterations должен быть положительным")
+        if self.maximum_function_evaluations <= 0:
+            raise ValueError("maximum_function_evaluations должен быть положительным")
+        if not 0.0 <= self.gray_country_fraction <= 1.0:
+            raise ValueError("gray_country_fraction должен находиться в [0, 1]")

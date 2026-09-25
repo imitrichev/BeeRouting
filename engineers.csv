@@ -1,36 +1,36 @@
-territory_code;engineer_id;name;vehicle_type;skills;start_address;start_lat;start_lon;shift_start;shift_end
-vostok;vostok-E01;Бригада Соколов;car;connection_orders|emergency_works|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E02;Бригада Мельников;foot;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E03;Бригада Матвеев;car;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E04;Бригада Попов;public_transport;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E05;Бригада Арташкин;car;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E06;Бригада Комарь;foot;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E07;Бригада Каушнян;bicycle;connection_orders|emergency_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E08;Бригада Зверев;public_transport;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E09;Бригада Перов;car;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E10;Бригада Белузин;foot;connection_orders|emergency_works|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E11;Бригада Гусаковский;bicycle;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-vostok;vostok-E12;Бригада Свеженцев;car;emergency_works|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00
-yugo_vostok;yugo_vostok-E01;Бригада Паршин;car;connection_orders|emergency_works|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E02;Бригада Андреев;foot;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E03;Бригада Белоновский;car;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E04;Бригада Рыбин;public_transport;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E05;Бригада Горбанев;car;connection_orders|emergency_works|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E06;Бригада Бузань;foot;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E07;Бригада Козырь;bicycle;connection_orders|emergency_works|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E08;Бригада Царьков;public_transport;connection_orders;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E09;Бригада Саламатин;car;connection_orders|emergency_works|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E10;Бригада Макаров;foot;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E11;Бригада Каушнян;bicycle;connection_orders;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_vostok;yugo_vostok-E12;Бригада Демин;car;local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00
-yugo_tsentr;yugo_tsentr-E01;Бахарев Андрей;car;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E02;Брюзгин Ярослав;foot;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E03;Выговский Сергей;car;connection_orders|emergency_works|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E04;Данилов Даниил;public_transport;connection_orders;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E05;Ионов Геннадий;car;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E06;Исхаков Денис;foot;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E07;Капитанчук Александр;bicycle;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E08;Переладов Алексей;public_transport;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E09;Прокопенко Вячеслав;car;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E10;Рыбалкин Егор;foot;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
-yugo_tsentr;yugo_tsentr-E11;Сакур Тимофей;bicycle;connection_orders;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00
+territory_code;engineer_id;name;vehicle_type;skills;start_address;start_lat;start_lon;shift_start;shift_end;available_router_count
+vostok;vostok-E01;Бригада Соколов;car;connection_orders|emergency_works|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;5
+vostok;vostok-E02;Бригада Мельников;foot;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;3
+vostok;vostok-E03;Бригада Матвеев;car;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;3
+vostok;vostok-E04;Бригада Попов;public_transport;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;3
+vostok;vostok-E05;Бригада Арташкин;car;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;2
+vostok;vostok-E06;Бригада Комарь;foot;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;2
+vostok;vostok-E07;Бригада Каушнян;bicycle;connection_orders|emergency_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;2
+vostok;vostok-E08;Бригада Зверев;public_transport;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;3
+vostok;vostok-E09;Бригада Перов;car;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;2
+vostok;vostok-E10;Бригада Белузин;foot;connection_orders|emergency_works|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;2
+vostok;vostok-E11;Бригада Гусаковский;bicycle;connection_orders|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;5
+vostok;vostok-E12;Бригада Свеженцев;car;emergency_works|local_works;г. Москва, ул Юных Ленинцев, д 83 к 4;55.7022013;37.7739593;09:00;22:00;0
+yugo_vostok;yugo_vostok-E01;Бригада Паршин;car;connection_orders|emergency_works|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;5
+yugo_vostok;yugo_vostok-E02;Бригада Андреев;foot;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;4
+yugo_vostok;yugo_vostok-E03;Бригада Белоновский;car;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;3
+yugo_vostok;yugo_vostok-E04;Бригада Рыбин;public_transport;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;4
+yugo_vostok;yugo_vostok-E05;Бригада Горбанев;car;connection_orders|emergency_works|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;4
+yugo_vostok;yugo_vostok-E06;Бригада Бузань;foot;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;3
+yugo_vostok;yugo_vostok-E07;Бригада Козырь;bicycle;connection_orders|emergency_works|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;2
+yugo_vostok;yugo_vostok-E08;Бригада Царьков;public_transport;connection_orders;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;1
+yugo_vostok;yugo_vostok-E09;Бригада Саламатин;car;connection_orders|emergency_works|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;3
+yugo_vostok;yugo_vostok-E10;Бригада Макаров;foot;connection_orders|local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;3
+yugo_vostok;yugo_vostok-E11;Бригада Каушнян;bicycle;connection_orders;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;1
+yugo_vostok;yugo_vostok-E12;Бригада Демин;car;local_works;г. Москва, ул Бирюлёвская, д 1 к 1;55.5868278;37.6654561;09:00;22:00;0
+yugo_tsentr;yugo_tsentr-E01;Бахарев Андрей;car;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;5
+yugo_tsentr;yugo_tsentr-E02;Брюзгин Ярослав;foot;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;3
+yugo_tsentr;yugo_tsentr-E03;Выговский Сергей;car;connection_orders|emergency_works|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;3
+yugo_tsentr;yugo_tsentr-E04;Данилов Даниил;public_transport;connection_orders;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;3
+yugo_tsentr;yugo_tsentr-E05;Ионов Геннадий;car;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;1
+yugo_tsentr;yugo_tsentr-E06;Исхаков Денис;foot;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;1
+yugo_tsentr;yugo_tsentr-E07;Капитанчук Александр;bicycle;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;2
+yugo_tsentr;yugo_tsentr-E08;Переладов Алексей;public_transport;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;1
+yugo_tsentr;yugo_tsentr-E09;Прокопенко Вячеслав;car;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;1
+yugo_tsentr;yugo_tsentr-E10;Рыбалкин Егор;foot;connection_orders|local_works;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;2
+yugo_tsentr;yugo_tsentr-E11;Сакур Тимофей;bicycle;connection_orders;г.Москва проезд Симферопольский, д.7;55.6638404;37.6138686;09:00;22:00;3

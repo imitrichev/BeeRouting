@@ -238,6 +238,7 @@ class ManualAssignmentPlanner(RouteOptimizer):
             availability = availability_by_engineer[engineer_id]
             current_time = hhmm_to_minutes(availability.available_from)
             previous_location = engineer.start_location_id
+            routers_used = 0
             for task_id in task_ids:
                 task = tasks_by_id.get(task_id)
                 if task is None:
@@ -278,6 +279,21 @@ class ManualAssignmentPlanner(RouteOptimizer):
                         )
                     )
                     continue
+
+                if problem.consider_equipment:
+                    routers_used += task.required_router_count
+                    available_routers = problem.available_router_count_for_planning(engineer)
+                    if routers_used > available_routers:
+                        violations.append(
+                            ManualAssignmentViolation(
+                                task.id,
+                                engineer_id,
+                                UnassignedReasonCode.MISSING_EQUIPMENT.value,
+                                f"Для маршрута требуется {routers_used} роутеров, "
+                                f"у инженера доступно {available_routers}.",
+                            )
+                        )
+                        continue
 
                 travel_time = problem.travel_time_between(
                     previous_location,

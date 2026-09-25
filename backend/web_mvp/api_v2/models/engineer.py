@@ -27,6 +27,7 @@ class Engineer(models.Model):
     )
 
     available_equipment = models.JSONField(default=list)
+    available_router_count = models.PositiveIntegerField(default=0)
     start_address = models.CharField(max_length=500, blank=True)
 
     class Meta:

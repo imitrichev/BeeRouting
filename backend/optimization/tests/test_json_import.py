@@ -236,6 +236,8 @@ def test_generator_uses_synthetic_ids_and_time_norms(tmp_path: Path) -> None:
     assert scenario.control_request_id_by_task[scenario.tasks[0].id] == "305894566"
     assert scenario.engineers[1].vehicle_type == VehicleType.WALK
     assert Skill.LOCAL_WORKS in scenario.engineers[1].qualifications
+    assert scenario.engineers[0].available_router_count >= 0
+    assert any(task.required_router_count > 0 for task in scenario.tasks)
 
 
 def test_generator_normalizes_apartment_before_geocoding(tmp_path: Path) -> None:
@@ -270,6 +272,7 @@ def test_engineers_csv_contains_start_address_and_coordinates() -> None:
     assert "start_address" in header
     assert "start_lat" in header
     assert "start_lon" in header
+    assert "available_router_count" in header
     territory_index = header.index("territory_code")
     lat_index = header.index("start_lat")
     lon_index = header.index("start_lon")

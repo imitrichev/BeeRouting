@@ -6,6 +6,7 @@
 - модели `Engineer`, `Task`, `OptimizationProblem`, `OptimizationResult`;
 - общий интерфейс `RouteOptimizer`;
 - реализация `ORToolsOptimizer`;
+- экспериментальная реализация `ICOOptimizer` на основе ICO/DE и random keys;
 - простой `GreedyBaselineOptimizer` без глобального поиска;
 - интерфейс `RoutingProvider` и `InMemoryRoutingProvider` для внешней матрицы;
 - внешние матрицы времени движения в минутах и расстояния в километрах;
@@ -15,6 +16,37 @@
 - приоритеты `NORMAL` и `URGENT`;
 - штраф за неназначение с учётом приоритета;
 - минимизация суммарного времени движения по внешней матрице.
+
+## Экспериментальный ICO solver
+
+`ICOOptimizer` реализует тот же `RouteOptimizer`, принимает обычный
+`OptimizationProblem` и возвращает общий `OptimizationResult`. Для каждой
+заявки хромосома содержит два вещественных ключа: первый выбирает неназначение
+или инженера, второй задаёт порядок заявки в маршруте выбранного инженера.
+Декодер использует матрицу транспорта этого инженера и принимает вставку
+только при соблюдении навыка, оборудования, транспорта, временного окна,
+смены, зафиксированных статусов и ограниченных ресурсов.
+
+Поиск начинается с результата `GreedyBaselineOptimizer`. Поэтому короткий
+лимит ICO не может ухудшить baseline: если найденный план дороже, solver
+возвращает стартовый план. Численные параметры поиска находятся отдельно в
+`ICORoutingConfig`, а веса общей objective — в `OptimizerConfig`.
+
+```python
+from backend.optimization import ICOOptimizer, ICORoutingConfig
+
+optimizer = ICOOptimizer(
+    ico_config=ICORoutingConfig(
+        maximum_iterations=200,
+        maximum_function_evaluations=20_000,
+        random_seed=42,
+    )
+)
+result = optimizer.optimize(problem)
+```
+
+ICO остаётся экспериментальным solver’ом. Основным надёжным решателем проекта
+является `ORToolsOptimizer`.
 
 ## Альтернативный Timefold solver
 
