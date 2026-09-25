@@ -5,7 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import api_view as drf_api_view
 from backend.optimization import EngineerOperationalState, RoutingProviderError
-from backend.web_mvp.api.services import OFFICIAL_DATASET_PATHS
+from ..services.planning import OFFICIAL_DATASET_PATHS
 from ..models import Territory
 from ..services import import_dataset, reload_official_datasets
 from ..serializers import (OperationalStateSerializer, ReplanningEventSerializer,

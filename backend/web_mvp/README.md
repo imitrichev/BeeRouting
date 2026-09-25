@@ -45,15 +45,15 @@ dataset. Если выключить переключатель, `CANCELLED` и 
 
 ## API
 
-- `GET /api/dataset/official/` — открыть `Югоцентр.json`;
-- `POST /api/dataset/upload/` — загрузить JSON в поле `file`;
-- `POST /api/optimize/` — запустить OR-Tools для текущего dataset;
-- `POST /api/explain/<task_id>/` — получить объяснение назначения заявки.
+- `GET /api/v2/dataset/official/` — открыть `Югоцентр.json`;
+- `POST /api/v2/dataset/upload/` — загрузить JSON в поле `file`;
+- `POST /api/v2/optimize/` — запустить OR-Tools для текущего dataset;
+- `POST /api/v2/explain/<task_id>/` — получить объяснение назначения заявки.
 
 По умолчанию API использует `OSRMRoutingProvider`. Он запрашивает у OSRM
-матрицу времени и расстояний через [Table service](https://project-osrm.org/docs/v5.22.0/api/#table-service),
+матрицу времени и расстояний через [Table service](https://project-osrm.org/docs/v5.22.0/api/v2/#table-service),
 а после оптимизации — дорожную GeoJSON-геометрию каждого маршрута через
-[Route service](https://project-osrm.org/docs/v5.22.0/api/#route-service).
+[Route service](https://project-osrm.org/docs/v5.22.0/api/v2/#route-service).
 Адрес сервера можно изменить переменной окружения:
 
 ```bash

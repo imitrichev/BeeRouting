@@ -17,8 +17,7 @@ const territoryCode = ref('')
 
 // Район передаётся явно в каждом запросе; переключение не меняет чужие планы.
 function apiFetch(path: string, options?: RequestInit): Promise<Response> {
-  const url = path.replace('/api/', '/api/v2/')
-  return fetch(`${url}?territory=${encodeURIComponent(territoryCode.value)}`, options)
+  return fetch(`${path}?territory=${encodeURIComponent(territoryCode.value)}`, options)
 }
 
 async function refreshTerritories(): Promise<void> {
@@ -305,7 +304,7 @@ async function loadOfficialDataset() {
   loading.value = true
   errorMessage.value = ''
   try {
-    const response = await apiFetch('/api/dataset/official/', { method: 'POST' })
+    const response = await apiFetch('/api/v2/dataset/official/', { method: 'POST' })
     const payload = await readResponse(response)
     dataset.value = payload.dataset
     if (payload.territory_code) territoryCode.value = payload.territory_code
@@ -335,7 +334,7 @@ async function uploadDataset() {
   try {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
-    const response = await apiFetch('/api/dataset/upload/', {
+    const response = await apiFetch('/api/v2/dataset/upload/', {
       method: 'POST',
       body: formData,
     })
@@ -376,7 +375,7 @@ async function optimize(ignoreStatuses: boolean) {
   ignoreTaskStatuses.value = ignoreStatuses
   planningTime.value = ignoreStatuses ? '' : controlPlanningTime()
   try {
-    const response = await apiFetch('/api/optimize/', {
+    const response = await apiFetch('/api/v2/optimize/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -405,7 +404,7 @@ async function createTask(): Promise<void> {
   creatingTask.value = true
   errorMessage.value = ''
   try {
-    const response = await apiFetch('/api/tasks/', {
+    const response = await apiFetch('/api/v2/tasks/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -451,7 +450,7 @@ async function geocodeTaskAddress(): Promise<void> {
   newTask.value.latitude = null
   newTask.value.longitude = null
   try {
-    const response = await apiFetch('/api/geocode/', {
+    const response = await apiFetch('/api/v2/geocode/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address: newTask.value.address }),
@@ -531,7 +530,7 @@ async function replan(): Promise<void> {
         status: 'NOT_SENT',
       }
     }
-    const response = await apiFetch('/api/replan/', {
+    const response = await apiFetch('/api/v2/replan/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -558,7 +557,7 @@ async function explainTask(taskId: string): Promise<void> {
   explanationDeveloperMode.value = false
   errorMessage.value = ''
   try {
-    const response = await apiFetch(`/api/explain/${encodeURIComponent(taskId)}/`, {
+    const response = await apiFetch(`/api/v2/explain/${encodeURIComponent(taskId)}/`, {
       method: 'POST',
     })
     const payload = await response.json()
@@ -591,7 +590,7 @@ async function previewManualReassignment(): Promise<void> {
   reassignmentError.value = ''
   reassignmentPreview.value = null
   try {
-    const response = await apiFetch('/api/manual-reassignment/preview/', {
+    const response = await apiFetch('/api/v2/manual-reassignment/preview/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -618,7 +617,7 @@ async function confirmManualReassignment(): Promise<void> {
   reassignmentLoading.value = true
   reassignmentError.value = ''
   try {
-    const response = await apiFetch('/api/manual-reassignment/confirm/', {
+    const response = await apiFetch('/api/v2/manual-reassignment/confirm/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ proposal_id: proposalId }),

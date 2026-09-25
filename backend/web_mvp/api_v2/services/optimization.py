@@ -8,7 +8,7 @@ import json
 from typing import Any
 from django.db import transaction
 from backend.optimization import load_json_scenario_data, create_osrm_provider_from_environment
-from backend.web_mvp.api.services import OptimizationWebService as BaseOptimizationWebService
+from .planning import PlanningService
 from ..models import (
     District, Engineer, Job, Priority, ReassignmentProposal, RescheduleEvent,
     Skill, Territory, VehicleType,
@@ -21,7 +21,7 @@ STATE_FIELDS = ('_scenario', '_problem', '_result', '_preserve_assigned_tasks',
                 '_late_day_manual_task_ids', '_late_day_active_engineer_ids')
 
 
-class OptimizationWebService(BaseOptimizationWebService):
+class OptimizationWebService(PlanningService):
     """Актуальный сервис планирования, адресованный конкретной территории.
 
     Исходная реализация коллеги ввела отдельный сервис и метод

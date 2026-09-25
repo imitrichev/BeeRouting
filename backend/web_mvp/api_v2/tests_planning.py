@@ -1,28 +1,62 @@
 """Минимальные API-тесты end-to-end MVP."""
 
-from pathlib import Path
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from backend.web_mvp.api.services import optimization_service
+from backend.optimization import CoordinateRoutingProvider
+from backend.web_mvp.api_v2.models import Territory
+from backend.web_mvp.api_v2.services import import_dataset, restore, save
+from backend.web_mvp.api_v2.services.optimization import OptimizationWebService
+from backend.web_mvp.api_v2.services.planning import OFFICIAL_DATASET_PATH
+
+
+class TerritoryApiClient(APIClient):
+    """Направляет прежние сценарии тестов только в API v2 выбранного района."""
+
+    territory_code: str
+
+    def generic(self, method, path, *args, **kwargs):
+        """Добавляет обязательный территориальный контекст API v2."""
+        if path.startswith("/api/v2/") and "territory=" not in path:
+            separator = "&" if "?" in path else "?"
+            path = f"{path}{separator}territory={self.territory_code}"
+        return super().generic(method, path, *args, **kwargs)
 
 
 class OptimizationApiTests(TestCase):
     """Проверяет загрузку dataset и запуск независимого solver."""
 
     def setUp(self) -> None:
-        """Очищает in-memory состояние перед каждым тестом."""
-        optimization_service.reset()
-        optimization_service.use_osrm = False
-        optimization_service.routing_provider = None
-        self.client = APIClient()
-        self.dataset_path = Path(__file__).resolve().parents[3] / "Югоцентр.json"
+        """Создаёт постоянный район и локальный routing provider для API v2."""
+        self.dataset_path = OFFICIAL_DATASET_PATH
+        self.territory = import_dataset(
+            self.dataset_path.read_bytes(),
+            self.dataset_path.name,
+        )
+        self.client = TerritoryApiClient()
+        self.client.territory_code = self.territory.code
+        provider_factory = lambda coordinates, **_kwargs: CoordinateRoutingProvider(
+            coordinates,
+            speed_km_per_hour=30,
+        )
+        planning_provider = patch(
+            "backend.web_mvp.api_v2.services.planning.create_osrm_provider_from_environment",
+            side_effect=provider_factory,
+        )
+        restore_provider = patch(
+            "backend.web_mvp.api_v2.services.optimization.create_osrm_provider_from_environment",
+            side_effect=provider_factory,
+        )
+        planning_provider.start()
+        restore_provider.start()
+        self.addCleanup(planning_provider.stop)
+        self.addCleanup(restore_provider.stop)
 
     def test_official_dataset_is_visible(self) -> None:
         """Официальный dataset доступен через API."""
-        response = self.client.get("/api/dataset/official/")
+        response = self.client.get("/api/v2/dataset/")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["dataset"]["engineers"]), 11)
@@ -32,7 +66,7 @@ class OptimizationApiTests(TestCase):
         """API принимает официальный JSON как multipart upload."""
         with self.dataset_path.open("rb") as dataset_file:
             response = self.client.post(
-                "/api/dataset/upload/",
+                "/api/v2/dataset/upload/",
                 {"file": dataset_file},
                 format="multipart",
             )
@@ -42,7 +76,7 @@ class OptimizationApiTests(TestCase):
 
     def test_optimize_returns_metrics_routes_and_unassigned_reasons(self) -> None:
         """Запуск OR-Tools возвращает маршрутный результат для dataset."""
-        response = self.client.post("/api/optimize/", {}, format="json")
+        response = self.client.post("/api/v2/optimize/", {}, format="json")
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("metrics", response.data["result"])
@@ -68,7 +102,7 @@ class OptimizationApiTests(TestCase):
     def test_assigned_tasks_can_be_preserved_by_request_mode(self) -> None:
         """API передаёт режим фиксации ASSIGNED в математическое ядро."""
         response = self.client.post(
-            "/api/optimize/",
+            "/api/v2/optimize/",
             {"preserve_assigned_tasks": True},
             format="json",
         )
@@ -97,7 +131,7 @@ class OptimizationApiTests(TestCase):
     def test_ignore_statuses_builds_a_new_plan_for_all_tasks(self) -> None:
         """Полный режим frontend включает даже исторические статусы в новый план."""
         response = self.client.post(
-            "/api/optimize/",
+            "/api/v2/optimize/",
             {"ignore_task_statuses": True},
             format="json",
         )
@@ -113,7 +147,7 @@ class OptimizationApiTests(TestCase):
     def test_task_can_be_created_through_api(self) -> None:
         """Новая заявка появляется в dataset и сбрасывает старый результат."""
         response = self.client.post(
-            "/api/tasks/",
+            "/api/v2/tasks/",
             {
                 "id": "NEW-1",
                 "latitude": 55.75,
@@ -136,9 +170,9 @@ class OptimizationApiTests(TestCase):
 
     def test_duplicate_task_is_rejected(self) -> None:
         """API не позволяет затереть существующую заявку тем же ID."""
-        existing_id = self.client.get("/api/dataset/").data["dataset"]["tasks"][0]["id"]
+        existing_id = self.client.get("/api/v2/dataset/").data["dataset"]["tasks"][0]["id"]
         response = self.client.post(
-            "/api/tasks/",
+            "/api/v2/tasks/",
             {
                 "id": existing_id,
                 "latitude": 55.75,
@@ -154,13 +188,13 @@ class OptimizationApiTests(TestCase):
     def test_late_manual_task_cannot_activate_new_engineer(self) -> None:
         """После условных 14:00 новый план не вызывает инженера из дома."""
         initial = self.client.post(
-            "/api/optimize/",
+            "/api/v2/optimize/",
             {"ignore_task_statuses": True},
             format="json",
         )
         self.assertEqual(initial.status_code, 200)
         created = self.client.post(
-            "/api/tasks/",
+            "/api/v2/tasks/",
             {
                 "id": "LATE-NEW",
                 "latitude": 55.75,
@@ -172,13 +206,15 @@ class OptimizationApiTests(TestCase):
             format="json",
         )
         self.assertEqual(created.status_code, 201)
-        self.assertIn("LATE-NEW", optimization_service._late_day_manual_task_ids)
+        service = restore(Territory.objects.get(pk=self.territory.pk))
+        self.assertIn("LATE-NEW", service._late_day_manual_task_ids)
 
         # Имитируем результат, который потребовал бы вызвать любого инженера,
         # отсутствовавшего в исходном составе на линии.
-        optimization_service._late_day_active_engineer_ids.clear()
+        service._late_day_active_engineer_ids.clear()
+        save(self.territory, service)
         rejected = self.client.post(
-            "/api/optimize/",
+            "/api/v2/optimize/",
             {"ignore_task_statuses": True},
             format="json",
         )
@@ -187,7 +223,7 @@ class OptimizationApiTests(TestCase):
         self.assertIn("После условных 14:00", rejected.data["error"])
         task = next(
             item
-            for item in self.client.get("/api/dataset/").data["dataset"]["tasks"]
+            for item in self.client.get("/api/v2/dataset/").data["dataset"]["tasks"]
             if item["id"] == "LATE-NEW"
         )
         self.assertEqual(task["status"], "NOT_SENT")
@@ -195,7 +231,7 @@ class OptimizationApiTests(TestCase):
     def test_late_emergency_can_activate_new_engineer(self) -> None:
         """Авария не включает запрет вызова дополнительной бригады."""
         created = self.client.post(
-            "/api/tasks/",
+            "/api/v2/tasks/",
             {
                 "id": "LATE-EMERGENCY",
                 "latitude": 55.75,
@@ -210,13 +246,13 @@ class OptimizationApiTests(TestCase):
         self.assertEqual(created.status_code, 201)
         self.assertNotIn(
             "LATE-EMERGENCY",
-            optimization_service._late_day_manual_task_ids,
+            restore(Territory.objects.get(pk=self.territory.pk))._late_day_manual_task_ids,
         )
 
     def test_task_window_rejects_non_24_hour_time(self) -> None:
         """Форма не принимает часы за пределами 00:00–23:59."""
         response = self.client.post(
-            "/api/tasks/",
+            "/api/v2/tasks/",
             {
                 "id": "BAD-TIME",
                 "latitude": 55.75,
@@ -232,12 +268,12 @@ class OptimizationApiTests(TestCase):
     def test_cancelled_task_is_removed_by_dynamic_replanning(self) -> None:
         """Сценарий отмены исключает заявку из продолжения плана."""
         initial = self.client.post(
-            "/api/optimize/", {"ignore_task_statuses": True}, format="json"
+            "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
         )
         task_id = initial.data["result"]["routes"][0]["stops"][0]["task_id"]
 
         response = self.client.post(
-            "/api/replan/",
+            "/api/v2/replan/",
             {"event_type": "TASK_CANCELLED", "planning_time": "09:00", "task_id": task_id},
             format="json",
         )
@@ -255,7 +291,7 @@ class OptimizationApiTests(TestCase):
     def test_unavailable_engineer_receives_no_tasks(self) -> None:
         """Сценарий недоступности освобождает и запрещает маршрут инженера."""
         initial = self.client.post(
-            "/api/optimize/", {"ignore_task_statuses": True}, format="json"
+            "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
         )
         engineer_id = next(
             route["engineer_id"]
@@ -264,7 +300,7 @@ class OptimizationApiTests(TestCase):
         )
 
         response = self.client.post(
-            "/api/replan/",
+            "/api/v2/replan/",
             {
                 "event_type": "ENGINEER_UNAVAILABLE",
                 "planning_time": "09:00",
@@ -283,7 +319,7 @@ class OptimizationApiTests(TestCase):
     def test_emergency_event_creates_urgent_emergency_task(self) -> None:
         """Аварийный сценарий создаёт заявку с обязательным приоритетом и навыком."""
         response = self.client.post(
-            "/api/replan/",
+            "/api/v2/replan/",
             {
                 "event_type": "EMERGENCY_TASK",
                 "planning_time": "09:00",
@@ -310,7 +346,7 @@ class OptimizationApiTests(TestCase):
     def test_manual_reassignment_requires_preview_and_confirmation(self) -> None:
         """Preview показывает метрики, а план меняется только после подтверждения."""
         initial = self.client.post(
-            "/api/optimize/", {"ignore_task_statuses": True}, format="json"
+            "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
         )
         task_id = "yugo_tsentr-J78540"
         old_engineer_id = next(
@@ -321,7 +357,7 @@ class OptimizationApiTests(TestCase):
         new_engineer_id = "yugo_tsentr-E02"
 
         preview = self.client.post(
-            "/api/manual-reassignment/preview/",
+            "/api/v2/manual-reassignment/preview/",
             {"task_id": task_id, "engineer_id": new_engineer_id},
             format="json",
         )
@@ -335,12 +371,12 @@ class OptimizationApiTests(TestCase):
         self.assertTrue(
             any(
                 stop.task_id == task_id
-                for stop in optimization_service._result.routes[old_engineer_id].stops
+                for stop in restore(Territory.objects.get(pk=self.territory.pk))._result.routes[old_engineer_id].stops
             )
         )
 
         confirmed = self.client.post(
-            "/api/manual-reassignment/confirm/",
+            "/api/v2/manual-reassignment/confirm/",
             {"proposal_id": preview.data["proposal_id"]},
             format="json",
         )
@@ -354,7 +390,7 @@ class OptimizationApiTests(TestCase):
     def test_manual_reassignment_reports_missing_skill(self) -> None:
         """Недопустимый инженер отклоняется до запуска OR-Tools с ясной причиной."""
         initial = self.client.post(
-            "/api/optimize/", {"ignore_task_statuses": True}, format="json"
+            "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
         )
         task = next(
             item for item in initial.data["dataset"]["tasks"]
@@ -366,7 +402,7 @@ class OptimizationApiTests(TestCase):
         )
 
         response = self.client.post(
-            "/api/manual-reassignment/preview/",
+            "/api/v2/manual-reassignment/preview/",
             {"task_id": task["id"], "engineer_id": engineer["id"]},
             format="json",
         )
@@ -377,14 +413,14 @@ class OptimizationApiTests(TestCase):
         self.assertIn("нет требуемой квалификации", response.data["message"])
 
     @patch.object(
-        optimization_service,
+        OptimizationWebService,
         "geocode_address",
         return_value=(55.7558, 37.6176),
     )
     def test_address_can_be_geocoded_for_task_form(self, _geocode_mock) -> None:
         """Frontend получает координаты только после успешной проверки адреса."""
         response = self.client.post(
-            "/api/geocode/", {"address": "Москва, Красная площадь, 1"}, format="json"
+            "/api/v2/geocode/", {"address": "Москва, Красная площадь, 1"}, format="json"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -392,7 +428,7 @@ class OptimizationApiTests(TestCase):
 
     @patch("LLM.query.explain_assignment", return_value="Заявка назначена Иванову.")
     @patch(
-        "backend.web_mvp.api.services.ExplanationEngine.explain_task",
+        "backend.web_mvp.api_v2.services.planning.ExplanationEngine.explain_task",
         return_value={
             "schema_version": "1.0",
             "event_type": "task_assignment_explanation",
@@ -410,11 +446,11 @@ class OptimizationApiTests(TestCase):
         _llm_mock,
     ) -> None:
         """Endpoint отдаёт decision trace и текст, не выполняя LLM в тесте."""
-        optimize_response = self.client.post("/api/optimize/", {}, format="json")
+        optimize_response = self.client.post("/api/v2/optimize/", {}, format="json")
         task_id = optimize_response.data["dataset"]["tasks"][0]["id"]
 
         response = self.client.post(
-            f"/api/explain/{task_id}/",
+            f"/api/v2/explain/{task_id}/",
             {},
             format="json",
         )
@@ -434,7 +470,7 @@ class OptimizationApiTests(TestCase):
     @override_settings(DEVELOPER_MODE=False)
     @patch("LLM.query.explain_assignment", return_value="Причины назначения.")
     @patch(
-        "backend.web_mvp.api.services.ExplanationEngine.explain_task",
+        "backend.web_mvp.api_v2.services.planning.ExplanationEngine.explain_task",
         return_value={
             "assignment": {
                 "status": "assigned",
@@ -448,10 +484,10 @@ class OptimizationApiTests(TestCase):
         _llm_mock,
     ) -> None:
         """Production API не передаёт внутренний decision trace клиенту."""
-        optimize_response = self.client.post("/api/optimize/", {}, format="json")
+        optimize_response = self.client.post("/api/v2/optimize/", {}, format="json")
         task_id = optimize_response.data["dataset"]["tasks"][0]["id"]
 
-        response = self.client.post(f"/api/explain/{task_id}/", {}, format="json")
+        response = self.client.post(f"/api/v2/explain/{task_id}/", {}, format="json")
 
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.data["developer_mode"])

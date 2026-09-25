@@ -36,14 +36,15 @@ from backend.optimization.constraints import engineer_has_required_equipment
 from backend.web_mvp.api_v2.serializers.optimization import OptimizationResultSerializer, DatasetSerializer
 
 
-OFFICIAL_DATASET_PATH = Path(__file__).resolve().parents[3] / "Югоцентр.json"
+PROJECT_ROOT = Path(__file__).resolve().parents[4]
+OFFICIAL_DATASET_PATH = PROJECT_ROOT / "Югоцентр.json"
 OFFICIAL_DATASET_PATHS = tuple(
-    Path(__file__).resolve().parents[3] / filename
+    PROJECT_ROOT / filename
     for filename in ("Восток.json", "Юго-восток.json", "Югоцентр.json")
 )
 
 
-class OptimizationWebService:
+class PlanningService:
     """Хранит выбранный dataset и вызывает независимое математическое ядро.
 
     Состояние хранится в памяти, потому что MVP рассчитан на одного локального
@@ -811,6 +812,3 @@ class OptimizationWebService:
             }
         )
         return serializer.data
-
-
-optimization_service = OptimizationWebService()
