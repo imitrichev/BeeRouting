@@ -168,8 +168,21 @@ JSON генерируется только из синтетического CSV
 
 ### Основное окружение
 
+Основное приложение сейчас запускается в `.venv`. В моей текущей рабочей
+копии это Python 3.14. Основной проект, Django и OR-Tools устанавливаются в
+это окружение; Timefold туда устанавливать не нужно.
+
+Проверить версию Python перед созданием окружения:
+
+```bash
+python3 --version
+```
+
+Создать и заполнить основное окружение:
+
 ```bash
 python3 -m venv .venv
+.venv/bin/python --version
 .venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python backend/web_mvp/manage.py migrate
 ```
@@ -180,6 +193,76 @@ python3 -m venv .venv
 pytest. Timefold намеренно вынесен в отдельный
 `backend/optimization/requirements-timefold.txt`, потому что требует отдельную
 совместимую версию Python и JVM.
+
+### Отдельное окружение Timefold
+
+Timefold Python API в текущей конфигурации требует Python 3.10–3.12. Поэтому
+Timefold устанавливается рядом, в `.timefold-venv`, а не в `.venv`. У коллеги
+не будет каталога `.tools`: это локальная, игнорируемая Git папка этой машины.
+
+Сначала проверьте наличие Python 3.12:
+
+```bash
+python3.12 --version
+```
+
+Если команда есть, создайте окружение:
+
+```bash
+python3.12 -m venv .timefold-venv
+.timefold-venv/bin/python -m pip install \
+  -r backend/optimization/requirements-timefold.txt
+```
+
+Если Python 3.12 отсутствует в Ubuntu, его можно установить так:
+
+```bash
+sudo apt update
+sudo apt install python3.12 python3.12-venv
+```
+
+Затем повторите создание `.timefold-venv`. Не создавайте Timefold-окружение
+командой `python3 -m venv`, если `python3 --version` показывает 3.14.
+
+Timefold также требует JDK 17 или новее. Проверьте его:
+
+```bash
+java -version
+```
+
+Если Java установлена и находится в `PATH`, запустите полный benchmark так:
+
+```bash
+PYTHONPATH="$PWD" \
+.timefold-venv/bin/python \
+  -m backend.optimization.benchmarks.benchmark_yugo_center \
+  --include-timefold \
+  --routing-provider coordinate \
+  --iterations 1 \
+  --timefold-time-limit-seconds 20
+```
+
+Если Java установлена в нестандартный каталог, задайте `JAVA_HOME`:
+
+```bash
+JAVA_HOME=/path/to/jdk-21 \
+PATH="$JAVA_HOME/bin:$PATH" \
+PYTHONPATH="$PWD" \
+.timefold-venv/bin/python \
+  -m backend.optimization.benchmarks.benchmark_yugo_center \
+  --include-timefold --routing-provider coordinate --iterations 1
+```
+
+Схема окружений такая:
+
+| Что запускается | Python | Окружение |
+|---|---|---|
+| Django, API, frontend-сценарий, OR-Tools, Baseline | системный Python проекта, сейчас 3.14 | `.venv` |
+| Benchmark с Timefold | Python 3.10–3.12 + JDK 17+ | `.timefold-venv` |
+
+Веб-интерфейс сейчас запускает Baseline и OR-Tools. Timefold подключён как
+отдельный solver для сравнительного benchmark и не требуется для запуска
+Django.
 
 ### Backend
 

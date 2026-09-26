@@ -18,7 +18,7 @@ python3 -m venv .venv
 
 Timefold — отдельная демонстрационная зависимость. Ему нужен совместимый
 Python 3.10–3.12, пакет из `backend/optimization/requirements-timefold.txt` и
-JDK 17 или новее:
+JDK 17 или новее. Не используйте для него Python 3.14:
 
 ```bash
 python3.12 -m venv .timefold-venv
@@ -26,16 +26,19 @@ python3.12 -m venv .timefold-venv
   -r backend/optimization/requirements-timefold.txt
 ```
 
-При наличии JDK 21 в проекте:
+Если Java установлена в `PATH`:
 
 ```bash
-JAVA_HOME="$PWD/.tools/jdk-21.0.2" \
-PATH="$JAVA_HOME/bin:$PATH" \
 PYTHONPATH="$PWD" \
 .timefold-venv/bin/python -m \
   backend.optimization.benchmarks.benchmark_yugo_center \
   --include-timefold
 ```
+
+Если Java находится в нестандартном каталоге, перед командой задайте
+`JAVA_HOME=/path/to/jdk-21` и добавьте `$JAVA_HOME/bin` в `PATH`. Каталог
+`.tools/`, который может присутствовать в рабочей копии, локальный и в Git не
+хранится; коллега должен использовать системные Python 3.12 и JDK.
 
 Если Java или Python API Timefold недоступны, benchmark печатает причину и
 пропускает только Timefold. Baseline и OR-Tools продолжают выполняться.
