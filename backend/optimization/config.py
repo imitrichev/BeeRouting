@@ -30,6 +30,8 @@ class OptimizerConfig:
     explanation_time_limit_seconds: int = 2  # Лимит одного counterfactual-расчёта для объяснения.
     explanation_distance_threshold_km: float = 1.0  # Минимальная существенная разница пробега для текста объяснения.
     explanation_travel_time_threshold_minutes: int = 5  # Минимальная существенная разница времени движения.
+    explanation_free_reassignments: int = 2  # Сколько переносов допускается в counterfactual-проверке без штрафа.
+    explanation_reassignment_penalty: int = 300  # Цена каждого переноса сверх бесплатного порога; 300 соответствует примерно 3 км пробега.
 
     def __post_init__(self) -> None:
         """Проверяет числовые параметры конфигурации."""
@@ -77,6 +79,10 @@ class OptimizerConfig:
             raise ValueError(
                 "explanation_travel_time_threshold_minutes не может быть отрицательным"
             )
+        if self.explanation_free_reassignments < 0:
+            raise ValueError("explanation_free_reassignments не может быть отрицательным")
+        if self.explanation_reassignment_penalty < 0:
+            raise ValueError("explanation_reassignment_penalty не может быть отрицательным")
 
     def unassigned_multiplier(self, task: Task) -> int:
         """Возвращает множитель потери заявки по типу выполняемых работ.
@@ -97,3 +103,42 @@ class OptimizerConfig:
             if task.priority == Priority.URGENT
             else self.normal_unassigned_multiplier
         )
+
+    def explanation_plan_disruption_penalty(self, reassigned_task_count: int) -> int:
+        """Считает штраф stage 2 только за переносы сверх бесплатного порога."""
+        charged_count = max(
+            0,
+            reassigned_task_count - self.explanation_free_reassignments,
+        )
+        return charged_count * self.explanation_reassignment_penalty
+
+
+@dataclass(frozen=True, slots=True)
+class ICORoutingConfig:
+    """Параметры популяционного поиска ICO для маршрутизации.
+
+    Веса целевой функции берутся из отдельного ``OptimizerConfig``. Этот
+    класс управляет только самим метаэвристическим поиском и потому не
+    дублирует бизнес-приоритеты назначения.
+    """
+
+    countries_count: int = 6  # Число независимых островов поиска.
+    country_population: int = 16  # Начальное число решений на одном острове.
+    maximum_iterations: int = 200  # Максимум поколений ICO/DE.
+    maximum_function_evaluations: int = 20_000  # Общий бюджет декодирований и оценок маршрута.
+    gray_country_fraction: float = 0.25  # Доля островов с Gray-кодированием; помогает менять дискретные корзины назначения.
+    random_seed: int | None = 42  # Seed для воспроизводимого результата; None включает случайный запуск.
+    printing: bool = False  # Печатать прогресс ICO каждые 50 поколений.
+
+    def __post_init__(self) -> None:
+        """Проверяет параметры популяционного поиска."""
+        if self.countries_count <= 0:
+            raise ValueError("countries_count должен быть положительным")
+        if self.country_population < 4:
+            raise ValueError("country_population должен быть не меньше 4 для DE")
+        if self.maximum_iterations <= 0:
+            raise ValueError("maximum_iterations должен быть положительным")
+        if self.maximum_function_evaluations <= 0:
+            raise ValueError("maximum_function_evaluations должен быть положительным")
+        if not 0.0 <= self.gray_country_fraction <= 1.0:
+            raise ValueError("gray_country_fraction должен находиться в [0, 1]")

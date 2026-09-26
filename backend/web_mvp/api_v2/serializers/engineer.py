@@ -49,7 +49,7 @@ class EngineerSerializer(serializers.ModelSerializer):
         fields = [
             "id", "engineer_id", "territory", "name",
             "start_lat", "start_lon", "shift_start", "shift_end",
-            "skills", "vehicle_type", "available_equipment", "start_address",
+            "skills", "vehicle_type", "available_equipment", "available_router_count", "start_address",
         ]
 
 
@@ -78,7 +78,7 @@ class EngineerCreateSerializer(serializers.ModelSerializer):
         fields = [
             "engineer_id", "territory", "name",
             "start_lat", "start_lon", "shift_start", "shift_end",
-            "skills", "vehicle_type", "available_equipment", "start_address",
+            "skills", "vehicle_type", "available_equipment", "available_router_count", "start_address",
         ]
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:

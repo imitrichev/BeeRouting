@@ -9,6 +9,7 @@ from backend.optimization import (
     ORToolsOptimizer,
     Skill,
     Task,
+    TaskStatus,
     VehicleType,
 )
 
@@ -128,8 +129,9 @@ def test_trace_runs_counterfactual_for_feasible_alternative() -> None:
 
     alternative = next(item for item in trace["checks"] if item["engineer"]["id"] == "e2")
     assert alternative["stage_2"]["status"] == "feasible"
-    assert alternative["impact"]["distance_difference_km"] == 4.0
-    assert alternative["impact"]["must_mention"] is True
+    assert alternative["stage_2"]["distance_delta_km"] == 4.0
+    assert alternative["stage_2"]["must_mention"] is False
+    assert alternative["impact"] is None
 
 
 def test_counterfactual_objective_includes_new_engineer_penalty() -> None:
@@ -216,4 +218,55 @@ def test_counterfactual_objective_includes_new_engineer_penalty() -> None:
     assert stage_2["alternative_used_engineers_count"] == 2
     assert stage_2["objective"]["delta"]["used_engineers_penalty"] == 1_000
     assert stage_2["objective_delta"] == 1_000
-    assert alternative["impact"]["direction"] == "worse"
+    assert stage_2["must_mention"] is False
+    assert alternative["impact"] is None
+
+
+def test_explanation_disruption_penalty_starts_after_two_reassignments() -> None:
+    """Первые два переноса бесплатны, третий стоит 300 баллов."""
+    config = OptimizerConfig(
+        explanation_free_reassignments=2,
+        explanation_reassignment_penalty=300,
+    )
+
+    assert config.explanation_plan_disruption_penalty(0) == 0
+    assert config.explanation_plan_disruption_penalty(2) == 0
+    assert config.explanation_plan_disruption_penalty(3) == 300
+    assert config.explanation_plan_disruption_penalty(5) == 900
+
+
+def test_explanation_does_not_move_closed_task_in_full_recalculation() -> None:
+    """Даже при ignore statuses stage 2 не предлагает перенос закрытой заявки."""
+    engineers = (
+        Engineer("e1", "Иванов", frozenset({Skill.LOCAL_WORKS}), "base-1", VehicleType.CAR),
+        Engineer("e2", "Петров", frozenset({Skill.LOCAL_WORKS}), "base-2", VehicleType.CAR),
+    )
+    task = Task(
+        "job",
+        "job",
+        frozenset({Skill.LOCAL_WORKS}),
+        30,
+        "09:00",
+        "17:00",
+        status=TaskStatus.COMPLETED,
+    )
+    original = _problem(engineers, task, {"base-1": 1.0, "base-2": 5.0})
+    problem = OptimizationProblem(
+        engineers=original.engineers,
+        availabilities=original.availabilities,
+        tasks=original.tasks,
+        travel_time_matrix=original.travel_time_matrix,
+        travel_distance_matrix=original.travel_distance_matrix,
+        ignore_task_statuses=True,
+    )
+    result = ORToolsOptimizer().optimize(problem)
+
+    trace = ExplanationEngine().explain_task(problem, result, "job")
+    assigned_id = trace["assignment"]["engineer"]["id"]
+    alternative = next(
+        item for item in trace["checks"] if item["engineer"]["id"] != assigned_id
+    )
+
+    assert alternative["feasible_after_stage_1"] is False
+    assert alternative["hard_reasons"][0]["code"] == "TASK_STATUS_LOCKED"
+    assert "stage_2" not in alternative

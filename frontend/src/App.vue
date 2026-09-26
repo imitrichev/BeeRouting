@@ -17,8 +17,7 @@ const territoryCode = ref('')
 
 // Район передаётся явно в каждом запросе; переключение не меняет чужие планы.
 function apiFetch(path: string, options?: RequestInit): Promise<Response> {
-  const url = path.replace('/api/', '/api/v2/')
-  return fetch(`${url}?territory=${encodeURIComponent(territoryCode.value)}`, options)
+  return fetch(`${path}?territory=${encodeURIComponent(territoryCode.value)}`, options)
 }
 
 async function refreshTerritories(): Promise<void> {
@@ -44,6 +43,7 @@ async function switchTerritory(code: string): Promise<void> {
         ? (payload.planning_options?.planning_time ?? '')
         : ''
     )
+    considerEquipment.value = payload.planning_options?.consider_equipment ?? false
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
     reassignmentOpen.value = false
@@ -59,6 +59,7 @@ const result = ref<OptimizationResult | null>(null)
 const selectedFile = ref<File | null>(null)
 const loading = ref(false)
 const optimizing = ref(false)
+const syncingStatuses = ref(false)
 const errorMessage = ref('')
 const selectedEngineerId = ref('')
 const selectedEngineerIds = ref<string[]>([])
@@ -80,6 +81,7 @@ const reassignmentError = ref('')
 // оперативный режим с сохранением уже начатых/назначенных заявок.
 const ignoreTaskStatuses = ref(true)
 const planningTime = ref('')
+const considerEquipment = ref(false)
 const createTaskOpen = ref(false)
 const creatingTask = ref(false)
 const geocodingTaskAddress = ref(false)
@@ -93,14 +95,14 @@ const replanningEvent = ref({
   engineer_id: '', task_id: '', emergency_id: '',
   latitude: null as number | null, longitude: null as number | null,
   duration_minutes: 80, window_start: '12:00', window_end: '14:00',
-  required_vehicle_type: null as string | null, required_equipment: '',
+  required_vehicle_type: null as string | null, required_router_count: 0,
 })
 const newTask = ref({
   id: '', address: '', latitude: null as number | null,
   longitude: null as number | null, work_type: 'LOCAL',
   window_start: '09:00', window_end: '11:00',
   required_vehicle_type: null as string | null,
-  required_equipment: '',
+  required_router_count: 0,
 })
 
 const WORK_NORMS: Record<string, { title: string; duration: number }> = {
@@ -211,7 +213,8 @@ const assignedTaskIds = computed(() => {
   return ids
 })
 
-const canLoadControlDistribution = computed(() => Boolean(dataset.value) && !result.value)
+const canRunBaseline = computed(() => Boolean(dataset.value) && !result.value)
+const canSyncReferenceStatuses = computed(() => Boolean(result.value))
 const canDistributeTasks = computed(() => {
   if (!dataset.value) return false
   if (!result.value) return dataset.value.tasks.length > 0
@@ -240,6 +243,13 @@ const assignmentByTask = computed(() => {
 })
 
 const formatNumber = (value: number, digits = 1) => value.toFixed(digits)
+
+const explanationTitle = computed(() => {
+  const engineerName = assignmentByTask.value[explanationTaskId.value]
+  return engineerName
+    ? `Причины назначения заявки ${explanationTaskId.value} инженеру ${engineerName}`
+    : `Причины неназначения заявки ${explanationTaskId.value}`
+})
 
 function escapeHtml(value: string): string {
   const element = document.createElement('div')
@@ -298,13 +308,14 @@ async function loadOfficialDataset() {
   loading.value = true
   errorMessage.value = ''
   try {
-    const response = await apiFetch('/api/dataset/official/', { method: 'POST' })
+    const response = await apiFetch('/api/v2/dataset/official/', { method: 'POST' })
     const payload = await readResponse(response)
     dataset.value = payload.dataset
     if (payload.territory_code) territoryCode.value = payload.territory_code
     await refreshTerritories()
     result.value = payload.result ?? null
     ignoreTaskStatuses.value = true
+    considerEquipment.value = false
     planningTime.value = ''
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
@@ -328,7 +339,7 @@ async function uploadDataset() {
   try {
     const formData = new FormData()
     formData.append('file', selectedFile.value)
-    const response = await apiFetch('/api/dataset/upload/', {
+    const response = await apiFetch('/api/v2/dataset/upload/', {
       method: 'POST',
       body: formData,
     })
@@ -345,6 +356,7 @@ async function uploadDataset() {
         ? (payload.planning_options?.planning_time ?? '')
         : ''
     )
+    considerEquipment.value = payload.planning_options?.consider_equipment ?? false
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
     await refreshMap()
@@ -355,28 +367,22 @@ async function uploadDataset() {
   }
 }
 
-function controlPlanningTime(): string {
-  const starts = dataset.value?.tasks
-    .filter((task) => task.status === 'IN_PROGRESS')
-    .map((task) => task.window_start)
-    .sort() ?? []
-  return starts.length ? starts[starts.length - 1] : ''
-}
-
-async function optimize(ignoreStatuses: boolean) {
+async function optimize(ignoreStatuses: boolean, solver: 'baseline' | 'ortools') {
   optimizing.value = true
   errorMessage.value = ''
   ignoreTaskStatuses.value = ignoreStatuses
-  planningTime.value = ignoreStatuses ? '' : controlPlanningTime()
+  planningTime.value = ''
   try {
-    const response = await apiFetch('/api/optimize/', {
+    const response = await apiFetch('/api/v2/optimize/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        solver,
         ignore_task_statuses: ignoreStatuses,
         planning_time: !ignoreStatuses && planningTime.value
           ? planningTime.value
           : null,
+        consider_equipment: considerEquipment.value,
       }),
     })
     const payload = await readResponse(response)
@@ -394,11 +400,37 @@ async function optimize(ignoreStatuses: boolean) {
   }
 }
 
+async function syncReferenceStatuses(): Promise<void> {
+  syncingStatuses.value = true
+  errorMessage.value = ''
+  try {
+    const response = await apiFetch('/api/v2/sync-reference-statuses/', {
+      method: 'POST',
+    })
+    const payload = await readResponse(response)
+    dataset.value = payload.dataset
+    result.value = payload.result ?? null
+    // После синхронизации показываем актуальные статусы и назначения из
+    // текущего рабочего плана, а не исполнителей из контрольного CSV.
+    ignoreTaskStatuses.value = false
+    planningTime.value = ''
+    selectedEngineerId.value = ''
+    selectedEngineerIds.value = []
+    await refreshMap()
+  } catch (error) {
+    errorMessage.value = error instanceof Error
+      ? error.message
+      : 'Не удалось загрузить статусы из контрольного распределения'
+  } finally {
+    syncingStatuses.value = false
+  }
+}
+
 async function createTask(): Promise<void> {
   creatingTask.value = true
   errorMessage.value = ''
   try {
-    const response = await apiFetch('/api/tasks/', {
+    const response = await apiFetch('/api/v2/tasks/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -410,8 +442,7 @@ async function createTask(): Promise<void> {
         window_start: newTask.value.window_start,
         window_end: newTask.value.window_end,
         required_vehicle_type: newTask.value.required_vehicle_type,
-        required_equipment: newTask.value.required_equipment
-          .split(',').map((item) => item.trim()).filter(Boolean),
+        required_router_count: newTask.value.required_router_count,
       }),
     })
     const payload = await readResponse(response)
@@ -424,7 +455,7 @@ async function createTask(): Promise<void> {
       id: '', address: '', latitude: null, longitude: null,
       work_type: 'LOCAL',
       window_start: '09:00', window_end: '11:00',
-      required_vehicle_type: null, required_equipment: '',
+      required_vehicle_type: null, required_router_count: 0,
     }
     taskAddressError.value = ''
     draftLocationMarker?.remove()
@@ -444,7 +475,7 @@ async function geocodeTaskAddress(): Promise<void> {
   newTask.value.latitude = null
   newTask.value.longitude = null
   try {
-    const response = await apiFetch('/api/geocode/', {
+    const response = await apiFetch('/api/v2/geocode/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ address: newTask.value.address }),
@@ -506,6 +537,7 @@ async function replan(): Promise<void> {
     const payload: Record<string, unknown> = {
       event_type: form.event_type,
       planning_time: form.planning_time,
+      consider_equipment: considerEquipment.value,
     }
     if (form.event_type === 'ENGINEER_UNAVAILABLE') payload.engineer_id = form.engineer_id
     if (form.event_type === 'TASK_CANCELLED') payload.task_id = form.task_id
@@ -519,12 +551,11 @@ async function replan(): Promise<void> {
         window_end: form.window_end,
         priority: 'URGENT',
         required_vehicle_type: form.required_vehicle_type,
-        required_equipment: form.required_equipment
-          .split(',').map((item) => item.trim()).filter(Boolean),
+        required_router_count: form.required_router_count,
         status: 'NOT_SENT',
       }
     }
-    const response = await apiFetch('/api/replan/', {
+    const response = await apiFetch('/api/v2/replan/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -551,7 +582,7 @@ async function explainTask(taskId: string): Promise<void> {
   explanationDeveloperMode.value = false
   errorMessage.value = ''
   try {
-    const response = await apiFetch(`/api/explain/${encodeURIComponent(taskId)}/`, {
+    const response = await apiFetch(`/api/v2/explain/${encodeURIComponent(taskId)}/`, {
       method: 'POST',
     })
     const payload = await response.json()
@@ -584,7 +615,7 @@ async function previewManualReassignment(): Promise<void> {
   reassignmentError.value = ''
   reassignmentPreview.value = null
   try {
-    const response = await apiFetch('/api/manual-reassignment/preview/', {
+    const response = await apiFetch('/api/v2/manual-reassignment/preview/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -611,7 +642,7 @@ async function confirmManualReassignment(): Promise<void> {
   reassignmentLoading.value = true
   reassignmentError.value = ''
   try {
-    const response = await apiFetch('/api/manual-reassignment/confirm/', {
+    const response = await apiFetch('/api/v2/manual-reassignment/confirm/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ proposal_id: proposalId }),
@@ -910,18 +941,27 @@ onBeforeUnmount(() => {
               color="secondary"
               variant="tonal"
               :loading="optimizing"
-              :disabled="!canLoadControlDistribution"
-              @click="optimize(false)"
+              :disabled="!canRunBaseline"
+              @click="optimize(true, 'baseline')"
             >
-              Контрольное распределение
+              Baseline (жадный алгоритм)
             </v-btn>
             <v-btn
               color="success"
               :loading="optimizing"
               :disabled="!canDistributeTasks"
-              @click="optimize(true)"
+              @click="optimize(true, 'ortools')"
             >
-              Распределить заявки
+              Распределить заявки (OR-Tools)
+            </v-btn>
+            <v-btn
+              color="info"
+              variant="tonal"
+              :loading="syncingStatuses"
+              :disabled="!canSyncReferenceStatuses"
+              @click="syncReferenceStatuses"
+            >
+              Статусы заявок из контрольного распределения
             </v-btn>
             <v-btn color="primary" variant="tonal" :disabled="!dataset" @click="createTaskOpen = true">
               Создать заявку
@@ -929,12 +969,20 @@ onBeforeUnmount(() => {
             <v-btn color="warning" variant="tonal" :disabled="!dataset" @click="replanOpen = true">
               Сценарии перепланирования...
             </v-btn>
+            <v-checkbox
+              v-model="considerEquipment"
+              label="Учитывать оборудование"
+              density="compact"
+              hide-details
+            />
             <span v-if="dataset" class="text-medium-emphasis">
               {{ dataset.source_name }} · {{ dataset.engineers.length }} инженеров ·
-              {{ ignoreTaskStatuses ? dataset.tasks.length : plannableTaskCount }}
-              в плане из {{ dataset.tasks.length }} заявок
-              <template v-if="result && !ignoreTaskStatuses && planningTime">
-                · Контрольное распределение на время {{ planningTime }}
+              <template v-if="result">
+                {{ ignoreTaskStatuses ? dataset.tasks.length : plannableTaskCount }}
+                в плане из {{ dataset.tasks.length }} заявок
+              </template>
+              <template v-else>
+                {{ dataset.tasks.length }} заявок
               </template>
             </span>
           </v-card-text>
@@ -994,7 +1042,15 @@ onBeforeUnmount(() => {
                 <v-col cols="12" sm="6">
                   <v-select v-model="newTask.required_vehicle_type" clearable label="Необходимый транспорт" :items="['CAR', 'WALK', 'BICYCLE', 'PUBLIC_TRANSPORT']" />
                 </v-col>
-                <v-col cols="12" sm="6"><v-text-field v-model="newTask.required_equipment" label="Оборудование через запятую" /></v-col>
+                <v-col cols="12" sm="6">
+                  <v-text-field
+                    v-model.number="newTask.required_router_count"
+                    type="number"
+                    min="0"
+                    step="1"
+                    label="Требуемое количество оборудования (роутеры), шт."
+                  />
+                </v-col>
               </v-row>
               <div class="text-caption text-medium-emphasis">Поля со звёздочкой обязательны. Новая заявка сохраняется в текущем локальном dataset.</div>
             </v-card-text>
@@ -1038,7 +1094,15 @@ onBeforeUnmount(() => {
                   <v-col cols="12" sm="6"><v-text-field v-model="replanningEvent.window_start" type="time" label="Начало окна *" /></v-col>
                   <v-col cols="12" sm="6"><v-text-field v-model="replanningEvent.window_end" type="time" label="Конец окна *" /></v-col>
                   <v-col cols="12" sm="6"><v-select v-model="replanningEvent.required_vehicle_type" clearable label="Необходимый транспорт" :items="['CAR', 'WALK', 'BICYCLE', 'PUBLIC_TRANSPORT']" /></v-col>
-                  <v-col cols="12" sm="6"><v-text-field v-model="replanningEvent.required_equipment" label="Оборудование через запятую" /></v-col>
+                  <v-col cols="12" sm="6">
+                    <v-text-field
+                      v-model.number="replanningEvent.required_router_count"
+                      type="number"
+                      min="0"
+                      step="1"
+                      label="Требуемое количество оборудования (роутеры), шт."
+                    />
+                  </v-col>
                 </template>
               </v-row>
             </v-card-text>
@@ -1080,6 +1144,7 @@ onBeforeUnmount(() => {
                   <v-list-item-title>{{ engineer.name }}</v-list-item-title>
                   <v-list-item-subtitle>
                     {{ engineer.vehicle_type }} · {{ engineer.available_from }}–{{ engineer.available_until }}
+                    · роутеров: {{ engineer.available_router_count }}
                     <span v-if="result"> · {{ result.routes.find((route) => route.engineer_id === engineer.id)?.stops.length ?? 0 }} заявок</span>
                   </v-list-item-subtitle>
                 </v-list-item>
@@ -1179,7 +1244,7 @@ onBeforeUnmount(() => {
               </v-card-title>
               <v-table density="compact" fixed-header height="330">
                 <thead>
-                  <tr><th>ID / действия</th><th>Навык</th><th>Окно</th><th>Длительность</th><th>Исполнитель</th><th>Статус</th></tr>
+                  <tr><th>ID / действия</th><th>Навык</th><th>Окно</th><th>Длительность</th><th>Роутеры</th><th>Исполнитель</th><th>Статус</th></tr>
                 </thead>
                 <tbody>
                   <tr v-for="task in dataset.tasks" :key="task.id">
@@ -1214,6 +1279,7 @@ onBeforeUnmount(() => {
                     <td>{{ task.required_skill }}</td>
                     <td>{{ task.window_start }}–{{ task.window_end }}</td>
                     <td>{{ task.duration_minutes }} мин</td>
+                    <td>{{ task.required_router_count }}</td>
                     <td>{{ assignmentByTask[task.id] ?? '—' }}</td>
                     <td>
                       <v-chip size="x-small" :color="taskStatusColor(task)">
@@ -1228,7 +1294,7 @@ onBeforeUnmount(() => {
 
             <v-dialog v-model="explanationOpen" max-width="760">
               <v-card>
-                <v-card-title>Причины назначения</v-card-title>
+                <v-card-title>{{ explanationTitle }}</v-card-title>
                 <v-card-text>
                   <div class="explanation-text">{{ explanationText }}</div>
                   <details

@@ -4,11 +4,17 @@
 сохраняет разработанную коллегой границу ``views -> service -> optimization``:
 представления не собирают математическую задачу и не управляют снимками сами.
 """
+import copy
 import json
+from dataclasses import replace
 from typing import Any
 from django.db import transaction
-from backend.optimization import load_json_scenario_data, create_osrm_provider_from_environment
-from backend.web_mvp.api.services import OptimizationWebService as BaseOptimizationWebService
+from backend.optimization import (
+    TaskStatus,
+    create_osrm_provider_from_environment,
+    load_json_scenario_data,
+)
+from .planning import PlanningService
 from ..models import (
     District, Engineer, Job, Priority, ReassignmentProposal, RescheduleEvent,
     Skill, Territory, VehicleType,
@@ -17,10 +23,11 @@ from .state import encode, decode
 from .repository import sync_entities
 
 STATE_FIELDS = ('_scenario', '_problem', '_result', '_preserve_assigned_tasks',
-                '_ignore_task_statuses', '_unavailable_engineer_ids', '_source_name')
+                '_ignore_task_statuses', '_consider_equipment', '_unavailable_engineer_ids', '_source_name',
+                '_late_day_manual_task_ids', '_late_day_active_engineer_ids')
 
 
-class OptimizationWebService(BaseOptimizationWebService):
+class OptimizationWebService(PlanningService):
     """Актуальный сервис планирования, адресованный конкретной территории.
 
     Исходная реализация коллеги ввела отдельный сервис и метод
@@ -52,9 +59,46 @@ class OptimizationWebService(BaseOptimizationWebService):
         Рассчитанный ранее маршрут сбрасывается, поскольку после изменения
         входных сущностей он больше не является доказанно допустимым.
         """
-        self._scenario = load_json_scenario_data(
-            self._build_scenario_payload(territory)
-        )
+        scenario = load_json_scenario_data(self._build_scenario_payload(territory))
+        jobs_by_id = {
+            job.job_id: job
+            for job in territory.jobs.select_related("current_engineer")
+        }
+        status_aliases = {
+            "Не отправлена": TaskStatus.NOT_SENT,
+            "Отправлена": TaskStatus.NOT_SENT,
+            "Назначена": TaskStatus.ASSIGNED,
+            "В пути": TaskStatus.EN_ROUTE,
+            "В работе": TaskStatus.IN_PROGRESS,
+            "Выполнена": TaskStatus.COMPLETED,
+            "Отменена": TaskStatus.CANCELLED,
+            "Просрочена": TaskStatus.OVERDUE,
+        }
+        tasks = []
+        for task in scenario.tasks:
+            job = jobs_by_id.get(task.id)
+            if job is None:
+                tasks.append(task)
+                continue
+            raw_status = str(job.current_status or TaskStatus.NOT_SENT.value)
+            current_status = status_aliases.get(raw_status)
+            if current_status is None:
+                try:
+                    current_status = TaskStatus(raw_status)
+                except ValueError:
+                    current_status = TaskStatus.NOT_SENT
+            tasks.append(
+                replace(
+                    task,
+                    status=current_status,
+                    current_engineer_id=(
+                        job.current_engineer.engineer_id
+                        if job.current_engineer is not None
+                        else None
+                    ),
+                )
+            )
+        self._scenario = replace(scenario, tasks=tuple(tasks))
         self._territory_code = territory.code
         self._source_name = territory.source_name or territory.code
         self._problem = None
@@ -124,6 +168,7 @@ class OptimizationWebService(BaseOptimizationWebService):
                         item.vehicle_type.code
                     ),
                     "available_equipment": item.available_equipment,
+                    "available_router_count": item.available_router_count,
                 }
                 for item in engineers
             ],
@@ -160,6 +205,7 @@ class OptimizationWebService(BaseOptimizationWebService):
                 ) if job.required_vehicle else None
             ),
             "required_equipment": job.required_equipment,
+            "required_router_count": job.required_router_count,
             "status": OptimizationWebService._json_status(job.current_status),
             "current_engineer_id": (
                 job.current_engineer.engineer_id if job.current_engineer else None
@@ -213,6 +259,10 @@ def restore(territory):
     for name, value in territory.state.items():
         if name in STATE_FIELDS:
             setattr(service, name, decode(value))
+    # Поддерживаем снимки, сохранённые до разделения reference и operational
+    # статусов: построенный маршрут является источником текущих назначений.
+    if service._result is not None:
+        service._project_result_to_scenario()
     if service._problem is not None:
         service.routing_provider = create_osrm_provider_from_environment(
             coordinates=service._scenario.location_coordinates,
@@ -223,10 +273,15 @@ def restore(territory):
 
 def save(territory, service):
     """Атомарно сохраняет модели ядра, матрицы, результат и геометрию."""
+    # Сначала переносим фактические назначения из результата в domain-снимок.
+    # Иначе после следующего HTTP-запроса restore снова прочитает статусы и
+    # исполнителей из контрольного JSON.
+    service._project_result_to_scenario()
     response = service.serialize_response(service._scenario, service._result)
     response['planning_options'] = {
         'ignore_task_statuses': service._ignore_task_statuses,
         'preserve_assigned_tasks': service._preserve_assigned_tasks,
+        'consider_equipment': service._consider_equipment,
         'planning_time': (
             service._problem.planning_time if service._problem is not None else None
         ),
@@ -237,6 +292,31 @@ def save(territory, service):
     territory.save()
     sync_entities(territory, service)
     ReassignmentProposal.objects.filter(territory=territory).delete()
+    return response
+
+
+def public_dataset_response(territory):
+    """Возвращает сохранённый dataset без контрольных статусов до расчёта.
+
+    Старые записи в БД могли быть сохранены до введения правила скрытия
+    ``reference_status``. Поэтому одного изменения сериализатора недостаточно:
+    GET существующего района читает готовый JSON из ``Territory.response``.
+    Здесь выполняется безопасная копия только для выдачи API, не меняя снимок
+    в базе и не затрагивая статусы, которые нужны solver для контрольного
+    режима после запуска.
+    """
+    response = copy.deepcopy(territory.response or {})
+    if response.get("result") is not None:
+        return response
+
+    dataset = response.get("dataset")
+    if not isinstance(dataset, dict):
+        return response
+
+    for task in dataset.get("tasks", []):
+        if isinstance(task, dict):
+            task["status"] = "NOT_SENT"
+            task["assignment_locked"] = False
     return response
 
 

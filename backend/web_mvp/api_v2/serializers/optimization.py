@@ -232,6 +232,7 @@ class DatasetTaskSerializer(serializers.Serializer):
     priority = serializers.SerializerMethodField()
     required_vehicle_type = serializers.SerializerMethodField()
     required_equipment = serializers.SerializerMethodField()
+    required_router_count = serializers.IntegerField(read_only=True)
     is_plannable = serializers.SerializerMethodField()
     assignment_locked = serializers.SerializerMethodField()
 
@@ -239,9 +240,17 @@ class DatasetTaskSerializer(serializers.Serializer):
     def get_required_skill(task: Any) -> str:
         return next(iter(task.required_skills)).value
 
-    @staticmethod
-    def get_status(task: Any) -> str:
-        """Возвращает нормализованный статус domain-модели для API."""
+    def get_status(self, task: Any) -> str:
+        """Возвращает статус заявки только после построения плана.
+
+        ``reference_status`` в официальном JSON описывает контрольное
+        распределение. До нажатия кнопки распределения это ещё не текущий
+        план, поэтому не показываем его диспетчеру как актуальный статус.
+        Сам объект ``Task`` при этом не изменяется: solver по-прежнему может
+        использовать исходный статус в режиме сохранения назначений.
+        """
+        if not self.context.get("has_plan", False):
+            return "NOT_SENT"
         return task.status.value
 
     def get_is_plannable(self, task: Any) -> bool:
@@ -252,6 +261,8 @@ class DatasetTaskSerializer(serializers.Serializer):
 
     def get_assignment_locked(self, task: Any) -> bool:
         """Показывает, запрещено ли solver менять текущего исполнителя."""
+        if not self.context.get("has_plan", False):
+            return False
         if self.context.get("ignore_task_statuses", False):
             return False
         if task.status.value in {"EN_ROUTE", "IN_PROGRESS"}:
@@ -284,6 +295,7 @@ class DatasetEngineerSerializer(serializers.Serializer):
 
     qualifications = serializers.SerializerMethodField()
     vehicle_type = serializers.SerializerMethodField()
+    available_router_count = serializers.IntegerField(read_only=True)
 
     start_location_id = serializers.ReadOnlyField()
     start_address = serializers.SerializerMethodField()

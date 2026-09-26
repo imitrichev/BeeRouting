@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.core.management import call_command
 from rest_framework.test import APIClient
-from backend.web_mvp.api.services import OFFICIAL_DATASET_PATH
+from backend.web_mvp.api_v2.services.planning import OFFICIAL_DATASET_PATH
 from backend.optimization import CoordinateRoutingProvider
 from .services import import_dataset, restore
 from .models import Territory
@@ -15,7 +15,7 @@ class PersistentPlanningTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.territory = import_dataset(OFFICIAL_DATASET_PATH.read_bytes(), 'Югоцентр.json')
-        self.provider = patch('backend.web_mvp.api.services.create_osrm_provider_from_environment',
+        self.provider = patch('backend.web_mvp.api_v2.services.planning.create_osrm_provider_from_environment',
                               side_effect=lambda coordinates, **kw: CoordinateRoutingProvider(coordinates, speed_km_per_hour=30))
         self.provider.start()
         restored_provider = patch('backend.web_mvp.api_v2.services.optimization.create_osrm_provider_from_environment',
@@ -39,7 +39,7 @@ class PersistentPlanningTests(TestCase):
         payload['territory_name'] = 'Другой район'
         second = import_dataset(json.dumps(payload).encode(), 'other.json')
         self.assertNotIn('result', second.response)
-        with patch('backend.web_mvp.api.services.ORToolsOptimizer.optimize', side_effect=AssertionError('Повторный расчёт')):
+        with patch('backend.web_mvp.api_v2.services.planning.ORToolsOptimizer.optimize', side_effect=AssertionError('Повторный расчёт')):
             restored = self.client.get(self.url('dataset'))
         self.assertEqual(restored.data['result'], result.data['result'])
         self.assertEqual(len(self.client.get('/api/v2/territories/').data), 2)
@@ -92,7 +92,9 @@ class PersistentPlanningTests(TestCase):
         with patch('LLM.query.explain_assignment', return_value='Проверенное объяснение.'):
             explanation = self.client.post(self.url('explain/URGENT'), {}, format='json')
         self.assertEqual(explanation.status_code, 200, explanation.data)
-        self.assertIn('URGENT', explanation.data['explanation'])
+        # Номер заявки и исполнитель теперь находятся в заголовке окна Vue,
+        # поэтому API не дублирует их в тексте LLM.
+        self.assertEqual(explanation.data['explanation'], 'Проверенное объяснение.')
 
     def test_failed_event_does_not_change_saved_state(self):
         old = self.client.get(self.url('dataset')).data

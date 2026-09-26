@@ -106,6 +106,7 @@ class JsonScenario:
         planning_time: str | None = None,
         operational_states: Iterable[EngineerOperationalState] = (),
         unavailable_engineer_ids: Iterable[str] = (),
+        consider_equipment: bool = False,
     ) -> OptimizationProblem:
         """Добавляет внешние матрицы и создаёт ``OptimizationProblem``.
 
@@ -171,6 +172,7 @@ class JsonScenario:
             planning_time=planning_time,
             operational_states=tuple(operational_states),
             unavailable_engineer_ids=frozenset(unavailable_engineer_ids),
+            consider_equipment=consider_equipment,
         )
 
 
@@ -225,6 +227,9 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
                 ),
                 start_latitude=start_lat,
                 start_longitude=start_lon,
+                available_router_count=int(
+                    engineer_data.get("available_router_count", 0)
+                ),
             )
         )
         availabilities.append(
@@ -297,6 +302,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
                 latitude=task_lat,
                 longitude=task_lon,
                 address=str(job.get("address", "")).strip() or None,
+                required_router_count=int(job.get("required_router_count", 0)),
             )
         )
         # У неназначенной заявки (`Не отправлена`) исполнителя ещё нет.

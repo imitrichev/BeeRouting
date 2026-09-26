@@ -30,9 +30,16 @@ def engineer_can_execute_task(
             resource.id: resource for resource in problem.vehicle_resources
         }
         vehicle_type = vehicle_by_id[engineer.vehicle_resource_id].vehicle_type
+    equipment_matches = (
+        not problem.consider_equipment
+        or (
+            task.required_router_count <= problem.available_router_count_for_planning(engineer)
+            and task.required_equipment.issubset(equipment_types)
+        )
+    )
     return (
         task.required_skills.issubset(engineer.qualifications)
-        and task.required_equipment.issubset(equipment_types)
+        and equipment_matches
         and (
             task.required_vehicle_type is None
             or vehicle_type == task.required_vehicle_type
@@ -56,7 +63,13 @@ def engineer_has_required_equipment(
         equipment_by_id[resource_id].equipment_type
         for resource_id in engineer.equipment_resource_ids
     )
-    return task.required_equipment.issubset(equipment_types)
+    return (
+        not problem.consider_equipment
+        or (
+            task.required_router_count <= problem.available_router_count_for_planning(engineer)
+            and task.required_equipment.issubset(equipment_types)
+        )
+    )
 
 
 def resource_ids_used_for_task(
@@ -67,6 +80,8 @@ def resource_ids_used_for_task(
     """Возвращает экземпляры ограниченных ресурсов для сервисного интервала."""
     # Эти ID нужны только расширенной модели ограниченных экземпляров. В
     # простом available_equipment-сценарии множество будет пустым.
+    if not problem.consider_equipment:
+        return ()
     equipment_by_id = {
         resource.id: resource for resource in problem.equipment_resources
     }

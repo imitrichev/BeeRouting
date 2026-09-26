@@ -9,6 +9,7 @@ export interface Engineer {
   start_longitude: number | null
   available_from: string
   available_until: string
+  available_router_count: number
 }
 
 export interface Task {
@@ -24,6 +25,7 @@ export interface Task {
   priority: string
   required_vehicle_type: string | null
   required_equipment: string[]
+  required_router_count: number
   status: string
   current_engineer_id: string | null
   is_plannable: boolean
@@ -108,6 +110,7 @@ export interface ApiResponse {
   planning_options?: {
     ignore_task_statuses: boolean
     planning_time?: string | null
+    consider_equipment?: boolean
   }
   dataset: Dataset
   result?: OptimizationResult

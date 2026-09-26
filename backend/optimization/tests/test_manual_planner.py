@@ -42,6 +42,7 @@ def _problem(*tasks: Task) -> OptimizationProblem:
         tasks=tuple(tasks),
         travel_time_matrix=time_matrix,
         travel_distance_matrix=distance_matrix,
+        consider_equipment=True,
     )
 
 

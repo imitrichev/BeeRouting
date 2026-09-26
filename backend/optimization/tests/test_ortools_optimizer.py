@@ -12,6 +12,7 @@ from backend.optimization import (
     Priority,
     Skill,
     Task,
+    TaskStatus,
     UnassignedReasonCode,
     VehicleResource,
     VehicleType,
@@ -49,6 +50,7 @@ def make_engineer(
     vehicle_type: VehicleType = VehicleType.CAR,
     start_location_id: str = "base",
     available_equipment: frozenset[str] = frozenset(),
+    available_router_count: int = 0,
     **kwargs: object,
 ) -> Engineer:
     """Создаёт инженера для теста."""
@@ -61,6 +63,7 @@ def make_engineer(
         start_location_id=start_location_id,
         vehicle_type=vehicle_type,
         available_equipment=available_equipment,
+        available_router_count=available_router_count,
         **kwargs,
     )
 
@@ -74,6 +77,7 @@ def make_task(
     window_end: str = "17:00",
     required_vehicle_type: VehicleType | None = None,
     required_equipment: frozenset[str] = frozenset(),
+    required_router_count: int = 0,
     priority: Priority = Priority.NORMAL,
     work_type: WorkType | None = None,
 ) -> Task:
@@ -87,6 +91,7 @@ def make_task(
         window_end=window_end,
         required_vehicle_type=required_vehicle_type,
         required_equipment=required_equipment,
+        required_router_count=required_router_count,
         priority=priority,
         work_type=work_type,
     )
@@ -254,6 +259,7 @@ def test_task_without_equipment_requirements_is_assignable() -> None:
             tasks=(make_task(),),
             travel_time_matrix=full_matrix(("base", "customer"), 1),
             travel_distance_matrix=full_distance_matrix(("base", "customer")),
+            consider_equipment=True,
         )
     )
 
@@ -274,6 +280,7 @@ def test_task_with_all_available_equipment_is_assignable() -> None:
             tasks=(task,),
             travel_time_matrix=full_matrix(("base", "customer"), 1),
             travel_distance_matrix=full_distance_matrix(("base", "customer")),
+            consider_equipment=True,
         )
     )
 
@@ -291,6 +298,7 @@ def test_missing_one_equipment_item_is_a_hard_constraint() -> None:
             tasks=(task,),
             travel_time_matrix=full_matrix(("base", "customer"), 1),
             travel_distance_matrix=full_distance_matrix(("base", "customer")),
+            consider_equipment=True,
         )
     )
 
@@ -317,10 +325,79 @@ def test_equipment_vehicle_and_skill_constraints_work_together() -> None:
             tasks=(task,),
             travel_time_matrix=full_matrix(("base", "customer"), 1),
             travel_distance_matrix=full_distance_matrix(("base", "customer")),
+            consider_equipment=True,
         )
     )
 
     assert result.assigned_task_count == 1
+
+
+def test_router_stock_limits_total_tasks_on_engineer_route() -> None:
+    """Один выданный роутер нельзя израсходовать на двух заявках."""
+    locations = ("base", "customer-1", "customer-2")
+    problem = OptimizationProblem(
+        engineers=(make_engineer(available_router_count=1),),
+        availabilities=(EngineerAvailability("e1", "08:00", "17:00"),),
+        tasks=(
+            make_task("t1", location_id="customer-1", required_router_count=1),
+            make_task("t2", location_id="customer-2", required_router_count=1),
+        ),
+        travel_time_matrix=full_matrix(locations, 1),
+        travel_distance_matrix=full_distance_matrix(locations),
+        consider_equipment=True,
+    )
+
+    result = ORToolsOptimizer().optimize(problem)
+
+    assert result.assigned_task_count == 1
+    assert result.unassigned_task_count == 1
+
+
+def test_router_stock_is_ignored_when_option_is_disabled() -> None:
+    """Без опции учёта оборудования количественный запас не ограничивает план."""
+    locations = ("base", "customer-1", "customer-2")
+    problem = OptimizationProblem(
+        engineers=(make_engineer(available_router_count=0),),
+        availabilities=(EngineerAvailability("e1", "08:00", "17:00"),),
+        tasks=(
+            make_task("t1", location_id="customer-1", required_router_count=1),
+            make_task("t2", location_id="customer-2", required_router_count=1),
+        ),
+        travel_time_matrix=full_matrix(locations, 1),
+        travel_distance_matrix=full_distance_matrix(locations),
+        consider_equipment=False,
+    )
+
+    assert ORToolsOptimizer().optimize(problem).assigned_task_count == 2
+
+
+def test_completed_task_consumes_router_from_start_of_day_stock() -> None:
+    """Роутер выполненной заявки нельзя повторно выдать в остатке дня."""
+    locations = ("base", "completed-location", "new-location")
+    completed = Task(
+        id="completed",
+        location_id="completed-location",
+        required_skills=frozenset({Skill.LOCAL_WORKS}),
+        duration_minutes=10,
+        window_start="08:00",
+        window_end="17:00",
+        status=TaskStatus.COMPLETED,
+        current_engineer_id="e1",
+        required_router_count=1,
+    )
+    problem = OptimizationProblem(
+        engineers=(make_engineer(available_router_count=1),),
+        availabilities=(EngineerAvailability("e1", "08:00", "17:00"),),
+        tasks=(completed, make_task("new", location_id="new-location", required_router_count=1)),
+        travel_time_matrix=full_matrix(locations, 1),
+        travel_distance_matrix=full_distance_matrix(locations),
+        consider_equipment=True,
+    )
+
+    result = ORToolsOptimizer().optimize(problem)
+
+    assert result.assigned_task_count == 0
+    assert result.unassigned_reasons["new"].code == UnassignedReasonCode.MISSING_EQUIPMENT
 
 
 def test_equipment_and_separate_vehicle_resource_are_supported() -> None:
@@ -344,6 +421,7 @@ def test_equipment_and_separate_vehicle_resource_are_supported() -> None:
         },
         equipment_resources=(EquipmentResource("meter-1", "meter"),),
         vehicle_resources=(VehicleResource("bike-1", VehicleType.BICYCLE),),
+        consider_equipment=True,
     )
     assert ORToolsOptimizer().optimize(problem).unassigned_task_ids == ()
 

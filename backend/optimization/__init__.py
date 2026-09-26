@@ -1,6 +1,7 @@
 """Независимое математическое ядро оптимизации маршрутов."""
 
-from .config import OptimizerConfig
+from .config import ICORoutingConfig, OptimizerConfig
+from .ico_optimizer import ICOOptimizer
 from .baseline_optimizer import GreedyBaselineOptimizer
 from .interfaces import RouteOptimizer
 from .models import (
@@ -59,6 +60,8 @@ __all__ = [
     "EngineerRoute",
     "EquipmentResource",
     "OptimizerConfig",
+    "ICORoutingConfig",
+    "ICOOptimizer",
     "GreedyBaselineOptimizer",
     "OptimizationProblem",
     "OptimizationResult",

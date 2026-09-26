@@ -236,6 +236,8 @@ def test_generator_uses_synthetic_ids_and_time_norms(tmp_path: Path) -> None:
     assert scenario.control_request_id_by_task[scenario.tasks[0].id] == "305894566"
     assert scenario.engineers[1].vehicle_type == VehicleType.WALK
     assert Skill.LOCAL_WORKS in scenario.engineers[1].qualifications
+    assert scenario.engineers[0].available_router_count >= 0
+    assert any(task.required_router_count > 0 for task in scenario.tasks)
 
 
 def test_generator_normalizes_apartment_before_geocoding(tmp_path: Path) -> None:
@@ -270,6 +272,7 @@ def test_engineers_csv_contains_start_address_and_coordinates() -> None:
     assert "start_address" in header
     assert "start_lat" in header
     assert "start_lon" in header
+    assert "available_router_count" in header
     territory_index = header.index("territory_code")
     lat_index = header.index("start_lat")
     lon_index = header.index("start_lon")
@@ -316,7 +319,54 @@ def test_building_marker_is_normalized_to_k() -> None:
     assert _replace_building_marker("Москва, д. 1с1") == "Москва, д. 1 к 1"
     assert _replace_building_marker("Москва, д. 12 стр. 2") == "Москва, д. 12 к 2"
     assert _replace_building_marker("Москва, д. 9б стр. 1") == "Москва, д. 9б к 1"
+    assert _replace_building_marker("Домодедово, ул. Гагарина, д. 55/2") == (
+        "Домодедово, ул. Гагарина, д. 55 к 2"
+    )
     assert _normalise_address("Москва, д. 1с1") == "москва, д. 1с1"
+
+
+def test_nominatim_accepts_only_results_with_house_or_building_number() -> None:
+    """Площадь без номера здания не принимается как найденный дом."""
+    assert NominatimGeocoder._is_precise_result(
+        {"addresstype": "square", "address": {"name": "площадь Гагарина"}}
+    ) is False
+    assert NominatimGeocoder._is_precise_result(
+        {"addresstype": "building", "address": {"house_number": "55к2"}}
+    ) is True
+    assert NominatimGeocoder._is_precise_result(
+        {"addresstype": "building", "address": {"building": "55к2"}}
+    ) is True
+
+
+def test_nominatim_tries_next_variant_after_result_without_house_number(tmp_path: Path) -> None:
+    """Результат уровня площади отклоняется, следующий запрос продолжается."""
+    geocoder = NominatimGeocoder(
+        cache_path=tmp_path / "nominatim.json",
+        endpoint="http://127.0.0.1:8080/search",
+    )
+    calls: list[str] = []
+
+    def fake_request(query: str, original: str) -> list[dict[str, object]]:
+        calls.append(query)
+        if len(calls) == 1:
+            return [{
+                "lat": "55.60",
+                "lon": "37.70",
+                "addresstype": "square",
+                "address": {"name": "площадь Гагарина"},
+            }]
+        return [{
+            "lat": "55.602",
+            "lon": "37.665",
+            "addresstype": "building",
+            "address": {"house_number": "55к2"},
+        }]
+
+    geocoder._request = fake_request  # type: ignore[method-assign]
+    coordinates = geocoder("Домодедово, ул. Гагарина, д. 55/2")
+
+    assert coordinates == (55.602, 37.665)
+    assert len(calls) >= 2
 
 
 def test_nominatim_delay_depends_on_endpoint(tmp_path: Path) -> None:

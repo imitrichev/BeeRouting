@@ -26,9 +26,7 @@ class TaskCreateSerializer(serializers.Serializer):
     required_vehicle_type = serializers.ChoiceField(
         choices=[item.value for item in VehicleType], required=False, allow_null=True
     )
-    required_equipment = serializers.ListField(
-        child=serializers.CharField(max_length=100), required=False, default=list
-    )
+    required_router_count = serializers.IntegerField(min_value=0, default=0)
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         """Проверяет формат и порядок границ временного окна."""
@@ -72,6 +70,7 @@ class ReplanningEventSerializer(serializers.Serializer):
     engineer_id = serializers.CharField(required=False)
     task_id = serializers.CharField(required=False)
     task = TaskCreateSerializer(required=False)
+    consider_equipment = serializers.BooleanField(required=False)
 
     def validate(self, attrs: dict[str, Any]) -> dict[str, Any]:
         """Требует payload, соответствующий выбранному событию."""

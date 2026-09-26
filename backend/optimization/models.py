@@ -118,6 +118,7 @@ class Engineer:
     qualifications: frozenset[Skill]  # Навыки, которыми владеет инженер.
     start_location_id: str  # Локация, откуда начинается его маршрут.
     vehicle_type: VehicleType  # Единственный тип транспорта из фиксированного справочника.
+    available_router_count: int = 0  # Число роутеров, выданных инженеру на весь рабочий день.
     available_equipment: frozenset[str] = frozenset()  # Оборудование, доступное инженеру постоянно.
     equipment_resource_ids: frozenset[str] = frozenset()  # ID отдельных экземпляров оборудования из problem.
     vehicle_resource_id: str | None = None  # ID закреплённого экземпляра транспорта, если он моделируется.
@@ -135,6 +136,10 @@ class Engineer:
         object.__setattr__(self, "qualifications", qualifications)
         if not isinstance(self.vehicle_type, VehicleType):
             raise ValueError("vehicle_type должен быть значением VehicleType")
+        if isinstance(self.available_router_count, bool) or not isinstance(
+            self.available_router_count, int
+        ) or self.available_router_count < 0:
+            raise ValueError("available_router_count должен быть целым и неотрицательным")
         object.__setattr__(
             self,
             "available_equipment",
@@ -232,6 +237,7 @@ class Task:
     priority: Priority = Priority.NORMAL  # Приоритет для штрафа неназначения.
     status: TaskStatus = TaskStatus.NOT_SENT  # Текущий статус; отменённая заявка не занимает маршрутное время.
     current_engineer_id: str | None = None  # Текущий исполнитель из оперативного/контрольного плана; нужен для фиксации начатой заявки.
+    required_router_count: int = 0  # Сколько роутеров расходуется при выполнении заявки.
     required_equipment: frozenset[str] = frozenset()  # Всё оборудование, необходимое на заявке.
     required_vehicle_type: VehicleType | None = None  # Требуемый тип транспорта или отсутствие требования.
     latitude: float | None = None  # Широта точки заявки в градусах WGS84.
@@ -258,6 +264,10 @@ class Task:
             raise ValueError(
                 "required_vehicle_type должен быть значением VehicleType или None"
             )
+        if isinstance(self.required_router_count, bool) or not isinstance(
+            self.required_router_count, int
+        ) or self.required_router_count < 0:
+            raise ValueError("required_router_count должен быть целым и неотрицательным")
         object.__setattr__(self, "required_skills", skills)
         object.__setattr__(self, "window_start", window_start)
         object.__setattr__(self, "window_end", window_end)
@@ -304,6 +314,7 @@ class OptimizationProblem:
     planning_time: str | None = None  # Текущее время HH:MM; None означает планирование от начала смены.
     operational_states: tuple[EngineerOperationalState, ...] = ()  # Фактические позиции и остатки работ при перепланировании.
     unavailable_engineer_ids: frozenset[str] = frozenset()  # Инженеры, исключённые из назначения в текущем пересчёте.
+    consider_equipment: bool = False  # True включает количественный расход роутеров и прочие equipment constraints.
 
     def __post_init__(self) -> None:
         """Проверяет идентификаторы, ресурсы и полноту внешних матриц."""
@@ -369,6 +380,8 @@ class OptimizationProblem:
             raise ValueError("preserve_assigned_tasks должен быть bool")
         if not isinstance(self.ignore_task_statuses, bool):
             raise ValueError("ignore_task_statuses должен быть bool")
+        if not isinstance(self.consider_equipment, bool):
+            raise ValueError("consider_equipment должен быть bool")
         if self.planning_time is not None:
             object.__setattr__(self, "planning_time", minutes_to_hhmm(hhmm_to_minutes(self.planning_time)))
         state_engineer_ids = [state.engineer_id for state in operational_states]
@@ -472,6 +485,23 @@ class OptimizationProblem:
             vehicle_type, self.travel_time_matrix
         )
         return matrix[from_location][to_location]
+
+    def available_router_count_for_planning(self, engineer: Engineer) -> int:
+        """Возвращает остаток утреннего запаса роутеров для нового плана.
+
+        Завершённые заявки исключены из перестраиваемого маршрута, но
+        установленные на них роутеры уже израсходованы. В режиме полного
+        перераспределения история игнорируется и доступен исходный запас.
+        """
+        if not self.consider_equipment or self.ignore_task_statuses:
+            return engineer.available_router_count
+        consumed = sum(
+            task.required_router_count
+            for task in self.tasks
+            if task.status == TaskStatus.COMPLETED
+            and task.current_engineer_id == engineer.id
+        )
+        return max(0, engineer.available_router_count - consumed)
 
     @property
     def planning_tasks(self) -> tuple[Task, ...]:

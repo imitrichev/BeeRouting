@@ -5,9 +5,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import api_view as drf_api_view
 from backend.optimization import EngineerOperationalState, RoutingProviderError
-from backend.web_mvp.api.services import OFFICIAL_DATASET_PATHS
+from ..services.planning import OFFICIAL_DATASET_PATHS
 from ..models import Territory
 from ..services import import_dataset, reload_official_datasets
+from ..services.optimization import public_dataset_response
 from ..serializers import (OperationalStateSerializer, ReplanningEventSerializer,
     ManualReassignmentConfirmSerializer, ManualReassignmentPreviewSerializer,
     TaskCreateSerializer, GeocodeAddressSerializer)
@@ -25,7 +26,7 @@ def dataset_view(request):
     territory = Territory.objects.filter(code=request.query_params.get('territory')).first()
     if territory is None:
         return Response({'error': 'Район не загружен.'}, status=404)
-    return Response({**territory.response, 'territory_code': territory.code})
+    return Response({**public_dataset_response(territory), 'territory_code': territory.code})
 
 @drf_api_view(['POST'])
 def official_dataset_view(request):
@@ -57,13 +58,15 @@ def upload_dataset_view(request):
 
 @api_view(["POST"])
 def optimize_view(request: Request) -> Response:
-    """Запускает OR-Tools и возвращает маршруты, метрики и причины отказа."""
-    # Переключатель frontend передаёт только ignore_task_statuses. В режиме
+    """Запускает выбранный solver и возвращает маршруты и метрики."""
+    # Frontend передаёт solver вместе с режимом статусов. В режиме
     # уважения статусов обычные ASSIGNED должны сохраняться автоматически;
     # отдельный старый параметр оставлен для обратной совместимости API.
     preserve_assigned_tasks = request.data.get("preserve_assigned_tasks")
     ignore_task_statuses = request.data.get("ignore_task_statuses", False)
+    solver = request.data.get("solver", "ortools")
     planning_time = request.data.get("planning_time")
+    consider_equipment = request.data.get("consider_equipment", False)
     state_serializer = OperationalStateSerializer(
         data=request.data.get("operational_states", []), many=True
     )
@@ -83,13 +86,36 @@ def optimize_view(request: Request) -> Response:
             {"error": "ignore_task_statuses должен быть bool."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+    if not isinstance(consider_equipment, bool):
+        return Response(
+            {"error": "consider_equipment должен быть bool."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if not isinstance(solver, str) or solver not in {"ortools", "baseline"}:
+        return Response(
+            {"error": "solver должен быть 'ortools' или 'baseline'."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     try:
         scenario, result = optimization_service.optimize_current(
             preserve_assigned_tasks=preserve_assigned_tasks,
             ignore_task_statuses=ignore_task_statuses,
+            solver=solver,
             planning_time=planning_time,
             operational_states=operational_states,
+            consider_equipment=consider_equipment,
         )
     except (ValueError, RoutingProviderError) as exc:
         return Response({"error": str(exc)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    return Response(optimization_service.serialize_response(scenario, result))
+
+
+@api_view(["POST"])
+def sync_reference_statuses_view(request: Request) -> Response:
+    """Синхронизирует только статусы с контрольным распределением.
+
+    Маршруты и текущие исполнители берутся из сохранённого рабочего плана;
+    ``reference_crew`` из контрольных данных намеренно не используется.
+    """
+    scenario, result = optimization_service.sync_statuses_from_reference()
     return Response(optimization_service.serialize_response(scenario, result))

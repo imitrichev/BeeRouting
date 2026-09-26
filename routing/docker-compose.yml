@@ -30,5 +30,25 @@ services:
     shm_size: 1gb
     restart: unless-stopped
 
+  otp:
+    image: opentripplanner/opentripplanner:2.10.0
+    container_name: otp
+
+    command:
+      - --load
+      - --serve
+
+    environment:
+      JAVA_TOOL_OPTIONS: -Xmx6g
+
+    volumes:
+      - ./otp:/var/opentripplanner
+      - ./osm/moscow-region.osm.pbf:/var/opentripplanner/moscow-region.osm.pbf
+
+    ports:
+      - "8081:8080"
+
+    restart: unless-stopped
+
 volumes:
   nominatim-db:
