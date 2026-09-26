@@ -621,23 +621,36 @@ class OptimizationApiTests(TestCase):
                 "IN_PROGRESS",
             }:
                 self.assertEqual(after[other_task_id], status_before)
+        restored = restore(Territory.objects.get(pk=self.territory.pk))
+        self.assertFalse(restored._problem.preserve_assigned_tasks)
 
     def test_unavailable_engineer_receives_no_tasks(self) -> None:
-        """Сценарий недоступности освобождает и запрещает маршрут инженера."""
+        """Недоступность освобождает его маршрут и защищает чужую начатую работу."""
         initial = self.client.post(
             "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
         )
-        engineer_id = next(
-            route["engineer_id"]
-            for route in initial.data["result"]["routes"]
-            if route["stops"]
+        non_empty_routes = [
+            route for route in initial.data["result"]["routes"] if route["stops"]
+        ]
+        self.assertGreaterEqual(len(non_empty_routes), 2)
+        unavailable_route, protected_route = non_empty_routes[:2]
+        engineer_id = unavailable_route["engineer_id"]
+        released_task_ids = {
+            stop["task_id"] for stop in unavailable_route["stops"]
+        }
+        protected_task_id = protected_route["stops"][0]["task_id"]
+        protected_engineer_id = protected_route["engineer_id"]
+        status_response = self.client.patch(
+            "/api/v2/jobs/status/",
+            {"task_id": protected_task_id, "status": "EN_ROUTE"},
+            format="json",
         )
+        self.assertEqual(status_response.status_code, 200, status_response.data)
 
         response = self.client.post(
             "/api/v2/replan/",
             {
                 "event_type": "ENGINEER_UNAVAILABLE",
-                "planning_time": "09:00",
                 "engineer_id": engineer_id,
             },
             format="json",
@@ -649,14 +662,53 @@ class OptimizationApiTests(TestCase):
             if item["engineer_id"] == engineer_id
         )
         self.assertEqual(route["stops"], [])
+        assignment_after = {
+            stop["task_id"]: route_item["engineer_id"]
+            for route_item in response.data["result"]["routes"]
+            for stop in route_item["stops"]
+        }
+        self.assertTrue(
+            all(
+                assignment_after.get(task_id) != engineer_id
+                for task_id in released_task_ids
+            )
+        )
+        self.assertEqual(
+            assignment_after.get(protected_task_id),
+            protected_engineer_id,
+        )
+        restored = restore(Territory.objects.get(pk=self.territory.pk))
+        self.assertFalse(restored._problem.preserve_assigned_tasks)
+        self.assertIn(engineer_id, restored._problem.unavailable_engineer_ids)
+        self.assertEqual(
+            restored._problem.fixed_task_engineer_by_id.get(protected_task_id),
+            protected_engineer_id,
+        )
 
     def test_emergency_event_creates_urgent_emergency_task(self) -> None:
-        """Аварийный сценарий создаёт заявку с обязательным приоритетом и навыком."""
+        """Авария создаётся как NOT_SENT и перестраивает только будущий план."""
+        initial = self.client.post(
+            "/api/v2/optimize/",
+            {"ignore_task_statuses": True},
+            format="json",
+        )
+        self.assertEqual(initial.status_code, 200, initial.data)
+        protected_route = next(
+            route for route in initial.data["result"]["routes"] if route["stops"]
+        )
+        protected_task_id = protected_route["stops"][0]["task_id"]
+        protected_engineer_id = protected_route["engineer_id"]
+        status_response = self.client.patch(
+            "/api/v2/jobs/status/",
+            {"task_id": protected_task_id, "status": "EN_ROUTE"},
+            format="json",
+        )
+        self.assertEqual(status_response.status_code, 200, status_response.data)
+
         response = self.client.post(
             "/api/v2/replan/",
             {
                 "event_type": "EMERGENCY_TASK",
-                "planning_time": "09:00",
                 "task": {
                     "id": "EMERGENCY-1",
                     "latitude": 55.70,
@@ -676,6 +728,32 @@ class OptimizationApiTests(TestCase):
         self.assertEqual(task["required_skill"], "EMERGENCY_WORKS")
         self.assertEqual(task["duration_minutes"], 80)
         self.assertEqual(task["priority"], "URGENT")
+        # После расчёта авария либо назначена, либо явно возвращена в списке
+        # неназначенных: она не может потеряться между созданием и solver.
+        planned_task_ids = {
+            stop["task_id"]
+            for route in response.data["result"]["routes"]
+            for stop in route["stops"]
+        }
+        unassigned_task_ids = {
+            item["task_id"] for item in response.data["result"]["unassigned"]
+        }
+        self.assertIn("EMERGENCY-1", planned_task_ids | unassigned_task_ids)
+        assignment_after = {
+            stop["task_id"]: route["engineer_id"]
+            for route in response.data["result"]["routes"]
+            for stop in route["stops"]
+        }
+        self.assertEqual(
+            assignment_after.get(protected_task_id),
+            protected_engineer_id,
+        )
+        restored = restore(Territory.objects.get(pk=self.territory.pk))
+        self.assertFalse(restored._problem.preserve_assigned_tasks)
+        self.assertEqual(
+            restored._problem.fixed_task_engineer_by_id.get(protected_task_id),
+            protected_engineer_id,
+        )
 
     def test_manual_reassignment_requires_preview_and_confirmation(self) -> None:
         """Preview показывает метрики, а план меняется только после подтверждения."""

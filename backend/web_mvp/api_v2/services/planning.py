@@ -835,8 +835,12 @@ class PlanningService:
         else:  # pragma: no cover — serializer ограничивает справочник.
             raise ValueError(f"Неизвестное событие {event_type!r}")
 
-        # ASSIGNED разрешено перестраивать, а EN_ROUTE/IN_PROGRESS остаются
-        # за текущими исполнителями через правила OptimizationProblem.
+        # Во всех оперативных сценариях обычные ASSIGNED и NOT_SENT можно
+        # перестраивать. EN_ROUTE/IN_PROGRESS остальных доступных инженеров
+        # остаются жёстко закреплёнными правилами OptimizationProblem.
+        # При недоступности инженера его активные заявки предварительно
+        # переводятся в NOT_SENT: физически отсутствующий исполнитель не
+        # может завершить даже уже начатую работу.
         self._problem = None
         self._result = None
         scenario, result = self.optimize_current(
@@ -844,10 +848,7 @@ class PlanningService:
             planning_time=event.get("planning_time"),
             initial_routes_by_engineer=initial_routes,
             reference_routes_by_engineer=reference_routes,
-            preserve_assigned_tasks=event_type in {
-                "ENGINEER_UNAVAILABLE",
-                "TASK_CANCELLED",
-            },
+            preserve_assigned_tasks=False,
             consider_equipment=bool(
                 event.get("consider_equipment", self._consider_equipment)
             ),
