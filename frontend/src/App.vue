@@ -947,8 +947,13 @@ onBeforeUnmount(() => {
             />
             <span v-if="dataset" class="text-medium-emphasis">
               {{ dataset.source_name }} · {{ dataset.engineers.length }} инженеров ·
-              {{ ignoreTaskStatuses ? dataset.tasks.length : plannableTaskCount }}
-              в плане из {{ dataset.tasks.length }} заявок
+              <template v-if="result">
+                {{ ignoreTaskStatuses ? dataset.tasks.length : plannableTaskCount }}
+                в плане из {{ dataset.tasks.length }} заявок
+              </template>
+              <template v-else>
+                {{ dataset.tasks.length }} заявок
+              </template>
               <template v-if="result && !ignoreTaskStatuses && planningTime">
                 · Контрольное распределение на время {{ planningTime }}
               </template>

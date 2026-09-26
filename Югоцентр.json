@@ -31,7 +31,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "car",
-      "available_router_count": 5
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_tsentr-E02",
@@ -103,7 +103,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "car",
-      "available_router_count": 1
+      "available_router_count": 2
     },
     {
       "engineer_id": "yugo_tsentr-E06",
@@ -121,7 +121,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "foot",
-      "available_router_count": 1
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_tsentr-E07",
@@ -157,7 +157,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "public_transport",
-      "available_router_count": 1
+      "available_router_count": 2
     },
     {
       "engineer_id": "yugo_tsentr-E09",
@@ -175,7 +175,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "car",
-      "available_router_count": 1
+      "available_router_count": 2
     },
     {
       "engineer_id": "yugo_tsentr-E10",

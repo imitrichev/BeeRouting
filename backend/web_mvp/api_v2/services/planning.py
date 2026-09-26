@@ -724,6 +724,10 @@ class PlanningService:
                 "source_name": self._source_name,
                 "preserve_assigned_tasks": self._preserve_assigned_tasks,
                 "ignore_task_statuses": self._ignore_task_statuses,
+                # Контрольные статусы становятся видимыми только после
+                # построения результата. При первичной загрузке JSON это
+                # всего лишь исходные данные для будущего расчёта.
+                "has_plan": self._result is not None,
             },
         )
 

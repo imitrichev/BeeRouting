@@ -33,7 +33,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "car",
-      "available_router_count": 5
+      "available_router_count": 3
     },
     {
       "engineer_id": "vostok-E02",
@@ -105,7 +105,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "car",
-      "available_router_count": 2
+      "available_router_count": 3
     },
     {
       "engineer_id": "vostok-E06",
@@ -123,7 +123,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "foot",
-      "available_router_count": 2
+      "available_router_count": 3
     },
     {
       "engineer_id": "vostok-E07",
@@ -141,7 +141,7 @@
         "Аварийные работы"
       ],
       "vehicle_type": "bicycle",
-      "available_router_count": 2
+      "available_router_count": 3
     },
     {
       "engineer_id": "vostok-E08",
@@ -215,7 +215,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "bicycle",
-      "available_router_count": 5
+      "available_router_count": 2
     },
     {
       "engineer_id": "vostok-E12",
@@ -233,7 +233,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "car",
-      "available_router_count": 0
+      "available_router_count": 2
     }
   ],
   "jobs": [

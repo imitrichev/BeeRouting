@@ -4,6 +4,7 @@
 сохраняет разработанную коллегой границу ``views -> service -> optimization``:
 представления не собирают математическую задачу и не управляют снимками сами.
 """
+import copy
 import json
 from typing import Any
 from django.db import transaction
@@ -241,6 +242,31 @@ def save(territory, service):
     territory.save()
     sync_entities(territory, service)
     ReassignmentProposal.objects.filter(territory=territory).delete()
+    return response
+
+
+def public_dataset_response(territory):
+    """Возвращает сохранённый dataset без контрольных статусов до расчёта.
+
+    Старые записи в БД могли быть сохранены до введения правила скрытия
+    ``reference_status``. Поэтому одного изменения сериализатора недостаточно:
+    GET существующего района читает готовый JSON из ``Territory.response``.
+    Здесь выполняется безопасная копия только для выдачи API, не меняя снимок
+    в базе и не затрагивая статусы, которые нужны solver для контрольного
+    режима после запуска.
+    """
+    response = copy.deepcopy(territory.response or {})
+    if response.get("result") is not None:
+        return response
+
+    dataset = response.get("dataset")
+    if not isinstance(dataset, dict):
+        return response
+
+    for task in dataset.get("tasks", []):
+        if isinstance(task, dict):
+            task["status"] = "NOT_SENT"
+            task["assignment_locked"] = False
     return response
 
 

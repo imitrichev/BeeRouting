@@ -89,12 +89,16 @@ def _replace_building_marker(value: str) -> str:
         value,
         flags=re.IGNORECASE,
     )
-    return re.sub(
+    value = re.sub(
         r"\s+(?:стр\.?|строение)\s*(?=\d)",
         " к ",
         value,
         flags=re.IGNORECASE,
     )
+    # В OSM запись 55/2 часто хранится как корпус 55к2. Этот вариант
+    # добавляется после исходной формы адреса, поэтому корректные дробные
+    # номера сначала ищутся без изменения.
+    return re.sub(r"(?<=\d)\s*/\s*(?=\d)", " к ", value)
 
 
 def _normalise_address(value: str) -> str:
@@ -250,12 +254,25 @@ class NominatimGeocoder:
                 if cache_path.exists() and not refresh_cache
                 else {}
             )
-            self._cache: dict[str, tuple[float, float]] = {
-                _normalise_address(str(key)): (float(value[0]), float(value[1]))
-                for key, value in loaded.items()
-            }
+            self._cache: dict[str, tuple[float, float]] = {}
+            self._validated_cache_keys: set[str] = set()
+            for key, value in loaded.items():
+                normalized_key = _normalise_address(str(key))
+                if isinstance(value, Mapping):
+                    self._cache[normalized_key] = (
+                        float(value["lat"]), float(value["lon"])
+                    )
+                    if value.get("address_verified", False):
+                        self._validated_cache_keys.add(normalized_key)
+                else:
+                    # Старый кэш содержал только координаты и не доказывал,
+                    # что результат имел номер дома. Он будет проверен заново.
+                    self._cache[normalized_key] = (
+                        float(value[0]), float(value[1])
+                    )
         except (OSError, ValueError, TypeError, KeyError, IndexError):
             self._cache = {}
+            self._validated_cache_keys = set()
 
     @staticmethod
     def _select_endpoint(
@@ -291,7 +308,7 @@ class NominatimGeocoder:
         """
         key = _normalise_address(address)
         cache_key = self._cache_key(key, reference_coordinates)
-        if cache_key in self._cache:
+        if cache_key in self._cache and cache_key in self._validated_cache_keys:
             return self._cache[cache_key]
         fallback_address = _replace_building_marker(address)
         fallback_key = _normalise_address(fallback_address)
@@ -310,6 +327,8 @@ class NominatimGeocoder:
                 query_index == len(original_query_addresses)
                 and fallback_key != key
                 and self._cache_key(fallback_key, reference_coordinates) in self._cache
+                and self._cache_key(fallback_key, reference_coordinates)
+                in self._validated_cache_keys
             ):
                 return self._cache[
                     self._cache_key(fallback_key, reference_coordinates)
@@ -323,6 +342,7 @@ class NominatimGeocoder:
             selected = self._nearest_result(precise_results, reference_coordinates)
             coordinates = (float(selected["lat"]), float(selected["lon"]))
             self._cache[cache_key] = coordinates
+            self._validated_cache_keys.add(cache_key)
             self._save_cache()
             return coordinates
         # Последняя осмысленная попытка — найти улицу без номера дома. Это
@@ -336,6 +356,7 @@ class NominatimGeocoder:
             selected = self._nearest_result(results, reference_coordinates)
             coordinates = (float(selected["lat"]), float(selected["lon"]))
             self._cache[cache_key] = coordinates
+            self._validated_cache_keys.discard(cache_key)
             self._save_cache()
             self.warnings.append(
                 f"Точный дом не найден: {address!r}; использованы координаты улицы по запросу {street_query!r}."
@@ -385,7 +406,7 @@ class NominatimGeocoder:
             "q": query_address,
             "format": "jsonv2",
             "limit": "2",
-            "addressdetails": "0",
+            "addressdetails": "1",
         }
         if self.email:
             query["email"] = self.email
@@ -409,17 +430,32 @@ class NominatimGeocoder:
 
     def _save_cache(self) -> None:
         """Атомарность здесь не требуется: генератор работает одним процессом."""
+        payload = {
+            key: {
+                "lat": value[0],
+                "lon": value[1],
+                "address_verified": key in self._validated_cache_keys,
+            }
+            for key, value in self._cache.items()
+        }
         self.cache_path.write_text(
-            json.dumps(self._cache, ensure_ascii=False, indent=2) + "\n",
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
 
     @staticmethod
     def _is_precise_result(result: Mapping[str, Any]) -> bool:
-        """Отличает объект или дом от результата уровня улицы/района."""
+        """Проверяет, что результат относится к зданию с адресным номером.
+
+        Одного ``addresstype`` недостаточно: Nominatim может вернуть площадь
+        или улицу как достаточно точный объект. Для поиска дома принимаем
+        только результат с ``address.house_number`` либо ``address.building``.
+        Запасные поля ``extratags`` нужны для ответов, где номер пришёл
+        непосредственно из OSM-тегов.
+        """
         if result.get("category") in {"highway", "boundary"}:
             return False
-        return result.get("addresstype") not in {
+        if result.get("addresstype") in {
             "road",
             "city",
             "town",
@@ -429,7 +465,18 @@ class NominatimGeocoder:
             "quarter",
             "neighbourhood",
             "administrative",
-        }
+        }:
+            return False
+        address = result.get("address")
+        address = address if isinstance(address, Mapping) else {}
+        extratags = result.get("extratags")
+        extratags = extratags if isinstance(extratags, Mapping) else {}
+        return bool(
+            str(address.get("house_number") or "").strip()
+            or str(address.get("building") or "").strip()
+            or str(extratags.get("addr:housenumber") or "").strip()
+            or str(extratags.get("building") or "").strip()
+        )
 
     @staticmethod
     def _street_query_variants(address: str) -> tuple[str, ...]:

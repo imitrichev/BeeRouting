@@ -61,6 +61,28 @@ class OptimizationApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data["dataset"]["engineers"]), 11)
         self.assertEqual(len(response.data["dataset"]["tasks"]), 56)
+        # До нажатия «Контрольное распределение» reference_status из JSON не
+        # является текущим статусом заявки и не должен попадать в таблицу.
+        self.assertIsNone(response.data.get("result"))
+        self.assertTrue(
+            all(task["status"] == "NOT_SENT" for task in response.data["dataset"]["tasks"])
+        )
+
+    def test_existing_unplanned_snapshot_hides_legacy_reference_statuses(self) -> None:
+        """GET скрывает старые контрольные статусы и в уже сохранённом JSON."""
+        self.territory.response["dataset"]["tasks"][0]["status"] = "COMPLETED"
+        self.territory.response["dataset"]["tasks"][0]["assignment_locked"] = True
+        self.territory.save(update_fields=["response"])
+
+        response = self.client.get("/api/v2/dataset/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            all(task["status"] == "NOT_SENT" for task in response.data["dataset"]["tasks"])
+        )
+        self.assertFalse(
+            any(task["assignment_locked"] for task in response.data["dataset"]["tasks"])
+        )
 
     def test_json_dataset_can_be_uploaded(self) -> None:
         """API принимает официальный JSON как multipart upload."""
@@ -96,6 +118,23 @@ class OptimizationApiTests(TestCase):
                 route["geometry"] is not None
                 and route["geometry"]["type"] == "LineString"
                 for route in response.data["result"]["routes"]
+            )
+        )
+
+    def test_control_distribution_reveals_source_statuses_after_planning(self) -> None:
+        """После контрольного расчёта исходные operational статусы видны."""
+        response = self.client.post(
+            "/api/v2/optimize/",
+            {"ignore_task_statuses": False},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.data.get("result"))
+        self.assertTrue(
+            any(
+                task["status"] != "NOT_SENT"
+                for task in response.data["dataset"]["tasks"]
             )
         )
 

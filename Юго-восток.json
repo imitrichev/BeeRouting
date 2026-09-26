@@ -33,7 +33,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "car",
-      "available_router_count": 5
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E02",
@@ -51,7 +51,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "foot",
-      "available_router_count": 4
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E03",
@@ -87,7 +87,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "public_transport",
-      "available_router_count": 4
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E05",
@@ -107,7 +107,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "car",
-      "available_router_count": 4
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E06",
@@ -161,7 +161,7 @@
         "Работы на подключение и дозаказы"
       ],
       "vehicle_type": "public_transport",
-      "available_router_count": 1
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E09",
@@ -215,7 +215,7 @@
         "Работы на подключение и дозаказы"
       ],
       "vehicle_type": "bicycle",
-      "available_router_count": 1
+      "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E12",
@@ -231,7 +231,7 @@
         "Локальные работы"
       ],
       "vehicle_type": "car",
-      "available_router_count": 0
+      "available_router_count": 2
     }
   ],
   "jobs": [
@@ -1247,8 +1247,8 @@
       "request_type_hd": "Нет линка",
       "district": "Домодедово",
       "address": "Домодедово, ул.Гагарина, д. 55/2",
-      "lat": 55.4151656,
-      "lon": 37.8358143,
+      "lat": 55.4515305,
+      "lon": 37.7394233,
       "window_start": "16:00",
       "window_end": "18:00",
       "duration_min": 30,

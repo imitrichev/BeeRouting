@@ -8,6 +8,7 @@ from backend.optimization import EngineerOperationalState, RoutingProviderError
 from ..services.planning import OFFICIAL_DATASET_PATHS
 from ..models import Territory
 from ..services import import_dataset, reload_official_datasets
+from ..services.optimization import public_dataset_response
 from ..serializers import (OperationalStateSerializer, ReplanningEventSerializer,
     ManualReassignmentConfirmSerializer, ManualReassignmentPreviewSerializer,
     TaskCreateSerializer, GeocodeAddressSerializer)
@@ -25,7 +26,7 @@ def dataset_view(request):
     territory = Territory.objects.filter(code=request.query_params.get('territory')).first()
     if territory is None:
         return Response({'error': 'Район не загружен.'}, status=404)
-    return Response({**territory.response, 'territory_code': territory.code})
+    return Response({**public_dataset_response(territory), 'territory_code': territory.code})
 
 @drf_api_view(['POST'])
 def official_dataset_view(request):
