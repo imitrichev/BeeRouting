@@ -101,6 +101,7 @@ export type DistrictDataOptimizationResult = {
 export type DistrictData = {
   territory_code: string
   planning_options: {
+    consider_equipment: boolean
     preserve_assigned_tasks: boolean
     ignore_task_statuses: boolean
     planning_time: string | null
@@ -108,3 +109,49 @@ export type DistrictData = {
   dataset: DistrictDataDataset
   result?: DistrictDataOptimizationResult
 }
+
+export type RouteStopExplanationObject = {
+  explanation: string
+  task_id: string
+}
+
+export type OptimizationRequestData = {
+  consider_equipment: boolean
+  ignore_task_statuses: true
+  planning_time: null
+  solver: 'baseline' | 'ortools'
+}
+
+export type PreviewReassignmentObjectEngineer = {
+  id: string
+  name: string
+}
+export type PreviewReassignmentObjectMetrics = {
+  used_engineers_count: number
+  total_distance_km: number
+}
+
+export type SuccessPreviewReassignmentObject = {
+  feasible: true
+  proposal_id: string
+  task_id: string
+  old_engineer: PreviewReassignmentObjectEngineer
+  new_engineer: PreviewReassignmentObjectEngineer
+  before: PreviewReassignmentObjectMetrics
+  after: PreviewReassignmentObjectMetrics
+  delta: PreviewReassignmentObjectMetrics
+}
+
+export type PreviewReassignmentRequestData = {
+  engineer_id: string
+  task_id: string
+}
+
+export type ErrorPreviewReassignmentObject = {
+  feasible: false
+  reason_code: string
+  message: string
+}
+
+export type PreviewReassignmentObject =
+  ErrorPreviewReassignmentObject | SuccessPreviewReassignmentObject

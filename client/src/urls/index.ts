@@ -31,6 +31,22 @@ const baseUrls = {
     path: '/api/v2/dataset/official/',
     method: HTTP_METHODS.POST,
   },
+  TASKS: {
+    EXPLAIN: {
+      path: '/api/v2/explain/{task_id}/',
+      method: HTTP_METHODS.POST,
+    },
+    REASSIGNMENT: {
+      PREVIEW: {
+        path: '/api/v2/manual-reassignment/preview/',
+        method: HTTP_METHODS.POST,
+      },
+      CONFIRM: {
+        path: '/api/v2/manual-reassignment/confirm/',
+        method: HTTP_METHODS.POST,
+      },
+    },
+  },
   DISTRICT: {
     DATA: {
       path: '/api/v2/dataset/',

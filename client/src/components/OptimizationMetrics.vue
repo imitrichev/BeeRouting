@@ -21,7 +21,7 @@ const metrics = computed(() => districtDataStore.getMetrics)
     </template>
     <v-row no-gutters v-if="metrics && !props.loading">
       <v-col cols="12" class="fill-height">
-        <v-card color="blue-lighten-5 fill-height" class="rounded-0 elevation-0" variant="flat">
+        <v-card color="blue-lighten-4 fill-height" class="rounded-0 elevation-0" variant="flat">
           <v-card-text>
             Инженеров: <br />
             <strong>{{ metrics.used_engineers_count }}</strong>
@@ -29,7 +29,7 @@ const metrics = computed(() => districtDataStore.getMetrics)
         </v-card>
       </v-col>
       <v-col cols="12" class="fill-height">
-        <v-card color="green-lighten-5 fill-height" class="rounded-0 elevation-0" variant="flat">
+        <v-card color="green-lighten-4 fill-height" class="rounded-0 elevation-0" variant="flat">
           <v-card-text>
             Задач: <br />
             <strong>{{ metrics.assigned_task_count }}</strong>
@@ -37,7 +37,7 @@ const metrics = computed(() => districtDataStore.getMetrics)
         </v-card>
       </v-col>
       <v-col cols="12" class="fill-height">
-        <v-card color="red-lighten-5 fill-height" class="rounded-0 elevation-0" variant="flat">
+        <v-card color="red-lighten-4 fill-height" class="rounded-0 elevation-0" variant="flat">
           <v-card-text>
             Пробег, км: <br />
             <strong>{{ metrics.total_distance_km.toFixed(1) }}</strong>
@@ -45,7 +45,7 @@ const metrics = computed(() => districtDataStore.getMetrics)
         </v-card>
       </v-col>
       <v-col cols="12" class="fill-height">
-        <v-card color="purple-lighten-5 fill-height" class="rounded-0 elevation-0" variant="flat">
+        <v-card color="purple-lighten-4 fill-height" class="rounded-0 elevation-0" variant="flat">
           <v-card-text>
             Objective: <br />
             <strong>{{ metrics.total_objective }}</strong>

@@ -7,6 +7,10 @@ import type {
   Engineer,
   EngineerRoute,
   OptimizationMetrics,
+  OptimizationRequestData,
+  PreviewReassignmentObject,
+  PreviewReassignmentRequestData,
+  RouteStopExplanationObject,
   Task,
   UnassignedTask,
 } from '@/types/entities.ts'
@@ -34,6 +38,13 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     if (!districtData.value) return []
     return districtData.value.dataset.engineers
   })
+
+  const getDistrictEngineersSelector = computed(() =>
+    getDistrictEngineers.value.map((item) => ({
+      title: item.name,
+      value: item.id,
+    })),
+  )
 
   const getRoutes = computed((): EngineerRoute[] => {
     if (!districtData.value) return []
@@ -92,11 +103,11 @@ export const useDistrictDataStore = defineStore('districtData', () => {
 
   const loadingOptimization = ref<boolean>(false)
 
-  const optimizeDataset = async (ignoreTaskStatuses: boolean) => {
+  const optimizeDataset = async (data: OptimizationRequestData) => {
     loadingOptimization.value = true
     const response = await sendRequest<DistrictData>(
       baseUrls.DISTRICT.OPTIMIZE,
-      { ignore_task_statuses: ignoreTaskStatuses },
+      data,
       {},
       { territory: String(districtCode.value) },
     )
@@ -105,8 +116,6 @@ export const useDistrictDataStore = defineStore('districtData', () => {
       selectedRoutes.value = getRoutes.value
         .filter((route) => !!route.stops.length)
         .map((r) => r.engineer_id)
-
-      console.log(selectedRoutes.value)
     }
 
     loadingOptimization.value = false
@@ -134,6 +143,87 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     await loadDistrictData()
   })
 
+  const loadingExplanation = ref<boolean>(false)
+  const explanationTaskId = ref<string>('')
+  const taskExplanation = ref<RouteStopExplanationObject | null>(null)
+
+  const loadTaskExplanation = async (taskId: string) => {
+    if (taskId === explanationTaskId.value) return
+    explanationTaskId.value = taskId
+    loadingExplanation.value = true
+    const response = await sendRequest<RouteStopExplanationObject>(
+      baseUrls.TASKS.EXPLAIN,
+      {},
+      { task_id: taskId },
+      { territory: String(districtCode.value) },
+    )
+    if (taskId !== explanationTaskId.value) return
+    if (!response.isSuccess) {
+      taskExplanation.value = {
+        task_id: taskId,
+        explanation: 'Не удалось получить объяснение',
+      }
+      loadingExplanation.value = false
+      return
+    }
+    taskExplanation.value = response.data
+    loadingExplanation.value = false
+  }
+
+  const loadingManualReassignmentPreview = ref<boolean>(false)
+  const manualReassignmentObject = ref<PreviewReassignmentObject | null>(null)
+
+  const clearManualReassignmentPreview = () => {
+    manualReassignmentObject.value = null
+  }
+
+  const loadManualReassignmentPreview = async (data: PreviewReassignmentRequestData) => {
+    loadingManualReassignmentPreview.value = true
+    const response = await sendRequest<PreviewReassignmentObject>(
+      baseUrls.TASKS.REASSIGNMENT.PREVIEW,
+      data,
+      {},
+      {
+        territory: String(districtCode.value),
+      },
+    )
+
+    if (!response.isSuccess) {
+      manualReassignmentObject.value = response.data as unknown as PreviewReassignmentObject
+    } else {
+      manualReassignmentObject.value = response.data
+    }
+
+    loadingManualReassignmentPreview.value = false
+  }
+
+  const loadingManualReassignment = ref<boolean>(false)
+
+  const loadManualReassignment = async () => {
+    if (!manualReassignmentObject.value || !manualReassignmentObject.value.feasible) return
+    loadingManualReassignment.value = true
+
+    const response = await sendRequest<DistrictData>(
+      baseUrls.TASKS.REASSIGNMENT.CONFIRM,
+      {
+        proposal_id: manualReassignmentObject.value.proposal_id,
+      },
+      {},
+      {
+        territory: String(districtCode.value),
+      },
+    )
+
+    if (response.isSuccess) {
+      districtData.value = response.data
+      selectedRoutes.value = getRoutes.value
+        .filter((route) => !!route.stops.length)
+        .map((r) => r.engineer_id)
+    }
+
+    loadingManualReassignment.value = false
+  }
+
   return {
     selectDistrict,
     loadDistrictData,
@@ -155,9 +245,22 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     getMetrics,
     getTravelTimeByEngineer,
     getUnassigned,
+
     selectedRoutes,
     toggleRouteSelection,
     isRouteSelected,
     clearRouteSelection,
+
+    loadingExplanation,
+    taskExplanation,
+    loadTaskExplanation,
+
+    getDistrictEngineersSelector,
+    loadingManualReassignmentPreview,
+    manualReassignmentObject,
+    loadManualReassignmentPreview,
+    clearManualReassignmentPreview,
+    loadingManualReassignment,
+    loadManualReassignment,
   }
 })

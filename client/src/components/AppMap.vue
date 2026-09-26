@@ -6,6 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import { getEngineerColor } from '@/utils/map.ts'
 import { getPriorityTranslation, getSkillTranslation } from '@/utils/translations.ts'
+import type { EngineerRoute, RouteStop, Task } from '@/types/entities.ts'
 
 interface IProps {
   loading: boolean
@@ -81,13 +82,11 @@ const renderMap = () => {
       })
     }
 
-    // 2) потом маркеры + данные
-    if (isOptimized.value) renderRoutes()
-    else renderTasks()
+    renderTasks()
   })
 }
 
-const getTaskMarker = (
+const getTaskMarkerWithPopup = (
   popupContent: string,
   longitude: number,
   latitude: number,
@@ -108,10 +107,10 @@ const getNotOptimizedMarker = (
   taskLongitude: number,
   taskLatitude: number,
 ): Marker => {
-  return getTaskMarker(
+  return getTaskMarkerWithPopup(
     `
       <div style="font-size: 13px; line-height: 1.4;">
-        <strong>Задача ${taskId}</strong><br/>
+        <strong>Заявка ${taskId}</strong><br/>
         <b>Тип:</b> ${getSkillTranslation(taskType)}<br/>
         <b>Длительность:</b> ${taskDuration} мин.<br/>
         <b>Окно:</b> ${taskWindowStart} — ${taskWindowEnd}<br/>
@@ -136,10 +135,10 @@ const getOptimizedMarker = (
   taskLongitude: number,
   taskLatitude: number,
 ): Marker => {
-  return getTaskMarker(
+  return getTaskMarkerWithPopup(
     `
       <div style="font-size: 13px; line-height: 1.4;">
-        <strong>Задача ${taskId}</strong><br/>
+        <strong>Заявка ${taskId}</strong><br/>
         ${taskEngineerName ? `<b>Назначена:</b> ${taskEngineerName}<br/>` : ''}
         <b>Прибытие:</b> ${engineerArrival}<br/>
         <b>Работы:</b> ${engineerServiceStart} — ${engineerServiceEnd}<br/>
@@ -158,101 +157,81 @@ const clearMarkers = () => {
   markers = []
 }
 
-const renderRouteLines = () => {
-  if (!map || !isOptimized.value) {
-    console.warn('skip: map?', !!map, 'isOptimized?', isOptimized.value)
-    return
-  }
-
-  const source = map.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
-  if (!source) {
-    console.warn('source not found')
-    return
-  }
-
-  const features = routes.value
-    .filter((r) => r.geometry && r.geometry.coordinates.length >= 2)
-    .map((route) => ({
-      type: 'Feature' as const,
-      properties: {
-        color: getEngineerColor(route.engineer_id),
-        engineer_id: route.engineer_id,
-        engineer_name: route.engineer_name,
-      },
-      geometry: {
-        type: 'LineString' as const,
-        coordinates: route.geometry!.coordinates as [number, number][],
-      },
-    }))
-
-  const bounds = new LngLatBounds()
-  features.forEach((f) => {
-    if (
-      selectedRoutes.value.length === 0 ||
-      selectedRoutes.value.includes(f.properties.engineer_id)
-    ) {
-      f.geometry.coordinates.forEach((c) => bounds.extend(c))
-    }
-  })
-  map.fitBounds(bounds, { padding: 40 })
-
-  source.setData({ type: 'FeatureCollection', features })
-}
-
-const renderRoutes = () => {
-  if (!map || !isOptimized.value) return
-
-  clearMarkers()
-
-  routes.value.forEach((route) => {
-    const color = selectedRoutes.value.includes(route.engineer_id)
-      ? getEngineerColor(route.engineer_id)
-      : '#888888'
-
-    route.stops.forEach((stop, index) => {
-      if (stop.longitude === null || stop.latitude === null) return
-
-      markers.push(
-        getOptimizedMarker(
-          color,
-          stop.task_id,
-          `${route.engineer_name} (#${index + 1})`,
-          stop.arrival_time,
-          stop.service_start_time,
-          stop.service_end_time,
-          stop.travel_time_from_previous,
-          stop.distance_from_previous_km.toFixed(2),
-          stop.longitude,
-          stop.latitude,
-        ),
-      )
-    })
-  })
-
-  renderRouteLines()
-}
-
 const renderTasks = () => {
-  if (!map || isOptimized.value) return
+  if (!map) return
 
   clearMarkers()
 
   tasks.value.forEach((task) => {
     if (task.latitude === null || task.longitude === null) return
+    const getTaskRoute = (task: Task): EngineerRoute | null => {
+      for (const route of routes.value) {
+        if (route.stops.map((item) => item.task_id).includes(task.id)) {
+          return route
+        }
+      }
+      return null
+    }
 
-    markers.push(
-      getNotOptimizedMarker(
-        '#888888',
-        task.id,
-        task.required_skill,
-        task.duration_minutes,
-        task.window_start,
-        task.window_end,
-        task.priority,
-        task.longitude,
-        task.latitude,
-      ),
-    )
+    const getRouteTaskStop = (task: Task, route: EngineerRoute): RouteStop | null => {
+      const stops = route.stops.filter((r) => r.task_id === task.id)
+      return stops[0] ? stops[0] : null
+    }
+
+    const getRouteTaskStopIndex = (route: EngineerRoute, stop: RouteStop): number => {
+      for (let i = 0; i < route.stops.length; i++) {
+        const routeStopTaskId = route.stops[i]?.task_id
+        if (stop.task_id === routeStopTaskId) return i
+      }
+      return 0
+    }
+
+    const taskRoute = getTaskRoute(task)
+    const taskRouteStop = taskRoute ? getRouteTaskStop(task, taskRoute) : null
+    const taskRouteStopIndex =
+      taskRoute && taskRouteStop ? getRouteTaskStopIndex(taskRoute, taskRouteStop) : null
+
+    const getTaskColor = (task: Task): string => {
+      if (routes.value.length === 0) return '#888888'
+      for (const route of routes.value) {
+        const engineerColor = getEngineerColor(route.engineer_id)
+        if (route.stops.map((item) => item.task_id).includes(task.id)) {
+          if (selectedRoutes.value.includes(route.engineer_id)) return engineerColor
+          return '#888888'
+        }
+      }
+      return '#888888'
+    }
+    if (!taskRoute) {
+      markers.push(
+        getNotOptimizedMarker(
+          getTaskColor(task),
+          task.id,
+          task.required_skill,
+          task.duration_minutes,
+          task.window_start,
+          task.window_end,
+          task.priority,
+          task.longitude,
+          task.latitude,
+        ),
+      )
+    } else if (taskRouteStop && taskRouteStopIndex) {
+      markers.push(
+        getOptimizedMarker(
+          getTaskColor(task),
+          taskRouteStop.task_id,
+          `${taskRoute.engineer_name} (#${taskRouteStopIndex + 1})`,
+          taskRouteStop.arrival_time,
+          taskRouteStop.service_start_time,
+          taskRouteStop.service_end_time,
+          taskRouteStop.travel_time_from_previous,
+          taskRouteStop.distance_from_previous_km.toFixed(2),
+          Number(taskRouteStop.longitude),
+          Number(taskRouteStop.latitude),
+        ),
+      )
+    }
   })
 }
 
@@ -266,18 +245,13 @@ watch(
   },
 )
 
-watch(() => [...selectedRoutes.value], renderRoutes)
+watch(() => [...selectedRoutes.value], renderTasks)
 
-watch(isOptimized, (val) => {
+watch(isOptimized, () => {
   if (!map) return
-  if (val) {
-    renderRoutes()
-  } else {
-    const source = map.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
-    source?.setData({ type: 'FeatureCollection', features: [] })
-    clearMarkers()
-    renderTasks()
-  }
+  const source = map.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
+  source?.setData({ type: 'FeatureCollection', features: [] })
+  renderTasks()
 })
 
 onBeforeUnmount(() => {
@@ -301,5 +275,6 @@ onBeforeUnmount(() => {
   width: 100% !important;
   height: calc(100vh - 66px - 24px - 110px) !important;
   min-height: 292px !important;
+  max-height: 100vw;
 }
 </style>

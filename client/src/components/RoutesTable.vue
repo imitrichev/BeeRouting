@@ -2,11 +2,12 @@
 import BasicCard from '@/templates/BasicCard.vue'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import { computed, ref } from 'vue'
-import type { EngineerRoute } from '@/types/entities.ts'
+import type { EngineerRoute, RouteStop } from '@/types/entities.ts'
 import { getVehicleTypeTranslation } from '@/utils/translations.ts'
 import { getEngineerColor } from '@/utils/map.ts'
 import IconButton from '@/templates/IconButton.vue'
-
+import StopExplanationDialog from '@/components/modals/StopExplanationDialog.vue'
+import ReasignmentDialog from '@/components/modals/ReasignmentDialog.vue'
 interface IProps {
   loading: boolean
 }
@@ -30,29 +31,76 @@ function isSelected(item: EngineerRoute) {
 }
 
 const routeHeaders = [
-  { title: 'Показать на карте', key: 'select', width: 100 },
-  { title: '#', key: 'index', width: 60, sortable: false },
-  { title: 'Инженер', key: 'engineer_name', width: 200 },
-  { title: 'Транспорт', key: 'vehicle_type', width: 150 },
-  { title: 'Остановок', key: 'stops_length', width: 50 },
-  { title: 'Дистанция', key: 'total_distance_km', width: 100 },
-  { title: 'Время в пути', key: 'total_travel_minutes', width: 50 },
-  { title: 'Действия', key: 'actions', width: 100, sortable: false },
+  { title: 'Показать на карте', key: 'select', width: 100, sortable: false, align: 'start' },
+  { title: '#', key: 'index', width: 60, sortable: false, align: 'center' },
+  { title: 'Инженер', key: 'engineer_name', width: 100, sortable: false, align: 'center' },
+  { title: 'Транспорт', key: 'vehicle_type', width: 100, sortable: false, align: 'center' },
+  { title: 'Остановок', key: 'stops_length', width: 50, sortable: false, align: 'center' },
+  { title: 'Дистанция', key: 'total_distance_km', width: 100, sortable: false, align: 'center' },
+  {
+    title: 'Время в пути',
+    key: 'total_travel_minutes',
+    width: 50,
+    sortable: false,
+    align: 'center',
+  },
 ]
 
 const stopHeaders = [
-  { title: '#', key: 'index', width: 60, sortable: false },
-  { title: 'Задача', key: 'task_id', width: 160 },
-  { title: 'Прибытие', key: 'arrival_time', width: 140 },
-  { title: 'Начало', key: 'service_start_time', width: 140 },
-  { title: 'Окончание', key: 'service_end_time', width: 140 },
-  { title: 'В пути от пред.', key: 'travel_time_from_previous', width: 160 },
-  { title: 'Расстояние от пред.', key: 'distance_from_previous_km', width: 180 },
-  { title: 'Координаты', key: 'coordinates', width: 200, sortable: false },
+  { title: '#', key: 'index', width: 60, sortable: false, align: 'center' },
+  { title: 'Заявка', key: 'task_id', width: 160, sortable: false, align: 'center' },
+  { title: 'Прибытие', key: 'arrival_time', width: 140, sortable: false, align: 'center' },
+  { title: 'Начало', key: 'service_start_time', width: 140, sortable: false, align: 'center' },
+  { title: 'Окончание', key: 'service_end_time', width: 140, sortable: false, align: 'center' },
+  {
+    title: 'В пути от пред.',
+    key: 'travel_time_from_previous',
+    width: 160,
+    sortable: false,
+    align: 'center',
+  },
+  {
+    title: 'Расстояние от пред.',
+    key: 'distance_from_previous_km',
+    width: 180,
+    sortable: false,
+    align: 'center',
+  },
+  { title: 'Координаты', key: 'coordinates', width: 100, sortable: false, align: 'center' },
+  { title: 'Действия', key: 'actions', width: 100, sortable: false, align: 'center' },
 ]
 
 const formatKm = (v: number) => `${v.toFixed(2)} км`
 const formatMin = (v: number) => `${v.toFixed(0)} мин`
+
+const explanationDialogOpened = ref<boolean>(false)
+const reassignmentDialogOpened = ref<boolean>(false)
+const selectedStop = ref<RouteStop | null>(null)
+const selectedRoute = ref<EngineerRoute | null>(null)
+
+const openExplanationDialog = (stop: RouteStop, route: EngineerRoute) => {
+  selectedStop.value = stop
+  selectedRoute.value = route
+  explanationDialogOpened.value = true
+}
+
+const closeExplanationDialog = () => {
+  explanationDialogOpened.value = false
+  selectedStop.value = null
+  selectedRoute.value = null
+}
+
+const openReassignmentDialog = (stop: RouteStop, route: EngineerRoute) => {
+  selectedStop.value = stop
+  selectedRoute.value = route
+  reassignmentDialogOpened.value = true
+}
+
+const closeReassignmentDialog = () => {
+  reassignmentDialogOpened.value = false
+  selectedStop.value = null
+  selectedRoute.value = null
+}
 </script>
 
 <template>
@@ -67,7 +115,6 @@ const formatMin = (v: number) => `${v.toFixed(0)} мин`
       :items="routes.filter((item) => item.stops.length)"
       item-value="engineer_id"
       show-expand
-      expand-strategy="single"
       density="comfortable"
       :headers="routeHeaders"
     >
@@ -95,29 +142,18 @@ const formatMin = (v: number) => `${v.toFixed(0)} мин`
       <template #item.total_travel_minutes="{ item }">
         {{ formatMin(item.total_travel_minutes) }}
       </template>
-      <template #item.actions="{ item }">
-        <icon-button icon="info" color="blue" tooltip-text="Причины назначения" />
-        <icon-button
-          icon="transfer_within_a_station"
-          color="warning"
-          tooltip-text="Переназначить исполнителя"
-        />
-      </template>
 
       <template #expanded-row="{ columns, item }">
         <tr>
-          <td :colspan="columns.length" class="pa-0">
-            <v-card flat color="#EEE" class="px-3 py-4">
-              <v-card-text class="pt-0 pl-1 text-body-large font-weight-bold">
-                Остановки маршрута ({{ item.stops.length }})
-              </v-card-text>
-
+          <td :colspan="columns.length" class="pa-0" style="background: lightgray !important">
+            <basic-card title="Остановки маршрута" class="ma-3">
               <v-data-table-virtual
                 class="stops-table"
                 :headers="stopHeaders"
                 :items="item.stops"
                 density="compact"
                 item-value="task_id"
+                style="min-width: 1000px !important"
               >
                 <template #item.index="{ index }">
                   {{ index + 1 }}
@@ -137,12 +173,39 @@ const formatMin = (v: number) => `${v.toFixed(0)} мин`
                   </span>
                   <span v-else>—</span>
                 </template>
+                <template #item.actions="props">
+                  <v-row no-gutters class="text-no-wrap justify-center">
+                    <icon-button
+                      icon="info"
+                      color="blue"
+                      tooltip-text="Причины назначения"
+                      @click="openExplanationDialog(props.item, item)"
+                    />
+                    <icon-button
+                      icon="transfer_within_a_station"
+                      color="warning"
+                      tooltip-text="Переназначить исполнителя"
+                      @click="openReassignmentDialog(props.item, item)"
+                    />
+                  </v-row>
+                </template>
               </v-data-table-virtual>
-            </v-card>
+            </basic-card>
           </td>
         </tr>
       </template>
     </v-data-table-virtual>
+    <stop-explanation-dialog
+      :opened="explanationDialogOpened"
+      :stop="selectedStop"
+      :route="selectedRoute"
+      @close="closeExplanationDialog"
+    />
+    <reasignment-dialog
+      :opened="reassignmentDialogOpened"
+      :task-id="selectedStop ? selectedStop.task_id : null"
+      @close="closeReassignmentDialog"
+    />
   </basic-card>
 </template>
 

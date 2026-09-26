@@ -45,8 +45,10 @@
   }
 }
 
-.location-subtitle {
-  white-space: normal !important;
-  overflow: visible !important;
-  text-overflow: clip !important;
+.border-bottom {
+  border-bottom: 1px solid lightgrey;
+}
+
+.border-top {
+  border-top: 1px solid lightgrey;
 }
