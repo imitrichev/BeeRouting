@@ -5,6 +5,7 @@ import { computed, ref } from 'vue'
 import type { EngineerRoute } from '@/types/entities.ts'
 import { getVehicleTypeTranslation } from '@/utils/translations.ts'
 import { getEngineerColor } from '@/utils/map.ts'
+import IconButton from '@/templates/IconButton.vue'
 
 interface IProps {
   loading: boolean
@@ -31,11 +32,12 @@ function isSelected(item: EngineerRoute) {
 const routeHeaders = [
   { title: 'Показать на карте', key: 'select', width: 100 },
   { title: '#', key: 'index', width: 60, sortable: false },
-  { title: 'Инженер', key: 'engineer_name', width: 220 },
-  { title: 'Транспорт', key: 'vehicle_type', width: 180 },
-  { title: 'Остановок', key: 'stops_length', width: 120 },
-  { title: 'Дистанция', key: 'total_distance_km', width: 140 },
-  { title: 'Время в пути', key: 'total_travel_minutes', width: 160 },
+  { title: 'Инженер', key: 'engineer_name', width: 200 },
+  { title: 'Транспорт', key: 'vehicle_type', width: 150 },
+  { title: 'Остановок', key: 'stops_length', width: 50 },
+  { title: 'Дистанция', key: 'total_distance_km', width: 100 },
+  { title: 'Время в пути', key: 'total_travel_minutes', width: 50 },
+  { title: 'Действия', key: 'actions', width: 100, sortable: false },
 ]
 
 const stopHeaders = [
@@ -59,6 +61,7 @@ const formatMin = (v: number) => `${v.toFixed(0)} мин`
       <v-skeleton-loader type="list-item-two-line" />
     </template>
     <v-data-table-virtual
+      v-if="!props.loading"
       v-model="selected"
       class="routes-table"
       :items="routes.filter((item) => item.stops.length)"
@@ -92,11 +95,19 @@ const formatMin = (v: number) => `${v.toFixed(0)} мин`
       <template #item.total_travel_minutes="{ item }">
         {{ formatMin(item.total_travel_minutes) }}
       </template>
+      <template #item.actions="{ item }">
+        <icon-button icon="info" color="blue" tooltip-text="Причины назначения" />
+        <icon-button
+          icon="transfer_within_a_station"
+          color="warning"
+          tooltip-text="Переназначить исполнителя"
+        />
+      </template>
 
       <template #expanded-row="{ columns, item }">
         <tr>
           <td :colspan="columns.length" class="pa-0">
-            <v-card flat color="#DDD" class="px-3 py-4">
+            <v-card flat color="#EEE" class="px-3 py-4">
               <v-card-text class="pt-0 pl-1 text-body-large font-weight-bold">
                 Остановки маршрута ({{ item.stops.length }})
               </v-card-text>

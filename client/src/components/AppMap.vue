@@ -186,7 +186,14 @@ const renderRouteLines = () => {
     }))
 
   const bounds = new LngLatBounds()
-  features.forEach((f) => f.geometry.coordinates.forEach((c) => bounds.extend(c)))
+  features.forEach((f) => {
+    if (
+      selectedRoutes.value.length === 0 ||
+      selectedRoutes.value.includes(f.properties.engineer_id)
+    ) {
+      f.geometry.coordinates.forEach((c) => bounds.extend(c))
+    }
+  })
   map.fitBounds(bounds, { padding: 40 })
 
   source.setData({ type: 'FeatureCollection', features })

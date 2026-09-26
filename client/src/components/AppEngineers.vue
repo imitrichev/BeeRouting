@@ -25,8 +25,7 @@ const getSubtitle = (item: Engineer): string => {
     <template #loading>
       <v-skeleton-loader type="list-item-two-line" />
     </template>
-    <template #toolbarAppend> </template>
-    <v-list class="overflow-list" density="compact">
+    <v-list v-if="!props.loading" class="overflow-list" density="compact">
       <v-list-group v-for="item in engineers" :key="item.id">
         <template #activator="{ props: activatorProps }">
           <v-list-item v-bind="activatorProps" :title="item.name" :subtitle="getSubtitle(item)">

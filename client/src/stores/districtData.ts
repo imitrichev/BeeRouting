@@ -75,7 +75,9 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     )
     if (response.isSuccess) {
       districtData.value = response.data
-      selectedRoutes.value = getRoutes.value.map((r) => r.engineer_id)
+      selectedRoutes.value = getRoutes.value
+        .filter((route) => !!route.stops.length)
+        .map((r) => r.engineer_id)
       loadingDistrictData.value = false
     }
   }
@@ -100,7 +102,11 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     )
     if (response.isSuccess) {
       districtData.value = response.data
-      selectedRoutes.value = getRoutes.value.map((r) => r.engineer_id)
+      selectedRoutes.value = getRoutes.value
+        .filter((route) => !!route.stops.length)
+        .map((r) => r.engineer_id)
+
+      console.log(selectedRoutes.value)
     }
 
     loadingOptimization.value = false

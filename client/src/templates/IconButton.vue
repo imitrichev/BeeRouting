@@ -26,12 +26,13 @@ const componentProps = withDefaults(defineProps<IProps>(), {
         v-bind="props"
         :icon="componentProps.icon"
         :class="componentProps.class"
-        :color="componentProps.color"
         size="40"
         flat
         :loading="componentProps.loading"
         @click="emit('click')"
-      />
+      >
+        <v-icon :color="componentProps.color">{{ componentProps.icon }}</v-icon>
+      </v-btn>
     </template>
   </v-tooltip>
 </template>

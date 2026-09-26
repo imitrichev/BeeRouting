@@ -39,8 +39,17 @@ onMounted(() => {
               </v-col>
             </v-row>
             <v-row no-gutters v-if="districtDataStore.isOptimized">
-              <v-col cols="12" class="mb-3">
+              <v-col cols="12" md="6" :class="display.mdAndUp.value ? 'pr-3' : ''" class="mb-3">
                 <optimization-metrics
+                  :loading="
+                    selectorsStore.loadingTerritories ||
+                    districtDataStore.loadingDistrictData ||
+                    districtDataStore.loadingOptimization
+                  "
+                />
+              </v-col>
+              <v-col cols="12" md="6" class="mb-3">
+                <unassigned-tasks
                   :loading="
                     selectorsStore.loadingTerritories ||
                     districtDataStore.loadingDistrictData ||
@@ -50,15 +59,6 @@ onMounted(() => {
               </v-col>
               <v-col cols="12" class="mb-3">
                 <routes-table
-                  :loading="
-                    selectorsStore.loadingTerritories ||
-                    districtDataStore.loadingDistrictData ||
-                    districtDataStore.loadingOptimization
-                  "
-                />
-              </v-col>
-              <v-col cols="12" class="mb-3">
-                <unassigned-tasks
                   :loading="
                     selectorsStore.loadingTerritories ||
                     districtDataStore.loadingDistrictData ||

@@ -21,14 +21,13 @@ const unassigned = computed<UnassignedTask[]>(() => districtDataStore.getUnassig
     </template>
 
     <v-alert
-      v-if="unassigned.length === 0"
-      type="success"
-      class="d-flex align-center justify-center text-medium-emphasis py-4 rounded-0"
+      v-if="unassigned.length === 0 && !props.loading"
+      class="d-flex align-center justify-center text-medium-emphasis py-4 rounded-0 data-height alert-height"
     >
       Все заявки успешно распределены
     </v-alert>
 
-    <v-list v-else class="overflow-list" density="compact">
+    <v-list v-else-if="!props.loading" class="overflow-list data-height" density="compact">
       <v-list-item
         v-for="item in unassigned"
         :key="item.task_id"
@@ -40,7 +39,17 @@ const unassigned = computed<UnassignedTask[]>(() => districtDataStore.getUnassig
 </template>
 
 <style scoped lang="scss">
-.overflow-list {
-  min-height: unset !important;
+.data-height {
+  height: calc(72px * 4) !important;
+  min-height: calc(72px * 4) !important;
+  max-height: calc(72px * 4) !important;
+}
+
+.alert-height {
+  @media (max-width: 839px) {
+    height: auto !important;
+    min-height: unset !important;
+    max-height: unset !important;
+  }
 }
 </style>

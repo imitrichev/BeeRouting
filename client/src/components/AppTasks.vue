@@ -36,7 +36,7 @@ const getPriorityColor = (priority: string): string => {
       <v-skeleton-loader type="list-item-two-line" />
     </template>
 
-    <v-list class="overflow-list" density="compact">
+    <v-list v-if="!props.loading" class="overflow-list" density="compact">
       <v-list-group v-for="item in tasks" :key="item.id">
         <template #activator="{ props: activatorProps }">
           <v-list-item v-bind="activatorProps" :title="item.id" :subtitle="getSubtitle(item)" />
