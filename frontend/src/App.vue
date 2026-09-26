@@ -230,10 +230,22 @@ function unassignedTaskMessage(taskId: string): string {
   return unassignedReasonByTask.value.get(taskId) ?? 'Ожидает распределения'
 }
 
-// Обе кнопки доступны по одному правилу: в текущем плане есть хотя бы одна
-// заявка без исполнителя. Метрика предыдущего result здесь не подходит:
-// только что созданной заявки в старом результате ещё нет.
-const canDistributeTasks = computed(() => unassignedTaskCount.value > 0)
+// Последний result перечисляет каждую рассмотренную solver заявку: она либо
+// попала в маршрут, либо возвращена в unassigned с явной причиной. Повторный
+// щелчок по Baseline/OR-Tools без изменения входных данных не нужен.
+const evaluatedTaskIds = computed(() => {
+  const ids = new Set(assignedTaskIds.value)
+  result.value?.unassigned.forEach((item) => ids.add(item.task_id))
+  return ids
+})
+
+// Обе кнопки снова становятся доступны только после появления новой
+// неназначенной заявки, отсутствующей в предыдущем результате. При создании
+// заявки старый result сохраняется, поэтому новая ID естественно попадёт сюда.
+const pendingDistributionTasks = computed(() =>
+  unassignedTasks.value.filter((task) => !evaluatedTaskIds.value.has(task.id)),
+)
+const canDistributeTasks = computed(() => pendingDistributionTasks.value.length > 0)
 
 // Количество в шапке метрик должно учитывать текущий dataset. После создания
 // новой заявки старый OptimizationResult намеренно сохраняется, поэтому его
