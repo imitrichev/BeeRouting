@@ -49,7 +49,11 @@ def sync_entities(territory, service):
         reference = next((e for e in engineers.values() if e.name == original.get('reference_crew')), None)
         operational_status = item.status.value
         operational_engineer_id = planned_engineers.get(item.id, item.current_engineer_id)
-        if service._result is None and not has_existing_plan:
+        if (
+            service._result is None
+            and not has_existing_plan
+            and not getattr(service, "_manual_status_update", False)
+        ):
             operational_status = TaskStatus.NOT_SENT.value
             operational_engineer_id = None
         Job.objects.update_or_create(territory=territory, job_id=item.id, defaults={

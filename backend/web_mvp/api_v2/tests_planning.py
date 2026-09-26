@@ -1,11 +1,12 @@
 """Минимальные API-тесты end-to-end MVP."""
 
+from dataclasses import replace
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from backend.optimization import CoordinateRoutingProvider
+from backend.optimization import CoordinateRoutingProvider, TaskStatus
 from backend.web_mvp.api_v2.models import Territory
 from backend.web_mvp.api_v2.services import import_dataset, restore, save
 from backend.web_mvp.api_v2.services.optimization import OptimizationWebService
@@ -104,15 +105,11 @@ class OptimizationApiTests(TestCase):
         self.assertIn("metrics", response.data["result"])
         self.assertIn("routes", response.data["result"])
         self.assertIn("unassigned", response.data["result"])
-        # В исходном dataset только 14 заявок требуют текущего планирования:
-        # COMPLETED и CANCELLED остаются в таблице, но не строятся повторно.
-        self.assertEqual(response.data["result"]["metrics"]["assigned_task_count"], 14)
+        # При первой загрузке контрольные статусы не являются оперативным
+        # состоянием: solver получает все 56 неназначенных заявок.
+        self.assertEqual(response.data["result"]["metrics"]["assigned_task_count"], 56)
         tasks = response.data["dataset"]["tasks"]
-        self.assertEqual(sum(task["is_plannable"] for task in tasks), 14)
-        # При уважении статусов API сохраняет 10 обычных ASSIGNED и 4 уже
-        # начатые заявки; в новом полном режиме frontend отправляет
-        # ignore_task_statuses=True и блокировок не будет.
-        self.assertEqual(sum(task["assignment_locked"] for task in tasks), 14)
+        self.assertEqual(sum(task["is_plannable"] for task in tasks), 56)
         self.assertTrue(
             any(
                 route["geometry"] is not None
@@ -137,6 +134,124 @@ class OptimizationApiTests(TestCase):
             + response.data["result"]["metrics"]["unassigned_task_count"],
             56,
         )
+
+    def test_equipment_checkbox_controls_router_constraint_through_api(self) -> None:
+        """API применяет запас роутеров только при consider_equipment=true."""
+        service = restore(self.territory)
+        service._scenario = replace(
+            service._scenario,
+            engineers=tuple(
+                replace(engineer, available_router_count=0)
+                for engineer in service._scenario.engineers
+            ),
+            tasks=tuple(
+                replace(task, required_router_count=1)
+                for task in service._scenario.tasks
+            ),
+        )
+        service._problem = None
+        service._result = None
+        save(self.territory, service)
+
+        ignored = self.client.post(
+            "/api/v2/optimize/",
+            {
+                "solver": "ortools",
+                "consider_equipment": False,
+                "preserve_assigned_tasks": True,
+            },
+            format="json",
+        )
+        self.assertEqual(ignored.status_code, 200, ignored.data)
+        self.assertGreater(
+            ignored.data["result"]["metrics"]["assigned_task_count"],
+            0,
+        )
+        self.assertFalse(ignored.data["planning_options"]["consider_equipment"])
+
+        # Возвращаем чистую очередь перед вторым запуском, чтобы сравнить
+        # ровно один и тот же набор заявок с включённой галочкой.
+        service = restore(self.territory)
+        service._scenario = replace(
+            service._scenario,
+            tasks=tuple(
+                replace(task, status=TaskStatus.NOT_SENT, current_engineer_id=None)
+                for task in service._scenario.tasks
+            ),
+        )
+        service._problem = None
+        service._result = None
+        save(self.territory, service)
+
+        enforced = self.client.post(
+            "/api/v2/optimize/",
+            {
+                "solver": "ortools",
+                "consider_equipment": True,
+                "preserve_assigned_tasks": True,
+            },
+            format="json",
+        )
+        self.assertEqual(enforced.status_code, 200, enforced.data)
+        self.assertEqual(
+            enforced.data["result"]["metrics"]["assigned_task_count"],
+            0,
+        )
+        self.assertTrue(enforced.data["planning_options"]["consider_equipment"])
+        self.assertTrue(
+            all(
+                item["reason_code"] == "missing_equipment"
+                for item in enforced.data["result"]["unassigned"]
+            )
+        )
+
+    def test_status_dropdown_updates_operational_status_without_replanning(self) -> None:
+        """Статус назначенной заявки меняется отдельной операцией без solver."""
+        initial = self.client.post(
+            "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
+        )
+        self.assertEqual(initial.status_code, 200, initial.data)
+        route = next(route for route in initial.data["result"]["routes"] if route["stops"])
+        task_id = route["stops"][0]["task_id"]
+        engineer_id = route["engineer_id"]
+        route_ids_before = [item["task_id"] for item in route["stops"]]
+
+        response = self.client.patch(
+            "/api/v2/jobs/status/",
+            {"task_id": task_id, "status": "IN_PROGRESS"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        task = next(item for item in response.data["dataset"]["tasks"] if item["id"] == task_id)
+        self.assertEqual(task["status"], "IN_PROGRESS")
+        route_after = next(
+            route for route in response.data["result"]["routes"]
+            if route["engineer_id"] == engineer_id
+        )
+        self.assertEqual(
+            route_ids_before,
+            [item["task_id"] for item in route_after["stops"]],
+        )
+
+    def test_unassigned_status_can_only_be_cancelled(self) -> None:
+        """Неназначенную заявку нельзя вручную перевести в рабочий статус."""
+        task_id = self.client.get("/api/v2/dataset/").data["dataset"]["tasks"][0]["id"]
+        rejected = self.client.patch(
+            "/api/v2/jobs/status/",
+            {"task_id": task_id, "status": "ASSIGNED"},
+            format="json",
+        )
+        self.assertEqual(rejected.status_code, 422, rejected.data)
+
+        cancelled = self.client.patch(
+            "/api/v2/jobs/status/",
+            {"task_id": task_id, "status": "CANCELLED"},
+            format="json",
+        )
+        self.assertEqual(cancelled.status_code, 200, cancelled.data)
+        task = next(item for item in cancelled.data["dataset"]["tasks"] if item["id"] == task_id)
+        self.assertEqual(task["status"], "CANCELLED")
 
     def test_reference_status_sync_keeps_current_engineers(self) -> None:
         """Синхронизация статусов не подменяет рабочее назначение control crew."""
@@ -228,7 +343,7 @@ class OptimizationApiTests(TestCase):
             for task in response.data["dataset"]["tasks"]
             if task["status"] == "ASSIGNED"
         ]
-        self.assertEqual(len(assigned_tasks), 10)
+        self.assertEqual(len(assigned_tasks), 56)
         self.assertTrue(all(task["assignment_locked"] for task in assigned_tasks))
 
         route_by_task = {
@@ -260,7 +375,7 @@ class OptimizationApiTests(TestCase):
         self.assertFalse(any(task["assignment_locked"] for task in response.data["dataset"]["tasks"]))
 
     def test_task_can_be_created_through_api(self) -> None:
-        """Новая заявка появляется в dataset и сбрасывает старый результат."""
+        """Новая заявка появляется в dataset как NOT_SENT."""
         response = self.client.post(
             "/api/v2/tasks/",
             {
@@ -282,6 +397,77 @@ class OptimizationApiTests(TestCase):
         self.assertEqual(created["duration_minutes"], 30)
         self.assertEqual(created["priority"], "NORMAL")
         self.assertEqual(created["status"], "NOT_SENT")
+
+    def test_created_task_preserves_plan_and_baseline_only_adds_pending(self) -> None:
+        """Создание не стирает план, а Baseline дополняет его новой заявкой."""
+        self._assert_incremental_assignment("baseline", "NEW-BASELINE")
+
+    def test_created_task_preserves_plan_and_ortools_only_adds_pending(self) -> None:
+        """OR-Tools фиксирует прежних исполнителей и назначает новую заявку."""
+        self._assert_incremental_assignment("ortools", "NEW-ORTOOLS")
+
+    def _assert_incremental_assignment(self, solver: str, task_id: str) -> None:
+        """Проверяет общий контракт инкрементального запуска solver."""
+        initial = self.client.post(
+            "/api/v2/optimize/",
+            {"solver": "ortools", "preserve_assigned_tasks": True},
+            format="json",
+        )
+        self.assertEqual(initial.status_code, 200, initial.data)
+        assignment_before = {
+            stop["task_id"]: route["engineer_id"]
+            for route in initial.data["result"]["routes"]
+            for stop in route["stops"]
+        }
+
+        created = self.client.post(
+            "/api/v2/tasks/",
+            {
+                "id": task_id,
+                "latitude": 55.75,
+                "longitude": 37.61,
+                "work_type": "LOCAL",
+                "window_start": "09:00",
+                "window_end": "22:00",
+                "required_router_count": 0,
+            },
+            format="json",
+        )
+        self.assertEqual(created.status_code, 201, created.data)
+        # Ответ создания содержит прежний результат без скрытого перезапуска.
+        self.assertEqual(
+            assignment_before,
+            {
+                stop["task_id"]: route["engineer_id"]
+                for route in created.data["result"]["routes"]
+                for stop in route["stops"]
+            },
+        )
+        new_task = next(
+            task for task in created.data["dataset"]["tasks"] if task["id"] == task_id
+        )
+        self.assertEqual(new_task["status"], "NOT_SENT")
+        self.assertIsNone(new_task["current_engineer_id"])
+
+        updated = self.client.post(
+            "/api/v2/optimize/",
+            {
+                "solver": solver,
+                "ignore_task_statuses": False,
+                "preserve_assigned_tasks": True,
+            },
+            format="json",
+        )
+        self.assertEqual(updated.status_code, 200, updated.data)
+        assignment_after = {
+            stop["task_id"]: route["engineer_id"]
+            for route in updated.data["result"]["routes"]
+            for stop in route["stops"]
+        }
+        self.assertIn(task_id, assignment_after)
+        self.assertTrue(
+            all(assignment_after[old_id] == engineer_id for old_id, engineer_id in assignment_before.items())
+        )
 
     def test_duplicate_task_is_rejected(self) -> None:
         """API не позволяет затереть существующую заявку тем же ID."""

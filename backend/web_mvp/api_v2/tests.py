@@ -166,14 +166,8 @@ class PersistentPlanningTests(TestCase):
         self.assertNotIn('TEMPORARY', task_ids)
         self.assertNotIn('result', reloaded.response)
 
-    def test_control_distribution_derives_time_from_in_progress_windows(self):
-        """Контрольный режим берёт позднейшее начало окна активной работы."""
-        expected = max(
-            task.window_start
-            for task in restore(self.territory)._scenario.tasks
-            if task.status.value == 'IN_PROGRESS'
-        )
-
+    def test_initial_distribution_does_not_infer_control_planning_time(self):
+        """Первый расчёт не переносит время из контрольного распределения."""
         response = self.client.post(
             self.url('optimize'),
             {'ignore_task_statuses': False},
@@ -181,4 +175,8 @@ class PersistentPlanningTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200, response.data)
-        self.assertEqual(response.data['planning_options']['planning_time'], expected)
+        self.assertIsNone(response.data['planning_options']['planning_time'])
+        self.assertEqual(
+            response.data['result']['metrics']['assigned_task_count'],
+            56,
+        )

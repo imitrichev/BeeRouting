@@ -2,6 +2,7 @@
 from contextvars import ContextVar
 from functools import wraps
 from django.db import transaction
+from django.utils import timezone
 from rest_framework.decorators import api_view as drf_api_view
 from rest_framework.response import Response
 from backend.optimization import RoutingProviderError
@@ -60,7 +61,14 @@ def api_view(methods):
                             RescheduleEvent.objects.create(
                                 territory=territory,
                                 event_type=request.data['event_type'],
-                                time=request.data['planning_time'],
+                                # Снимок времени больше не вводится на форме;
+                                # событие всё равно получает фактическое время.
+                                time=(
+                                    request.data.get('planning_time')
+                                    or timezone.localtime().time().replace(
+                                        second=0, microsecond=0
+                                    )
+                                ),
                                 payload=dict(request.data),
                             )
                     return response

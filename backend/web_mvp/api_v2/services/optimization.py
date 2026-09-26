@@ -291,6 +291,14 @@ def save(territory, service):
     territory.revision += 1
     territory.save()
     sync_entities(territory, service)
+    # При отсутствии маршрута исходный JSON скрывает reference-статусы.
+    # После ручной смены статуса нужно сразу отразить operational-состояние
+    # из ORM, иначе диспетчер увидит старое «не отправлена» до нового GET.
+    response['dataset'] = public_dataset_response(territory).get(
+        'dataset', response.get('dataset')
+    )
+    territory.response = response
+    territory.save(update_fields=['response'])
     ReassignmentProposal.objects.filter(territory=territory).delete()
     return response
 
@@ -316,7 +324,24 @@ def public_dataset_response(territory):
     for task in dataset.get("tasks", []):
         if isinstance(task, dict):
             task["status"] = "NOT_SENT"
+            task["current_engineer_id"] = None
             task["assignment_locked"] = False
+    operational_jobs = {
+        job.job_id: job
+        for job in territory.jobs.only("job_id", "current_status", "current_engineer_id")
+    }
+    for task in dataset.get("tasks", []):
+        if not isinstance(task, dict):
+            continue
+        job = operational_jobs.get(task.get("id"))
+        if job is None:
+            continue
+        task["status"] = job.current_status
+        task["current_engineer_id"] = (
+            job.current_engineer.engineer_id
+            if job.current_engineer_id
+            else None
+        )
     return response
 
 
@@ -325,6 +350,21 @@ def import_dataset(content, filename):
     """Регистрирует район при первой загрузке; повторная загрузка сохраняет его план."""
     payload = json.loads(content.decode('utf-8'))
     scenario = load_json_scenario_data(payload)
+    # Контрольные статусы и исполнители в официальном JSON описывают
+    # исторический план организаторов, а не текущее состояние диспетчера.
+    # Новый район всегда начинается с чистой очереди заявок. Исходный payload
+    # сохраняется в Territory.source_payload и остаётся доступен benchmark.
+    scenario = replace(
+        scenario,
+        tasks=tuple(
+            replace(
+                task,
+                status=TaskStatus.NOT_SENT,
+                current_engineer_id=None,
+            )
+            for task in scenario.tasks
+        ),
+    )
     code = payload.get('territory_code') or scenario.scenario_name
     territory = Territory.objects.filter(code=code).first()
     if territory is not None and territory.state:
