@@ -71,6 +71,32 @@ const parseErrorResponse = async (response: Response): Promise<RequestErrorObjec
   }
 }
 
+export const executeWithMinDuration = async <T>(
+  fn: () => Promise<T>,
+  minTime: number = 200,
+): Promise<T> => {
+  const startTime = Date.now()
+  let result: T
+  let error: unknown
+
+  try {
+    result = await fn()
+  } catch (e) {
+    error = e
+  }
+
+  const elapsed = Date.now() - startTime
+  if (elapsed < minTime) {
+    await new Promise((resolve) => setTimeout(resolve, minTime - elapsed))
+  }
+
+  if (error !== undefined) {
+    throw error
+  }
+
+  return result!
+}
+
 export const sendRequest = async <T>(
   urlEntry: UrlEntry,
   data: object | FormData = {},
@@ -92,19 +118,23 @@ export const sendRequest = async <T>(
   let response
   try {
     if (urlEntry.method === 'GET') {
-      response = await fetch(url, {
-        method: urlEntry.method,
-        headers,
-        signal,
-      })
+      response = await executeWithMinDuration(() =>
+        fetch(url, {
+          method: urlEntry.method,
+          headers,
+          signal,
+        }),
+      )
     } else {
       const body: BodyInit = urlEntry.isFormData ? (data as FormData) : JSON.stringify(data)
-      response = await fetch(url, {
-        method: urlEntry.method,
-        headers,
-        body,
-        signal,
-      })
+      response = await executeWithMinDuration(() =>
+        fetch(url, {
+          method: urlEntry.method,
+          headers,
+          body,
+          signal,
+        }),
+      )
     }
   } catch (e) {
     if (e instanceof DOMException && e.name === 'AbortError') {
@@ -155,30 +185,4 @@ export const sendRequest = async <T>(
       data: { _error: 'Не удалось обработать ответ сервера' },
     }
   }
-}
-
-export const executeWithMinDuration = async <T>(
-  fn: () => Promise<T>,
-  minTime: number = 1000,
-): Promise<T> => {
-  const startTime = Date.now()
-  let result: T
-  let error: unknown
-
-  try {
-    result = await fn()
-  } catch (e) {
-    error = e
-  }
-
-  const elapsed = Date.now() - startTime
-  if (elapsed < minTime) {
-    await new Promise((resolve) => setTimeout(resolve, minTime - elapsed))
-  }
-
-  if (error !== undefined) {
-    throw error
-  }
-
-  return result!
 }

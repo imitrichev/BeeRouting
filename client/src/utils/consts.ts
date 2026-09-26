@@ -14,6 +14,7 @@ export const VEHICLE_TYPE_MAP = {
   CAR: 'Автомобиль',
   PUBLIC_TRANSPORT: 'Общ. транспорт',
   WALK: 'Пешком',
+  BICYCLE: 'Велосипед',
 } as const
 
 export const SKILL_TYPE_MAP = {

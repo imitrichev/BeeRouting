@@ -5,53 +5,24 @@ import AppTasks from '@/components/AppTasks.vue'
 import AppEngineers from '@/components/AppEngineers.vue'
 import AppMap from '@/components/AppMap.vue'
 import { useDisplay } from 'vuetify/framework'
-import { useDefaultDatasetStore, useOptimizationStore } from '@/stores'
-import { storeToRefs } from 'pinia'
-import { computed, onMounted, watch } from 'vue'
-import type { Engineer, Task } from '@/types/entities.ts'
-import { useCurrentStateStore } from '@/stores/state.ts'
+import { onMounted } from 'vue'
+import { useSelectorsStore } from '@/stores/selectors.ts'
+import { useDistrictDataStore } from '@/stores/districtData.ts'
+import OptimizationMetrics from '@/components/OptimizationMetrics.vue'
+import RoutesTable from '@/components/RoutesTable.vue'
+import UnassignedTasks from '@/components/UnassignedTasks.vue'
 
 const display = useDisplay()
-const defaultDatasetStore = useDefaultDatasetStore()
-const optimizationStore = useOptimizationStore()
-const stateStore = useCurrentStateStore()
-const { getLoading, getData } = storeToRefs(defaultDatasetStore)
-
-const getEngineers = computed((): Engineer[] => {
-  if (!getData.value) return []
-  return getData.value.dataset.engineers
-})
-
-const getTasks = computed((): Task[] => {
-  if (!getData.value) return []
-  return getData.value.dataset.tasks
-})
-
-watch(
-  () => getData.value,
-  (nVal) => {
-    if (!nVal) return
-    stateStore.setTasks(nVal.dataset.tasks)
-    stateStore.setEngineers(nVal.dataset.engineers)
-    stateStore.setScenarioName(nVal.dataset.scenario_name)
-    stateStore.setSourceName(nVal.dataset.source_name)
-  },
-)
-
-watch(
-  () => optimizationStore.getData,
-  (nVal) => {
-    if (!nVal) return
-    stateStore.setOptimizationResult(nVal.result)
-    stateStore.setTasks(nVal.dataset.tasks)
-    stateStore.setEngineers(nVal.dataset.engineers)
-    stateStore.setSourceName(nVal.dataset.source_name)
-    stateStore.setScenarioName(nVal.dataset.scenario_name)
-  },
-)
+const selectorsStore = useSelectorsStore()
+const districtDataStore = useDistrictDataStore()
 
 onMounted(() => {
-  defaultDatasetStore.execute({})
+  selectorsStore.loadTerritories()
+  selectorsStore.loadDistricts()
+  selectorsStore.loadPriorities()
+  selectorsStore.loadSkills()
+  selectorsStore.loadTimeNorms()
+  selectorsStore.loadVehicleTypes()
 })
 </script>
 
@@ -64,7 +35,36 @@ onMounted(() => {
           <v-col cols="12">
             <v-row no-gutters>
               <v-col cols="12" class="mb-3">
-                <control-row :loading="getLoading" />
+                <control-row :loading="selectorsStore.loadingTerritories" />
+              </v-col>
+            </v-row>
+            <v-row no-gutters v-if="districtDataStore.isOptimized">
+              <v-col cols="12" class="mb-3">
+                <optimization-metrics
+                  :loading="
+                    selectorsStore.loadingTerritories ||
+                    districtDataStore.loadingDistrictData ||
+                    districtDataStore.loadingOptimization
+                  "
+                />
+              </v-col>
+              <v-col cols="12" class="mb-3">
+                <routes-table
+                  :loading="
+                    selectorsStore.loadingTerritories ||
+                    districtDataStore.loadingDistrictData ||
+                    districtDataStore.loadingOptimization
+                  "
+                />
+              </v-col>
+              <v-col cols="12" class="mb-3">
+                <unassigned-tasks
+                  :loading="
+                    selectorsStore.loadingTerritories ||
+                    districtDataStore.loadingDistrictData ||
+                    districtDataStore.loadingOptimization
+                  "
+                />
               </v-col>
             </v-row>
             <v-row no-gutters>
@@ -76,7 +76,11 @@ onMounted(() => {
                     class="mb-3 fill-height"
                     :class="display.mdAndUp.value ? 'pr-3' : ''"
                   >
-                    <app-tasks :loading="getLoading" :tasks="getTasks" />
+                    <app-tasks
+                      :loading="
+                        selectorsStore.loadingTerritories || districtDataStore.loadingDistrictData
+                      "
+                    />
                   </v-col>
                   <v-col
                     cols="12"
@@ -84,12 +88,20 @@ onMounted(() => {
                     class="mb-3 fill-height"
                     :class="display.mdAndUp.value ? 'pr-3' : ''"
                   >
-                    <app-engineers :loading="getLoading" :engineers="getEngineers" />
+                    <app-engineers
+                      :loading="
+                        selectorsStore.loadingTerritories || districtDataStore.loadingDistrictData
+                      "
+                    />
                   </v-col>
                 </v-row>
               </v-col>
               <v-col cols="12" md="7" xl="6" class="mb-3">
-                <app-map :loading="getLoading" />
+                <app-map
+                  :loading="
+                    selectorsStore.loadingTerritories || districtDataStore.loadingDistrictData
+                  "
+                />
               </v-col>
             </v-row>
           </v-col>
@@ -105,13 +117,57 @@ onMounted(() => {
   padding-top: 12px !important;
   height: calc(100vh - 66px) !important;
   max-height: calc(100vh - 66px) !important;
-  min-width: unset !important;
-  width: unset !important;
-  overflow-x: hidden !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow-x: auto;
   overflow-y: auto !important;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--v-theme-on-surface), 0.2) transparent;
+
+  // WebKit (Chrome, Edge, Safari)
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--v-theme-on-surface), 0.2);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.2s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(var(--v-theme-on-surface), 0.4);
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+.main-container :deep(.v-row),
+.main-container :deep(.v-col),
+.main-container :deep(.v-card),
+.main-container :deep(.v-table__wrapper) {
+  min-width: 0;
 }
 
 .row-container {
   max-width: 1920px !important;
+  width: 100%;
 }
 </style>

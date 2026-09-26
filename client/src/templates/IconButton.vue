@@ -7,6 +7,7 @@ interface IProps {
   loading?: boolean
   tooltipText?: string
   icon?: string
+  color?: string
   class?: string
 }
 
@@ -25,6 +26,7 @@ const componentProps = withDefaults(defineProps<IProps>(), {
         v-bind="props"
         :icon="componentProps.icon"
         :class="componentProps.class"
+        :color="componentProps.color"
         size="40"
         flat
         :loading="componentProps.loading"

@@ -14,7 +14,13 @@ const props = withDefaults(defineProps<IProps>(), {
 
 <template>
   <v-card class="elevation-2 rounded-lg">
-    <v-toolbar density="compact" v-if="!!props.title || props.showToolbar">
+    <v-toolbar
+      density="compact"
+      class="elevation-0"
+      border
+      color="white"
+      v-if="!!props.title || props.showToolbar"
+    >
       <v-card-title v-if="props.title" class="my-1">
         {{ props.title }}
       </v-card-title>
@@ -23,7 +29,7 @@ const props = withDefaults(defineProps<IProps>(), {
       </template>
     </v-toolbar>
     <slot name="loading" v-if="props.loading" />
-    <slot v-else />
+    <slot />
   </v-card>
 </template>
 

@@ -1,6 +1,6 @@
 .overflow-list {
   overflow-y: auto;
-  max-height: calc((100vh - 66px - 100px) / 2 - 70px) !important;
+  max-height: calc((100vh - 66px - 100px) - 80px) !important;
   min-height: 240px !important;
 
   // Firefox
@@ -38,6 +38,10 @@
 
   &::-webkit-scrollbar-corner {
     background: transparent;
+  }
+
+  @media (max-width: 1544px) {
+    max-height: calc((100vh - 66px - 100px) / 2 - 71px) !important;
   }
 }
 

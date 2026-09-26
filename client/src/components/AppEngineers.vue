@@ -1,28 +1,19 @@
 <script setup lang="ts">
 import BasicCard from '@/templates/BasicCard.vue'
 import type { Engineer } from '@/types/entities.ts'
-import { ref, watch } from 'vue'
-import { useCurrentStateStore } from '@/stores/state.ts'
+import { computed } from 'vue'
 import { getEngineerColor } from '@/utils/map.ts'
 import { getSkillTranslation, getVehicleTypeTranslation } from '@/utils/translations.ts'
+import { useDistrictDataStore } from '@/stores/districtData.ts'
 
 interface IProps {
   loading: boolean
-  engineers: Engineer[]
 }
 
 const props = defineProps<IProps>()
 
-const store = useCurrentStateStore()
-
-const engineers = ref<Engineer[]>([])
-
-watch(
-  () => [...props.engineers],
-  (nVal) => {
-    engineers.value = nVal
-  },
-)
+const districtDataStore = useDistrictDataStore()
+const engineers = computed(() => districtDataStore.getDistrictEngineers)
 
 const getSubtitle = (item: Engineer): string => {
   return `${getVehicleTypeTranslation(item.vehicle_type)} • ${item.available_from} - ${item.available_until}`
@@ -36,12 +27,7 @@ const getSubtitle = (item: Engineer): string => {
     </template>
     <template #toolbarAppend> </template>
     <v-list class="overflow-list" density="compact">
-      <v-list-group
-        v-for="item in engineers"
-        :key="item.id"
-        :model-value="store.getExpandedEngineerIds.includes(item.id)"
-        @update:model-value="() => store.toggleExpandedEngineer(item.id)"
-      >
+      <v-list-group v-for="item in engineers" :key="item.id">
         <template #activator="{ props: activatorProps }">
           <v-list-item v-bind="activatorProps" :title="item.name" :subtitle="getSubtitle(item)">
             <template #prepend>

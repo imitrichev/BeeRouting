@@ -1,24 +1,22 @@
 <script setup lang="ts">
 import BasicCard from '@/templates/BasicCard.vue'
 import type { Task } from '@/types/entities.ts'
-import { useCurrentStateStore } from '@/stores/state.ts'
-import { storeToRefs } from 'pinia'
 import {
   getPriorityTranslation,
   getSkillTranslation,
   getVehicleTypeTranslation,
 } from '@/utils/translations.ts'
+import { computed } from 'vue'
+import { useDistrictDataStore } from '@/stores/districtData.ts'
 
 interface IProps {
   loading: boolean
-  tasks: Task[]
 }
 
 const props = defineProps<IProps>()
 
-const store = useCurrentStateStore()
-
-const { getTasks } = storeToRefs(store)
+const districtDataStore = useDistrictDataStore()
+const tasks = computed(() => districtDataStore.getDistrictTasks)
 
 const getSubtitle = (item: Task): string => {
   const skill = getSkillTranslation(item.required_skill)
@@ -39,12 +37,7 @@ const getPriorityColor = (priority: string): string => {
     </template>
 
     <v-list class="overflow-list" density="compact">
-      <v-list-group
-        v-for="item in getTasks"
-        :key="item.id"
-        :model-value="store.getExpandedTaskIds.includes(item.id)"
-        @update:model-value="() => store.toggleExpandedTask(item.id)"
-      >
+      <v-list-group v-for="item in tasks" :key="item.id">
         <template #activator="{ props: activatorProps }">
           <v-list-item v-bind="activatorProps" :title="item.id" :subtitle="getSubtitle(item)" />
         </template>
