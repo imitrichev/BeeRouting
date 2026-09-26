@@ -174,6 +174,13 @@ python3 -m venv .venv
 .venv/bin/python backend/web_mvp/manage.py migrate
 ```
 
+Корневой `requirements.txt` — агрегатор: он подключает
+`backend/optimization/requirements.txt` и `backend/web_mvp/requirements.txt`.
+`requirements-dev.txt` дополнительно подключает dev-зависимости ядра, включая
+pytest. Timefold намеренно вынесен в отдельный
+`backend/optimization/requirements-timefold.txt`, потому что требует отдельную
+совместимую версию Python и JVM.
+
 ### Backend
 
 ```bash
@@ -191,6 +198,22 @@ npm run dev
 ```
 
 Откройте <http://127.0.0.1:5173>.
+
+### Локальные Nominatim и OpenTripPlanner
+
+Если нужен локальный геокодер и routing-сервис, установите Docker и выполните
+из корня:
+
+```bash
+bash install.sh
+```
+
+Скрипт скачивает OSM/GTFS при отсутствии файлов, собирает граф OTP и запускает
+`routing/docker-compose.yml`: Nominatim доступен на `8080`, OpenTripPlanner —
+на `8081`. Сборка графа и загрузка карты занимают заметное время и требуют
+несколько гигабайт памяти. После запуска генератор JSON использует локальный
+Nominatim автоматически; OSRM для дорожных матриц настраивается отдельно через
+`OSRM_BASE_URL` или транспортные `OSRM_*_BASE_URL`.
 
 Для разработки JSON-проверки в окне объяснения доступны по умолчанию. Для
 режима без технического JSON можно запустить backend так:

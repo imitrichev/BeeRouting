@@ -1,18 +1,19 @@
 # BeeRouting web MVP
 
-Минимальный end-to-end сценарий состоит из независимого Optimization Engine,
-Django/DRF API и Vue 3 интерфейса.
+Web-слой состоит из Django/DRF API v2 и Vue 3 + TypeScript + Vite + Vuetify
+frontend с MapLibre. Optimization Engine остаётся независимым от Django.
 
 ## Запуск
 
-В первом терминале из корня проекта:
+Из корня проекта:
 
 ```bash
-.venv/bin/pip install -r backend/web_mvp/requirements.txt
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python backend/web_mvp/manage.py migrate
 .venv/bin/python backend/web_mvp/manage.py runserver 8000
 ```
 
-Во втором терминале:
+В отдельном терминале:
 
 ```bash
 cd frontend
@@ -20,64 +21,77 @@ npm install
 npm run dev
 ```
 
-Откройте <http://localhost:5173>.
+Откройте <http://127.0.0.1:5173>.
 
-## Режим интерфейса
-
-Режим задаётся переменной `BEEROUTING_MODE`:
+Для production-сборки frontend:
 
 ```bash
-# Локальная разработка: JSON-проверки доступны во всплывающем объяснении.
-BEEROUTING_MODE=developer .venv/bin/python backend/web_mvp/manage.py runserver 8000
-
-# Production: JSON-проверки не передаются frontend через API.
-BEEROUTING_MODE=production .venv/bin/python backend/web_mvp/manage.py runserver 8000
+npm run build
 ```
 
-По умолчанию используется `developer`. Значение можно записать в корневой
-файл `.env`; Django загружает его при запуске.
+Текущий `runserver` предназначен для локальной демонстрации. Для сервера
+нужно отдавать `frontend/dist` через web-сервер, а Django запускать через
+WSGI/ASGI-сервер.
 
-На панели оптимизации переключатель «Игнорировать статусы и перераспределить
-все заявки» включён по умолчанию. В этом режиме строится новый план по всему
-dataset. Если выключить переключатель, `CANCELLED` и `COMPLETED` исключаются,
-`EN_ROUTE` и `IN_PROGRESS` фиксируются, а обычные `ASSIGNED` сохраняются за
-текущими инженерами.
+## Сценарий интерфейса
+
+1. `Перезагрузить официальный датасет` заново импортирует Восток,
+   Юго-восток и Югоцентр и очищает сохранённые планы.
+2. Выпадающий список переключает район без нового расчёта.
+3. `Baseline (жадный алгоритм)` показывает эталон из ТЗ.
+4. `Распределить заявки (OR-Tools)` запускает основной solver.
+5. Флажок `Учитывать оборудование` включает расход роутеров.
+6. `Статусы заявок из контрольного распределения` копирует только статусы из
+   контрольных данных и не меняет текущих инженеров рабочего плана.
+7. `Сценарии перепланирования...` открывает аварийную заявку, отмену заявки и
+   недоступность инженера.
+8. Создание и ручное переназначение проходят через API-сервис с проверкой
+   адреса, навыка, транспорта, оборудования, окна и смены.
+9. Кнопка-облачко у заявки показывает объяснение. В developer-режиме виден
+   исходный JSON двухступенчатой проверки, в production-режиме — только
+   человекочитаемый текст.
 
 ## API
 
-- `GET /api/v2/dataset/official/` — открыть `Югоцентр.json`;
-- `POST /api/v2/dataset/upload/` — загрузить JSON в поле `file`;
-- `POST /api/v2/optimize/` — запустить OR-Tools для текущего dataset;
-- `POST /api/v2/explain/<task_id>/` — получить объяснение назначения заявки.
+Все маршруты находятся под `/api/v2/`. Устаревшего `/api/v1/` в текущем
+проекте нет. Полный список endpoint’ов — в [`docs/api-v2.md`](../../docs/api-v2.md).
 
-По умолчанию API использует `OSRMRoutingProvider`. Он запрашивает у OSRM
-матрицу времени и расстояний через [Table service](https://project-osrm.org/docs/v5.22.0/api/v2/#table-service),
-а после оптимизации — дорожную GeoJSON-геометрию каждого маршрута через
-[Route service](https://project-osrm.org/docs/v5.22.0/api/v2/#route-service).
-Адрес сервера можно изменить переменной окружения:
+По умолчанию API использует OSRM: Table service для матриц и Route service для
+линий маршрутов. Переменные окружения:
 
 ```bash
-OSRM_BASE_URL=http://localhost:5000 OSRM_TIMEOUT_SECONDS=15 \
-  .venv/bin/python backend/web_mvp/manage.py runserver 8000
+OSRM_BASE_URL=http://localhost:5000 \
+OSRM_TIMEOUT_SECONDS=15 \
+.venv/bin/python backend/web_mvp/manage.py runserver 8000
 ```
 
-Матрицы запрашиваются с учётом транспорта инженера. Для автомобиля по
-умолчанию используется `router.project-osrm.org`, для пешего режима —
-`routing.openstreetmap.de/routed-foot`, для велосипеда —
-`routing.openstreetmap.de/routed-bike`. У этих двух endpoints путь API всё
-равно содержит профиль `driving`, но графы дорог на серверах разные. Это важно:
-один только параметр `/v1/walking` на автомобильном публичном OSRM не делает
-маршрут пешим.
+Для разных типов транспорта поддерживаются отдельные `OSRM_*_BASE_URL` и
+профили. Публичный OSRM обычно не знает расписание общественного транспорта;
+`PUBLIC_TRANSPORT` поэтому использует автомобильный граф и коэффициент времени
+2.0. Пеший и велосипедный режимы требуют подходящих профилей/endpoint’ов.
 
-Стандартный OSRM не моделирует расписания и пересадки общественного
-транспорта, поэтому `PUBLIC_TRANSPORT` использует автомобильный граф, а время
-умножается на 2.0. Это явное приближение. Для собственного многопрофильного
-сервера задайте `OSRM_BASE_URL`; тогда приложение будет использовать его
-профили `driving`, `walking` и `cycling`. При необходимости endpoints и имена
-профилей можно переопределить переменными `OSRM_WALK_BASE_URL`,
-`OSRM_BICYCLE_BASE_URL`, `OSRM_CAR_BASE_URL`, `OSRM_WALK_PROFILE`,
-`OSRM_BICYCLE_PROFILE` и аналогичными переменными для остальных режимов.
+Без сети тесты используют детерминированный `CoordinateRoutingProvider`.
 
-Для полностью воспроизводимых тестов и работы без сети API-тесты переключают
-`use_osrm = False`; в этом режиме используется детерминированный
-`CoordinateRoutingProvider`.
+## Режимы статусов
+
+API по умолчанию учитывает текущие статусы. `CANCELLED` и `COMPLETED` не
+планируются, `EN_ROUTE` и `IN_PROGRESS` фиксируются, `ASSIGNED` можно
+переносить, `NOT_SENT` и `OVERDUE` можно назначать. Для полного нового плана
+frontend передаёт `ignore_task_statuses=true`.
+
+Сложная логика находится в `api_v2/services`, а views/serializers только
+валидируют запрос и вызывают сервис. Сохранение результата синхронизирует ORM
+и domain-снимок района.
+
+## Developer и production
+
+```bash
+# JSON-проверки доступны в окне объяснения.
+BEEROUTING_MODE=developer .venv/bin/python backend/web_mvp/manage.py runserver 8000
+
+# Технический JSON не передаётся frontend.
+BEEROUTING_MODE=production .venv/bin/python backend/web_mvp/manage.py runserver 8000
+```
+
+LLM получает только структурированные факты от Optimization Engine и не
+принимает решений о назначении.

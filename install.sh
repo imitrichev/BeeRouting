@@ -1,5 +1,7 @@
 #install requirements in .venv and .venv timefold
-#
+#  python3 -m venv .venv
+#  .venv/bin/python -m pip install -r requirements-dev.txt
+#  .venv/bin/python backend/web_mvp/manage.py migrate
 #
 
 # download maps/schedules
@@ -128,7 +130,11 @@ if [ ! -f "$OTP_GRAPH" ]; then
         opentripplanner/opentripplanner:2.10.0 \
         --build --save
 
-    echo "OTP graph built."
+    if [ $? -eq 0 ]; then
+      echo "OTP graph building finished."
+    else
+      echo "OTP graph building failed."
+    fi
 else
     echo "OTP graph already exists. Skipping build."
 fi

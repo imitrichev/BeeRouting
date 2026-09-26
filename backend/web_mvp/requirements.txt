@@ -1,8 +1,10 @@
 # Web/API слой и его инфраструктурные зависимости.
--r ../optimization/requirements.txt
+# Зависимости математического ядра подключаются отдельно корневым
+# requirements.txt, чтобы этот файл не скрыто дублировал domain-зависимости.
 Django>=5.0,<6
 djangorestframework>=3.15,<4
 drf-spectacular==0.30.0
 drf-spectacular-extras==0.1.0
 requests>=2.31,<3
 python-dotenv>=1.0,<2
+django-filter==26.1
