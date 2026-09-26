@@ -58,12 +58,13 @@ def upload_dataset_view(request):
 
 @api_view(["POST"])
 def optimize_view(request: Request) -> Response:
-    """Запускает OR-Tools и возвращает маршруты, метрики и причины отказа."""
-    # Переключатель frontend передаёт только ignore_task_statuses. В режиме
+    """Запускает выбранный solver и возвращает маршруты и метрики."""
+    # Frontend передаёт solver вместе с режимом статусов. В режиме
     # уважения статусов обычные ASSIGNED должны сохраняться автоматически;
     # отдельный старый параметр оставлен для обратной совместимости API.
     preserve_assigned_tasks = request.data.get("preserve_assigned_tasks")
     ignore_task_statuses = request.data.get("ignore_task_statuses", False)
+    solver = request.data.get("solver", "ortools")
     planning_time = request.data.get("planning_time")
     consider_equipment = request.data.get("consider_equipment", False)
     state_serializer = OperationalStateSerializer(
@@ -90,14 +91,31 @@ def optimize_view(request: Request) -> Response:
             {"error": "consider_equipment должен быть bool."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+    if not isinstance(solver, str) or solver not in {"ortools", "baseline"}:
+        return Response(
+            {"error": "solver должен быть 'ortools' или 'baseline'."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     try:
         scenario, result = optimization_service.optimize_current(
             preserve_assigned_tasks=preserve_assigned_tasks,
             ignore_task_statuses=ignore_task_statuses,
+            solver=solver,
             planning_time=planning_time,
             operational_states=operational_states,
             consider_equipment=consider_equipment,
         )
     except (ValueError, RoutingProviderError) as exc:
         return Response({"error": str(exc)}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    return Response(optimization_service.serialize_response(scenario, result))
+
+
+@api_view(["POST"])
+def sync_reference_statuses_view(request: Request) -> Response:
+    """Синхронизирует только статусы с контрольным распределением.
+
+    Маршруты и текущие исполнители берутся из сохранённого рабочего плана;
+    ``reference_crew`` из контрольных данных намеренно не используется.
+    """
+    scenario, result = optimization_service.sync_statuses_from_reference()
     return Response(optimization_service.serialize_response(scenario, result))

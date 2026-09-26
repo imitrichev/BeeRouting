@@ -59,6 +59,7 @@ const result = ref<OptimizationResult | null>(null)
 const selectedFile = ref<File | null>(null)
 const loading = ref(false)
 const optimizing = ref(false)
+const syncingStatuses = ref(false)
 const errorMessage = ref('')
 const selectedEngineerId = ref('')
 const selectedEngineerIds = ref<string[]>([])
@@ -212,7 +213,8 @@ const assignedTaskIds = computed(() => {
   return ids
 })
 
-const canLoadControlDistribution = computed(() => Boolean(dataset.value) && !result.value)
+const canRunBaseline = computed(() => Boolean(dataset.value) && !result.value)
+const canSyncReferenceStatuses = computed(() => Boolean(result.value))
 const canDistributeTasks = computed(() => {
   if (!dataset.value) return false
   if (!result.value) return dataset.value.tasks.length > 0
@@ -365,24 +367,17 @@ async function uploadDataset() {
   }
 }
 
-function controlPlanningTime(): string {
-  const starts = dataset.value?.tasks
-    .filter((task) => task.status === 'IN_PROGRESS')
-    .map((task) => task.window_start)
-    .sort() ?? []
-  return starts.length ? starts[starts.length - 1] : ''
-}
-
-async function optimize(ignoreStatuses: boolean) {
+async function optimize(ignoreStatuses: boolean, solver: 'baseline' | 'ortools') {
   optimizing.value = true
   errorMessage.value = ''
   ignoreTaskStatuses.value = ignoreStatuses
-  planningTime.value = ignoreStatuses ? '' : controlPlanningTime()
+  planningTime.value = ''
   try {
     const response = await apiFetch('/api/v2/optimize/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        solver,
         ignore_task_statuses: ignoreStatuses,
         planning_time: !ignoreStatuses && planningTime.value
           ? planningTime.value
@@ -402,6 +397,32 @@ async function optimize(ignoreStatuses: boolean) {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось запустить оптимизацию'
   } finally {
     optimizing.value = false
+  }
+}
+
+async function syncReferenceStatuses(): Promise<void> {
+  syncingStatuses.value = true
+  errorMessage.value = ''
+  try {
+    const response = await apiFetch('/api/v2/sync-reference-statuses/', {
+      method: 'POST',
+    })
+    const payload = await readResponse(response)
+    dataset.value = payload.dataset
+    result.value = payload.result ?? null
+    // После синхронизации показываем актуальные статусы и назначения из
+    // текущего рабочего плана, а не исполнителей из контрольного CSV.
+    ignoreTaskStatuses.value = false
+    planningTime.value = ''
+    selectedEngineerId.value = ''
+    selectedEngineerIds.value = []
+    await refreshMap()
+  } catch (error) {
+    errorMessage.value = error instanceof Error
+      ? error.message
+      : 'Не удалось загрузить статусы из контрольного распределения'
+  } finally {
+    syncingStatuses.value = false
   }
 }
 
@@ -920,18 +941,27 @@ onBeforeUnmount(() => {
               color="secondary"
               variant="tonal"
               :loading="optimizing"
-              :disabled="!canLoadControlDistribution"
-              @click="optimize(false)"
+              :disabled="!canRunBaseline"
+              @click="optimize(true, 'baseline')"
             >
-              Контрольное распределение
+              Baseline (жадный алгоритм)
             </v-btn>
             <v-btn
               color="success"
               :loading="optimizing"
               :disabled="!canDistributeTasks"
-              @click="optimize(true)"
+              @click="optimize(true, 'ortools')"
             >
-              Распределить заявки
+              Распределить заявки (OR-Tools)
+            </v-btn>
+            <v-btn
+              color="info"
+              variant="tonal"
+              :loading="syncingStatuses"
+              :disabled="!canSyncReferenceStatuses"
+              @click="syncReferenceStatuses"
+            >
+              Статусы заявок из контрольного распределения
             </v-btn>
             <v-btn color="primary" variant="tonal" :disabled="!dataset" @click="createTaskOpen = true">
               Создать заявку
@@ -953,9 +983,6 @@ onBeforeUnmount(() => {
               </template>
               <template v-else>
                 {{ dataset.tasks.length }} заявок
-              </template>
-              <template v-if="result && !ignoreTaskStatuses && planningTime">
-                · Контрольное распределение на время {{ planningTime }}
               </template>
             </span>
           </v-card-text>

@@ -32,6 +32,7 @@ urlpatterns = [
     path("tasks/", views.create_task_view, name="create-task"),
     path("geocode/", views.geocode_address_view, name="geocode-address"),
     path("optimize/", views.optimize_view, name="optimize"),
+    path("sync-reference-statuses/", views.sync_reference_statuses_view, name="sync-reference-statuses"),
     path("replan/", views.replan_view, name="replan"),
     path("manual-reassignment/preview/", views.manual_reassignment_preview_view, name="manual-reassignment-preview"),
     path("manual-reassignment/confirm/", views.manual_reassignment_confirm_view, name="manual-reassignment-confirm"),

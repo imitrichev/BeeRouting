@@ -12,10 +12,12 @@ from typing import Any
 from backend.optimization import (
     CoordinateRoutingProvider,
     EngineerOperationalState,
+    EngineerRoute,
     JsonScenario,
     OptimizationProblem,
     OptimizationResult,
     OptimizerConfig,
+    GreedyBaselineOptimizer,
     ORToolsOptimizer,
     OSRMRoutingProvider,
     create_osrm_provider_from_environment,
@@ -133,13 +135,21 @@ class PlanningService:
         self,
         preserve_assigned_tasks: bool = False,
         ignore_task_statuses: bool = False,
+        solver: str = "ortools",
         planning_time: str | None = None,
         operational_states: tuple[EngineerOperationalState, ...] = (),
         initial_routes_by_engineer: dict[str, tuple[str, ...]] | None = None,
         reference_routes_by_engineer: dict[str, tuple[str, ...]] | None = None,
         consider_equipment: bool = False,
     ) -> tuple[JsonScenario, OptimizationResult]:
-        """Строит задачу и запускает OR-Tools для текущего dataset."""
+        """Строит задачу и запускает выбранный solver для текущего dataset.
+
+        ``baseline`` используется интерфейсом как простой первый расчёт. Он
+        получает ту же OptimizationProblem и возвращает тот же формат ответа,
+        что и OR-Tools, но не выполняет глобальный поиск.
+        """
+        if solver not in {"ortools", "baseline"}:
+            raise ValueError("solver должен быть 'ortools' или 'baseline'.")
         scenario = self.current_dataset()
         if not ignore_task_statuses and not planning_time:
             # Контрольный снимок относится к минимальному моменту, когда все
@@ -162,20 +172,238 @@ class PlanningService:
             planning_time=planning_time,
             operational_states=states,
         )
-        # Для интерактивного MVP оставляем короткий лимит поиска. Он является
-        # параметром OR-Tools, а не ограничением корректности hard constraints.
-        result = ORToolsOptimizer(
-            OptimizerConfig(time_limit_minutes=1)
-        ).optimize(
-            problem,
-            initial_routes_by_engineer=initial_routes_by_engineer,
-            reference_routes_by_engineer=reference_routes_by_engineer,
-        )
+        config = OptimizerConfig(time_limit_minutes=1)
+        if solver == "baseline":
+            result = GreedyBaselineOptimizer(config).optimize(problem)
+        else:
+            # Для интерактивного MVP оставляем короткий лимит поиска. Он
+            # является параметром OR-Tools, а не ограничением корректности
+            # hard constraints.
+            result = ORToolsOptimizer(config).optimize(
+                problem,
+                initial_routes_by_engineer=initial_routes_by_engineer,
+                reference_routes_by_engineer=reference_routes_by_engineer,
+            )
         self._validate_late_day_engineer_activation(scenario, result)
         self._problem = problem
         self._result = result
         self._manual_reassignment_proposals.clear()
         return scenario, result
+
+    def _project_result_to_scenario(self) -> None:
+        """Переносит фактические назначения из результата в текущий dataset.
+
+        JSON содержит контрольные статусы, но после расчёта источником
+        оперативного состояния становится построенный маршрут. Проекция
+        нужна для сохранения этого состояния в БД: последующее перепланирование
+        должно продолжаться от текущего плана, а не от reference-данных.
+        """
+        if self._scenario is None or self._result is None:
+            return
+
+        engineer_by_task = {
+            stop.task_id: engineer_id
+            for engineer_id, route in self._result.routes.items()
+            for stop in route.stops
+        }
+        tasks = []
+        for task in self._scenario.tasks:
+            engineer_id = engineer_by_task.get(task.id)
+            if engineer_id is not None:
+                # В полном утреннем расчёте reference_status игнорируется:
+                # даже заявка, которая была «В работе» в контрольном CSV,
+                # становится обычной ASSIGNED-заявкой нового плана. Иначе
+                # несколько исторических заявок могли оказаться «В работе»
+                # одновременно у одного инженера при следующем запросе.
+                status = TaskStatus.ASSIGNED
+                if not self._ignore_task_statuses and task.status in {
+                    TaskStatus.EN_ROUTE,
+                    TaskStatus.IN_PROGRESS,
+                    TaskStatus.OVERDUE,
+                }:
+                    status = task.status
+                tasks.append(
+                    replace(
+                        task,
+                        status=status,
+                        current_engineer_id=engineer_id,
+                    )
+                )
+            elif task.status in {TaskStatus.COMPLETED, TaskStatus.CANCELLED}:
+                tasks.append(replace(task, current_engineer_id=None))
+            else:
+                tasks.append(
+                    replace(
+                        task,
+                        status=TaskStatus.NOT_SENT,
+                        current_engineer_id=None,
+                    )
+                )
+        self._scenario = replace(self._scenario, tasks=tuple(tasks))
+
+    def sync_statuses_from_reference(self) -> tuple[JsonScenario, OptimizationResult]:
+        """Накладывает статусы контрольного CSV на текущий рабочий план.
+
+        Исполнитель берётся из текущего результата, а не из
+        ``reference_crew``. Для статусов ``NOT_SENT``, ``COMPLETED`` и
+        ``CANCELLED`` заявка удаляется из текущего маршрута. Новые заявки,
+        которых нет в контрольных данных, остаются без изменений.
+        """
+        if self._scenario is None or self._result is None or self._problem is None:
+            raise ValueError("Сначала постройте текущий план")
+
+        current_engineer_by_task = {
+            stop.task_id: engineer_id
+            for engineer_id, route in self._result.routes.items()
+            for stop in route.stops
+        }
+        terminal_statuses = {
+            TaskStatus.NOT_SENT,
+            TaskStatus.COMPLETED,
+            TaskStatus.CANCELLED,
+        }
+        started_engineers: set[str] = set()
+        tasks = []
+        keep_task_ids: set[str] = set()
+        for task in self._scenario.tasks:
+            reference_status = self._scenario.reference_status_by_task.get(task.id)
+            if reference_status is None:
+                tasks.append(task)
+                if task.id in current_engineer_by_task:
+                    keep_task_ids.add(task.id)
+                continue
+
+            current_engineer_id = current_engineer_by_task.get(
+                task.id,
+                task.current_engineer_id,
+            )
+            effective_status = reference_status
+            if reference_status in terminal_statuses:
+                current_engineer_id = None
+            elif (
+                reference_status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}
+                and current_engineer_id is None
+            ):
+                raise ValueError(
+                    f"Для заявки {task.id} из контрольного распределения "
+                    f"со статусом {reference_status.value} не найден текущий инженер."
+                )
+            elif reference_status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}:
+                # В domain-модели у одного инженера не может быть две
+                # одновременно начатые заявки. Если контрольный статус
+                # накладывается на текущий маршрут конфликтующим образом,
+                # сохраняем текущего исполнителя и переводим вторую заявку в
+                # ASSIGNED; её фактическое начало ещё должен подтвердить
+                # диспетчер.
+                assert current_engineer_id is not None
+                if current_engineer_id in started_engineers:
+                    effective_status = TaskStatus.ASSIGNED
+                else:
+                    started_engineers.add(current_engineer_id)
+                keep_task_ids.add(task.id)
+            else:
+                keep_task_ids.add(task.id)
+
+            tasks.append(
+                replace(
+                    task,
+                    status=effective_status,
+                    current_engineer_id=current_engineer_id,
+                )
+            )
+
+        self._scenario = replace(self._scenario, tasks=tuple(tasks))
+        self._ignore_task_statuses = False
+        self._preserve_assigned_tasks = False
+        self._result = self._filter_result_tasks(keep_task_ids)
+        return self._scenario, self._result
+
+    def _filter_result_tasks(self, keep_task_ids: set[str]) -> OptimizationResult:
+        """Удаляет из сохранённого результата заявки вне текущего плана."""
+        assert self._result is not None
+        assert self._problem is not None
+        tasks_by_id = {task.id: task for task in self._scenario.tasks}
+        engineers_by_id = {engineer.id: engineer for engineer in self._problem.engineers}
+        routes: dict[str, EngineerRoute] = {}
+        for engineer_id, route in self._result.routes.items():
+            engineer = engineers_by_id[engineer_id]
+            stops = tuple(
+                stop for stop in route.stops if stop.task_id in keep_task_ids
+            )
+            distance_by_stop: list[float] = []
+            travel_by_stop: list[int] = []
+            previous_location = self._problem.route_start_location(engineer)
+            for stop in stops:
+                task = tasks_by_id[stop.task_id]
+                distance_by_stop.append(
+                    self._problem.travel_distance_between(
+                        previous_location,
+                        task.location_id,
+                        engineer.vehicle_type,
+                    )
+                )
+                travel_by_stop.append(
+                    self._problem.travel_time_between(
+                        previous_location,
+                        task.location_id,
+                        engineer.vehicle_type,
+                    )
+                )
+                previous_location = task.location_id
+            routes[engineer_id] = replace(
+                route,
+                stops=stops,
+                total_travel_minutes=sum(travel_by_stop),
+                total_service_minutes=sum(
+                    tasks_by_id[stop.task_id].duration_minutes for stop in stops
+                ),
+                total_distance_km=sum(distance_by_stop),
+            )
+
+        distance_by_engineer = {
+            engineer_id: route.total_distance_km
+            for engineer_id, route in routes.items()
+        }
+        travel_time_by_engineer = {
+            engineer_id: route.total_travel_minutes
+            for engineer_id, route in routes.items()
+        }
+        total_distance = sum(distance_by_engineer.values())
+        total_travel_time = sum(travel_time_by_engineer.values())
+        used_engineers_count = sum(bool(route.stops) for route in routes.values())
+        config = OptimizerConfig(time_limit_minutes=1)
+        unassigned_penalty = sum(
+            config.unassigned_penalty * config.unassigned_multiplier(tasks_by_id[task_id])
+            for task_id in self._result.unassigned_task_ids
+            if task_id in tasks_by_id
+        )
+        used_engineers_penalty = used_engineers_count * config.used_engineers_penalty
+        distance_penalty = round(total_distance * config.distance_penalty_per_km)
+        travel_time_penalty = total_travel_time * config.travel_time_penalty_per_minute
+        return replace(
+            self._result,
+            routes=routes,
+            distance_by_engineer=distance_by_engineer,
+            total_distance=total_distance,
+            travel_time_by_engineer=travel_time_by_engineer,
+            total_travel_time=total_travel_time,
+            used_engineers_count=used_engineers_count,
+            assigned_task_count=sum(len(route.stops) for route in routes.values()),
+            unassigned_penalty=unassigned_penalty,
+            used_engineers_penalty=used_engineers_penalty,
+            distance_penalty=distance_penalty,
+            travel_time_penalty=travel_time_penalty,
+            total_service_minutes=sum(
+                route.total_service_minutes for route in routes.values()
+            ),
+            total_objective=(
+                unassigned_penalty
+                + used_engineers_penalty
+                + distance_penalty
+                + travel_time_penalty
+                + self._result.plan_disruption_penalty
+            ),
+        )
 
     def preview_manual_reassignment(
         self,

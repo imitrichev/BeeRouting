@@ -1,9 +1,13 @@
 """Синхронизация актуального domain-состояния с моделями коллеги."""
 from ..models import Engineer, Job, Skill, VehicleType, Priority, District
+from backend.optimization import TaskStatus
 
 
 def sync_entities(territory, service):
     """Сохраняет текущие сущности, не переписывая контрольное распределение."""
+    # При самой первой загрузке плана ещё нет. Контрольные статусы остаются
+    # в reference-полях, а operational-состояние в БД начинается с NOT_SENT.
+    has_existing_plan = bool((territory.response or {}).get("result"))
     engineers = {}
     for item in service._scenario.engineers:
         shift = next(a for a in service._scenario.availabilities if a.engineer_id == item.id)
@@ -43,6 +47,11 @@ def sync_entities(territory, service):
         if item.required_vehicle_type:
             vehicle, _ = VehicleType.objects.get_or_create(code=item.required_vehicle_type.value, defaults={'name':item.required_vehicle_type.value})
         reference = next((e for e in engineers.values() if e.name == original.get('reference_crew')), None)
+        operational_status = item.status.value
+        operational_engineer_id = planned_engineers.get(item.id, item.current_engineer_id)
+        if service._result is None and not has_existing_plan:
+            operational_status = TaskStatus.NOT_SENT.value
+            operational_engineer_id = None
         Job.objects.update_or_create(territory=territory, job_id=item.id, defaults={
             'request_id':original.get('request_id', 0), 'control_request_id':original.get('control_request_id'),
             'skill_required':skill, 'priority':priority, 'district':district,
@@ -52,6 +61,6 @@ def sync_entities(territory, service):
             'required_vehicle':vehicle, 'required_equipment':sorted(item.required_equipment),
             'required_router_count':item.required_router_count,
             'reference_status':original.get('reference_status','Не отправлена'), 'reference_engineer':reference,
-            'current_status':item.status.value, 'current_engineer':engineers.get(planned_engineers.get(item.id, item.current_engineer_id)),
+            'current_status':operational_status, 'current_engineer':engineers.get(operational_engineer_id),
             'gigabit':original.get('gigabit',False),
         })

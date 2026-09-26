@@ -6,9 +6,14 @@
 """
 import copy
 import json
+from dataclasses import replace
 from typing import Any
 from django.db import transaction
-from backend.optimization import load_json_scenario_data, create_osrm_provider_from_environment
+from backend.optimization import (
+    TaskStatus,
+    create_osrm_provider_from_environment,
+    load_json_scenario_data,
+)
 from .planning import PlanningService
 from ..models import (
     District, Engineer, Job, Priority, ReassignmentProposal, RescheduleEvent,
@@ -54,9 +59,46 @@ class OptimizationWebService(PlanningService):
         Рассчитанный ранее маршрут сбрасывается, поскольку после изменения
         входных сущностей он больше не является доказанно допустимым.
         """
-        self._scenario = load_json_scenario_data(
-            self._build_scenario_payload(territory)
-        )
+        scenario = load_json_scenario_data(self._build_scenario_payload(territory))
+        jobs_by_id = {
+            job.job_id: job
+            for job in territory.jobs.select_related("current_engineer")
+        }
+        status_aliases = {
+            "Не отправлена": TaskStatus.NOT_SENT,
+            "Отправлена": TaskStatus.NOT_SENT,
+            "Назначена": TaskStatus.ASSIGNED,
+            "В пути": TaskStatus.EN_ROUTE,
+            "В работе": TaskStatus.IN_PROGRESS,
+            "Выполнена": TaskStatus.COMPLETED,
+            "Отменена": TaskStatus.CANCELLED,
+            "Просрочена": TaskStatus.OVERDUE,
+        }
+        tasks = []
+        for task in scenario.tasks:
+            job = jobs_by_id.get(task.id)
+            if job is None:
+                tasks.append(task)
+                continue
+            raw_status = str(job.current_status or TaskStatus.NOT_SENT.value)
+            current_status = status_aliases.get(raw_status)
+            if current_status is None:
+                try:
+                    current_status = TaskStatus(raw_status)
+                except ValueError:
+                    current_status = TaskStatus.NOT_SENT
+            tasks.append(
+                replace(
+                    task,
+                    status=current_status,
+                    current_engineer_id=(
+                        job.current_engineer.engineer_id
+                        if job.current_engineer is not None
+                        else None
+                    ),
+                )
+            )
+        self._scenario = replace(scenario, tasks=tuple(tasks))
         self._territory_code = territory.code
         self._source_name = territory.source_name or territory.code
         self._problem = None
@@ -217,6 +259,10 @@ def restore(territory):
     for name, value in territory.state.items():
         if name in STATE_FIELDS:
             setattr(service, name, decode(value))
+    # Поддерживаем снимки, сохранённые до разделения reference и operational
+    # статусов: построенный маршрут является источником текущих назначений.
+    if service._result is not None:
+        service._project_result_to_scenario()
     if service._problem is not None:
         service.routing_provider = create_osrm_provider_from_environment(
             coordinates=service._scenario.location_coordinates,
@@ -227,6 +273,10 @@ def restore(territory):
 
 def save(territory, service):
     """Атомарно сохраняет модели ядра, матрицы, результат и геометрию."""
+    # Сначала переносим фактические назначения из результата в domain-снимок.
+    # Иначе после следующего HTTP-запроса restore снова прочитает статусы и
+    # исполнителей из контрольного JSON.
+    service._project_result_to_scenario()
     response = service.serialize_response(service._scenario, service._result)
     response['planning_options'] = {
         'ignore_task_statuses': service._ignore_task_statuses,

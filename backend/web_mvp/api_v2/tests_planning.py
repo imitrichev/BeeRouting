@@ -121,6 +121,82 @@ class OptimizationApiTests(TestCase):
             )
         )
 
+    def test_baseline_solver_is_available_through_the_planning_api(self) -> None:
+        """Baseline строит тот же результат через API, что и основной solver."""
+        response = self.client.post(
+            "/api/v2/optimize/",
+            {"solver": "baseline", "ignore_task_statuses": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertIn("metrics", response.data["result"])
+        self.assertIn("routes", response.data["result"])
+        self.assertEqual(
+            response.data["result"]["metrics"]["assigned_task_count"]
+            + response.data["result"]["metrics"]["unassigned_task_count"],
+            56,
+        )
+
+    def test_reference_status_sync_keeps_current_engineers(self) -> None:
+        """Синхронизация статусов не подменяет рабочее назначение control crew."""
+        initial = self.client.post(
+            "/api/v2/optimize/",
+            {"ignore_task_statuses": True},
+            format="json",
+        )
+        self.assertEqual(initial.status_code, 200, initial.data)
+        current_engineer_by_task = {
+            stop["task_id"]: route["engineer_id"]
+            for route in initial.data["result"]["routes"]
+            for stop in route["stops"]
+        }
+        scenario = restore(self.territory)._scenario
+        reference_status_by_task = {
+            task.id: scenario.reference_status_by_task[task.id].value
+            for task in scenario.tasks
+        }
+
+        response = self.client.post(
+            "/api/v2/sync-reference-statuses/",
+            {},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        tasks_by_id = {
+            task["id"]: task for task in response.data["dataset"]["tasks"]
+        }
+        route_engineer_by_task = {
+            stop["task_id"]: route["engineer_id"]
+            for route in response.data["result"]["routes"]
+            for stop in route["stops"]
+        }
+        for task_id, reference_status in reference_status_by_task.items():
+            if task_id not in current_engineer_by_task:
+                continue
+            if reference_status in {"CANCELLED", "COMPLETED", "NOT_SENT"}:
+                self.assertNotIn(task_id, route_engineer_by_task)
+            else:
+                self.assertEqual(
+                    route_engineer_by_task.get(task_id),
+                    current_engineer_by_task[task_id],
+                )
+                self.assertIn(
+                    tasks_by_id[task_id]["status"],
+                    {reference_status, "ASSIGNED"},
+                )
+
+    def test_unknown_solver_is_rejected(self) -> None:
+        """API не принимает случайное имя алгоритма."""
+        response = self.client.post(
+            "/api/v2/optimize/",
+            {"solver": "control"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+
     def test_control_distribution_reveals_source_statuses_after_planning(self) -> None:
         """После контрольного расчёта исходные operational статусы видны."""
         response = self.client.post(
@@ -232,6 +308,12 @@ class OptimizationApiTests(TestCase):
             format="json",
         )
         self.assertEqual(initial.status_code, 200)
+        # До проверки позднего сценария явно переносим operational-статусы
+        # из контрольного источника отдельной пользовательской операцией.
+        synced = self.client.post(
+            "/api/v2/sync-reference-statuses/", {}, format="json"
+        )
+        self.assertEqual(synced.status_code, 200, synced.data)
         created = self.client.post(
             "/api/v2/tasks/",
             {
@@ -309,7 +391,20 @@ class OptimizationApiTests(TestCase):
         initial = self.client.post(
             "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
         )
-        task_id = initial.data["result"]["routes"][0]["stops"][0]["task_id"]
+        synced = self.client.post(
+            "/api/v2/sync-reference-statuses/", {}, format="json"
+        )
+        self.assertEqual(synced.status_code, 200, synced.data)
+        before = {
+            task["id"]: task["status"]
+            for task in synced.data["dataset"]["tasks"]
+        }
+        task_id = next(
+            stop["task_id"]
+            for route in synced.data["result"]["routes"]
+            for stop in route["stops"]
+            if before[stop["task_id"]] == "ASSIGNED"
+        )
 
         response = self.client.post(
             "/api/v2/replan/",
@@ -326,6 +421,20 @@ class OptimizationApiTests(TestCase):
             for stop in route["stops"]
         }
         self.assertNotIn(task_id, planned_ids)
+        after = {
+            task["id"]: task["status"]
+            for task in response.data["dataset"]["tasks"]
+        }
+        for other_task_id, status_before in before.items():
+            if other_task_id == task_id:
+                continue
+            if status_before in {
+                "COMPLETED",
+                "CANCELLED",
+                "EN_ROUTE",
+                "IN_PROGRESS",
+            }:
+                self.assertEqual(after[other_task_id], status_before)
 
     def test_unavailable_engineer_receives_no_tasks(self) -> None:
         """Сценарий недоступности освобождает и запрещает маршрут инженера."""
