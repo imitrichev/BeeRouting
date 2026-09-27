@@ -853,6 +853,11 @@ def generate_dataset(
         _match_rows(synthetic_rows, control_rows, synthetic_path.name, control_path.name)
         if control_rows else [None] * len(synthetic_rows)
     )
+    # Порядок строк контрольного CSV задаёт порядок посещения внутри ручного
+    # плана. Храним его в JSON, чтобы benchmark больше не зависел от CSV.
+    control_sequence_by_row = {
+        id(row): sequence for sequence, row in enumerate(control_rows, start=1)
+    }
     if not engineers_path.exists():
         raise ValueError(f"Не найден обязательный справочник инженеров: {engineers_path}")
 
@@ -909,6 +914,9 @@ def generate_dataset(
                 # «Не отправлена» импортируется как TaskStatus.NOT_SENT.
                 "reference_status": (control or {}).get("Статус BK", "Не отправлена"),
                 "reference_crew": (control or {}).get("Бригада", ""),
+                "reference_sequence": (
+                    control_sequence_by_row[id(control)] if control else None
+                ),
                 "gigabit": synthetic.get("Гигабитное подключение", "").strip().lower() == "да",
             }
         )

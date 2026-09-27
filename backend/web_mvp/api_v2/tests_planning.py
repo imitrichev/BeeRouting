@@ -234,6 +234,25 @@ class OptimizationApiTests(TestCase):
             [item["task_id"] for item in route_after["stops"]],
         )
 
+    def test_assigned_task_can_be_marked_overdue(self) -> None:
+        """Просроченный статус допустим для заявки, уже находящейся в плане."""
+        initial = self.client.post(
+            "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
+        )
+        self.assertEqual(initial.status_code, 200, initial.data)
+        route = next(route for route in initial.data["result"]["routes"] if route["stops"])
+        task_id = route["stops"][0]["task_id"]
+
+        response = self.client.patch(
+            "/api/v2/jobs/status/",
+            {"task_id": task_id, "status": "OVERDUE"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        task = next(item for item in response.data["dataset"]["tasks"] if item["id"] == task_id)
+        self.assertEqual(task["status"], "OVERDUE")
+
     def test_unassigned_status_can_only_be_cancelled(self) -> None:
         """Неназначенную заявку нельзя вручную перевести в рабочий статус."""
         task_id = self.client.get("/api/v2/dataset/").data["dataset"]["tasks"][0]["id"]
@@ -253,20 +272,24 @@ class OptimizationApiTests(TestCase):
         task = next(item for item in cancelled.data["dataset"]["tasks"] if item["id"] == task_id)
         self.assertEqual(task["status"], "CANCELLED")
 
-    def test_reference_status_sync_keeps_current_engineers(self) -> None:
-        """Синхронизация статусов не подменяет рабочее назначение control crew."""
+    def test_reference_distribution_fully_reloads_json_plan(self) -> None:
+        """Контрольная кнопка отбрасывает изменения и загружает план JSON."""
         initial = self.client.post(
             "/api/v2/optimize/",
             {"ignore_task_statuses": True},
             format="json",
         )
         self.assertEqual(initial.status_code, 200, initial.data)
-        current_engineer_by_task = {
-            stop["task_id"]: route["engineer_id"]
-            for route in initial.data["result"]["routes"]
-            for stop in route["stops"]
-        }
         scenario = restore(self.territory)._scenario
+        reference_engineer_id_by_task = {
+            task.id: next(
+                engineer.id
+                for engineer in scenario.engineers
+                if engineer.name == scenario.reference_engineer_by_task[task.id]
+            )
+            for task in scenario.tasks
+            if scenario.reference_engineer_by_task.get(task.id)
+        }
         reference_status_by_task = {
             task.id: scenario.reference_status_by_task[task.id].value
             for task in scenario.tasks
@@ -288,19 +311,14 @@ class OptimizationApiTests(TestCase):
             for stop in route["stops"]
         }
         for task_id, reference_status in reference_status_by_task.items():
-            if task_id not in current_engineer_by_task:
-                continue
             if reference_status in {"CANCELLED", "COMPLETED", "NOT_SENT"}:
                 self.assertNotIn(task_id, route_engineer_by_task)
             else:
                 self.assertEqual(
                     route_engineer_by_task.get(task_id),
-                    current_engineer_by_task[task_id],
+                    reference_engineer_id_by_task[task_id],
                 )
-                self.assertIn(
-                    tasks_by_id[task_id]["status"],
-                    {reference_status, "ASSIGNED"},
-                )
+            self.assertEqual(tasks_by_id[task_id]["status"], reference_status)
 
     def test_unknown_solver_is_rejected(self) -> None:
         """API не принимает случайное имя алгоритма."""

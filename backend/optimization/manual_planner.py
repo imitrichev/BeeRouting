@@ -156,6 +156,8 @@ class ControlDataset:
     def plan(
         self,
         tasks: Mapping[str, Task] | None = None,
+        *,
+        sort_by_window: bool = True,
     ) -> ManualAssignmentPlan:
         """Преобразует строки CSV в ручной план.
 
@@ -173,19 +175,20 @@ class ControlDataset:
                 assignments_by_engineer.setdefault(assignment.engineer_id, []).append(
                     assignment.task_id
                 )
-            for engineer_id, task_ids in assignments_by_engineer.items():
-                assignments_by_engineer[engineer_id] = sorted(
-                    task_ids,
-                    key=lambda task_id: (
-                        hhmm_to_minutes(tasks[task_id].window_start),
-                        next(
-                            item.sequence
-                            for item in assignments
-                            if item.task_id == task_id
-                            and item.engineer_id == engineer_id
+            if sort_by_window:
+                for engineer_id, task_ids in assignments_by_engineer.items():
+                    assignments_by_engineer[engineer_id] = sorted(
+                        task_ids,
+                        key=lambda task_id: (
+                            hhmm_to_minutes(tasks[task_id].window_start),
+                            next(
+                                item.sequence
+                                for item in assignments
+                                if item.task_id == task_id
+                                and item.engineer_id == engineer_id
+                            ),
                         ),
-                    ),
-                )
+                    )
             return ManualAssignmentPlan(assignments_by_engineer)
         for assignment in assignments:
             assignments_by_engineer.setdefault(assignment.engineer_id, []).append(
@@ -524,7 +527,12 @@ _CSV_STATUS = {
 }
 
 
-def load_control_dataset(path: str | Path, scenario) -> ControlDataset:
+def load_control_dataset(
+    path: str | Path,
+    scenario,
+    *,
+    require_reference_assignment_match: bool = True,
+) -> ControlDataset:
     """Загружает CSV контрольного распределения и сверяет его с JSON.
 
     Импорт не зашит под один dataset: номер заявки из CSV сопоставляется с
@@ -591,7 +599,10 @@ def load_control_dataset(path: str | Path, scenario) -> ControlDataset:
             errors.append(
                 f"Строка {row_number}: окно заявки {task_id} не совпадает с JSON."
             )
-        if engineer_name != reference_by_task.get(task_id):
+        if (
+            require_reference_assignment_match
+            and engineer_name != reference_by_task.get(task_id)
+        ):
             errors.append(
                 f"Строка {row_number}: исполнитель заявки {task_id} не совпадает с JSON."
             )
@@ -610,3 +621,44 @@ def load_control_dataset(path: str | Path, scenario) -> ControlDataset:
     if len(assignments) != len(seen_task_ids):
         errors.append("В CSV есть повторяющиеся заявки или строки без сопоставленного ID.")
     return ControlDataset(tuple(assignments), status_by_task, tuple(errors))
+
+
+def load_control_dataset_from_scenario(scenario) -> ControlDataset:
+    """Строит контрольный план только из reference-полей готового JSON.
+
+    CSV остаётся входом генератора и проверяется его тестами. Optimization
+    benchmark получает единый готовый контракт JSON: исполнителя, статус и
+    точный ``reference_sequence`` каждой строки контрольного плана.
+    """
+    engineer_id_by_name = {
+        engineer.name: engineer.id for engineer in scenario.engineers
+    }
+    assignments: list[ManualAssignment] = []
+    errors: list[str] = []
+    seen_sequences: set[int] = set()
+    for task in scenario.tasks:
+        engineer_name = scenario.reference_engineer_by_task.get(task.id, "")
+        if task.status == TaskStatus.NOT_SENT or not engineer_name:
+            # NOT_SENT может законно не иметь исполнителя в контрольном плане.
+            continue
+        engineer_id = engineer_id_by_name.get(engineer_name)
+        if engineer_id is None:
+            errors.append(
+                f"Заявка {task.id}: инженер {engineer_name!r} отсутствует в JSON."
+            )
+            continue
+        sequence = scenario.reference_sequence_by_task.get(task.id)
+        if sequence is None:
+            errors.append(f"Заявка {task.id}: отсутствует reference_sequence.")
+            continue
+        if sequence in seen_sequences:
+            errors.append(f"Повторяется reference_sequence={sequence}.")
+            continue
+        seen_sequences.add(sequence)
+        assignments.append(ManualAssignment(task.id, engineer_id, sequence))
+    assignments.sort(key=lambda item: item.sequence)
+    return ControlDataset(
+        assignments=tuple(assignments),
+        status_by_task=scenario.reference_status_by_task,
+        consistency_errors=tuple(errors),
+    )

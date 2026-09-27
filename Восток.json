@@ -242,7 +242,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 74198,
-      "control_request_id": 305927238,
+      "control_request_id": 74198,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -259,7 +259,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Не отправлена",
-      "reference_crew": "",
+      "reference_crew": "Бригада Арташкин",
+      "reference_sequence": 12,
       "gigabit": false
     },
     {
@@ -267,7 +268,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 86160,
-      "control_request_id": 305838184,
+      "control_request_id": 86160,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -285,6 +286,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 3,
       "gigabit": false
     },
     {
@@ -292,7 +294,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 50104,
-      "control_request_id": 305857695,
+      "control_request_id": 50104,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -309,7 +311,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Мельников",
+      "reference_crew": "Бригада Попов",
+      "reference_sequence": 10,
       "gigabit": true
     },
     {
@@ -317,7 +320,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 46393,
-      "control_request_id": 305849742,
+      "control_request_id": 46393,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -334,7 +337,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Матвеев",
+      "reference_crew": "Бригада Перов",
+      "reference_sequence": 22,
       "gigabit": false
     },
     {
@@ -342,7 +346,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 10135,
-      "control_request_id": 305886764,
+      "control_request_id": 10135,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -360,6 +364,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 6,
       "gigabit": false
     },
     {
@@ -367,7 +372,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 18754,
-      "control_request_id": 305893375,
+      "control_request_id": 18754,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -384,7 +389,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Матвеев",
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 17,
       "gigabit": false
     },
     {
@@ -392,7 +398,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 84627,
-      "control_request_id": 305738126,
+      "control_request_id": 84627,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -409,7 +415,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Попов",
+      "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 7,
       "gigabit": false
     },
     {
@@ -417,7 +424,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 61540,
-      "control_request_id": 305821472,
+      "control_request_id": 61540,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -435,6 +442,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Арташкин",
+      "reference_sequence": 11,
       "gigabit": false
     },
     {
@@ -442,7 +450,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 74949,
-      "control_request_id": 305887331,
+      "control_request_id": 74949,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -460,6 +468,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 58,
       "gigabit": false
     },
     {
@@ -467,7 +476,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 41077,
-      "control_request_id": 305896844,
+      "control_request_id": 41077,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -485,6 +494,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 41,
       "gigabit": false
     },
     {
@@ -492,7 +502,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 87693,
-      "control_request_id": 305891560,
+      "control_request_id": 87693,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -510,6 +520,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 62,
       "gigabit": false
     },
     {
@@ -517,7 +528,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 93086,
-      "control_request_id": 305828555,
+      "control_request_id": 93086,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -535,6 +546,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Комарь",
+      "reference_sequence": 63,
       "gigabit": false
     },
     {
@@ -542,7 +554,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 57866,
-      "control_request_id": 305919472,
+      "control_request_id": 57866,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -560,6 +572,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 51,
       "gigabit": false
     },
     {
@@ -567,7 +580,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 35675,
-      "control_request_id": 305886674,
+      "control_request_id": 35675,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -585,6 +598,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 39,
       "gigabit": false
     },
     {
@@ -592,7 +606,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 82388,
-      "control_request_id": 305866236,
+      "control_request_id": 82388,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -610,6 +624,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 13,
       "gigabit": false
     },
     {
@@ -617,7 +632,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 23380,
-      "control_request_id": 305863399,
+      "control_request_id": 23380,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -635,6 +650,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 30,
       "gigabit": false
     },
     {
@@ -642,7 +658,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 37272,
-      "control_request_id": 305853044,
+      "control_request_id": 37272,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -660,6 +676,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Зверев",
+      "reference_sequence": 40,
       "gigabit": false
     },
     {
@@ -667,7 +684,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 71388,
-      "control_request_id": 305885296,
+      "control_request_id": 71388,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -685,6 +702,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Зверев",
+      "reference_sequence": 56,
       "gigabit": false
     },
     {
@@ -692,7 +710,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 34366,
-      "control_request_id": 305888536,
+      "control_request_id": 34366,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -710,6 +728,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 38,
       "gigabit": false
     },
     {
@@ -717,7 +736,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 67554,
-      "control_request_id": 305813811,
+      "control_request_id": 67554,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -735,6 +754,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 53,
       "gigabit": false
     },
     {
@@ -742,7 +762,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 94409,
-      "control_request_id": 305825144,
+      "control_request_id": 94409,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -760,6 +780,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Перов",
+      "reference_sequence": 64,
       "gigabit": false
     },
     {
@@ -767,7 +788,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 10245,
-      "control_request_id": 305890789,
+      "control_request_id": 10245,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -785,6 +806,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Арташкин",
+      "reference_sequence": 25,
       "gigabit": false
     },
     {
@@ -792,7 +814,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 52405,
-      "control_request_id": 305482292,
+      "control_request_id": 52405,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -810,6 +832,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Комарь",
+      "reference_sequence": 48,
       "gigabit": false
     },
     {
@@ -817,7 +840,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 30769,
-      "control_request_id": 305863056,
+      "control_request_id": 30769,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -835,6 +858,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Комарь",
+      "reference_sequence": 36,
       "gigabit": false
     },
     {
@@ -842,7 +866,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 98182,
-      "control_request_id": 305622276,
+      "control_request_id": 98182,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -860,6 +884,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 65,
       "gigabit": false
     },
     {
@@ -867,7 +892,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 76082,
-      "control_request_id": 305838445,
+      "control_request_id": 76082,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -885,6 +910,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 59,
       "gigabit": false
     },
     {
@@ -892,7 +918,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 29890,
-      "control_request_id": 305896248,
+      "control_request_id": 29890,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -910,6 +936,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 34,
       "gigabit": false
     },
     {
@@ -917,7 +944,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 77563,
-      "control_request_id": 305857498,
+      "control_request_id": 77563,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -935,6 +962,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 61,
       "gigabit": false
     },
     {
@@ -942,7 +970,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 53587,
-      "control_request_id": 305534517,
+      "control_request_id": 53587,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -959,7 +987,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Просрочена",
-      "reference_crew": "Бригада Мельников",
+      "reference_crew": "Бригада Перов",
+      "reference_sequence": 20,
       "gigabit": false
     },
     {
@@ -967,7 +996,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 82808,
-      "control_request_id": 305825274,
+      "control_request_id": 82808,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -984,7 +1013,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Просрочена",
-      "reference_crew": "Бригада Матвеев",
+      "reference_crew": "Бригада Перов",
+      "reference_sequence": 21,
       "gigabit": false
     },
     {
@@ -992,7 +1022,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 7939,
-      "control_request_id": 305889650,
+      "control_request_id": 7939,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -1009,7 +1039,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Просрочена",
-      "reference_crew": "Бригада Каушнян",
+      "reference_crew": "Бригада Перов",
+      "reference_sequence": 19,
       "gigabit": false
     },
     {
@@ -1017,7 +1048,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 92031,
-      "control_request_id": 305929608,
+      "control_request_id": 92031,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
@@ -1034,7 +1065,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Не отправлена",
-      "reference_crew": "",
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 16,
       "gigabit": false
     },
     {
@@ -1042,7 +1074,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 31260,
-      "control_request_id": 305799343,
+      "control_request_id": 43506,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
@@ -1058,8 +1090,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 2,
-      "reference_status": "Отправлена",
+      "reference_status": "В работе",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 23,
       "gigabit": false
     },
     {
@@ -1067,7 +1100,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 69967,
-      "control_request_id": 305868471,
+      "control_request_id": 69967,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
@@ -1085,6 +1118,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Перов",
+      "reference_sequence": 55,
       "gigabit": true
     },
     {
@@ -1092,7 +1126,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 22634,
-      "control_request_id": 305895738,
+      "control_request_id": 22634,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
@@ -1110,6 +1144,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 29,
       "gigabit": false
     },
     {
@@ -1117,7 +1152,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 98815,
-      "control_request_id": 305898240,
+      "control_request_id": 98815,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
@@ -1135,6 +1170,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 66,
       "gigabit": false
     },
     {
@@ -1142,7 +1178,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 33527,
-      "control_request_id": 305549935,
+      "control_request_id": 33527,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
@@ -1159,7 +1195,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Просрочена",
-      "reference_crew": "Бригада Гусаковский",
+      "reference_crew": "Бригада Перов",
+      "reference_sequence": 18,
       "gigabit": false
     },
     {
@@ -1167,7 +1204,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 21571,
-      "control_request_id": 305898233,
+      "control_request_id": 21571,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1185,6 +1222,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 2,
       "gigabit": false
     },
     {
@@ -1192,7 +1230,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 47670,
-      "control_request_id": 305896864,
+      "control_request_id": 47670,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1209,7 +1247,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Свеженцев",
+      "reference_crew": "Бригада Соколов",
+      "reference_sequence": 4,
       "gigabit": false
     },
     {
@@ -1217,7 +1256,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 17892,
-      "control_request_id": 305868415,
+      "control_request_id": 17892,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1234,7 +1273,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Комарь",
+      "reference_crew": "Бригада Попов",
+      "reference_sequence": 9,
       "gigabit": false
     },
     {
@@ -1242,7 +1282,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 51115,
-      "control_request_id": 305910361,
+      "control_request_id": 51115,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1260,6 +1300,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 5,
       "gigabit": false
     },
     {
@@ -1267,7 +1308,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 76643,
-      "control_request_id": 305911691,
+      "control_request_id": 76643,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1285,6 +1326,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 1,
       "gigabit": false
     },
     {
@@ -1292,7 +1334,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 43506,
-      "control_request_id": 305817137,
+      "control_request_id": 31260,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1308,8 +1350,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "В работе",
+      "reference_status": "Отправлена",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 24,
       "gigabit": false
     },
     {
@@ -1317,7 +1360,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 48174,
-      "control_request_id": 305392043,
+      "control_request_id": 48174,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1335,6 +1378,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 8,
       "gigabit": false
     },
     {
@@ -1342,7 +1386,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 48227,
-      "control_request_id": 305882940,
+      "control_request_id": 48227,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1360,6 +1404,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Зверев",
+      "reference_sequence": 44,
       "gigabit": false
     },
     {
@@ -1367,7 +1412,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 60720,
-      "control_request_id": 305894885,
+      "control_request_id": 60720,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1385,6 +1430,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 52,
       "gigabit": false
     },
     {
@@ -1392,7 +1438,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 48238,
-      "control_request_id": 305897279,
+      "control_request_id": 48238,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1410,6 +1456,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 45,
       "gigabit": false
     },
     {
@@ -1417,7 +1464,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 41912,
-      "control_request_id": 305895612,
+      "control_request_id": 41912,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1435,6 +1482,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 42,
       "gigabit": false
     },
     {
@@ -1442,7 +1490,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 4893,
-      "control_request_id": 305891993,
+      "control_request_id": 4893,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1460,6 +1508,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Свеженцев",
+      "reference_sequence": 46,
       "gigabit": false
     },
     {
@@ -1467,7 +1516,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 68476,
-      "control_request_id": 305884768,
+      "control_request_id": 68476,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1485,6 +1534,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 54,
       "gigabit": false
     },
     {
@@ -1492,7 +1542,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 50219,
-      "control_request_id": 305887986,
+      "control_request_id": 50219,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1510,6 +1560,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 47,
       "gigabit": false
     },
     {
@@ -1517,7 +1568,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 76678,
-      "control_request_id": 305887351,
+      "control_request_id": 76678,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1535,6 +1586,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Перов",
+      "reference_sequence": 60,
       "gigabit": false
     },
     {
@@ -1542,7 +1594,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 47330,
-      "control_request_id": 305896987,
+      "control_request_id": 47330,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1560,6 +1612,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Перов",
+      "reference_sequence": 43,
       "gigabit": false
     },
     {
@@ -1567,7 +1620,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 26645,
-      "control_request_id": 305888304,
+      "control_request_id": 26645,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1585,6 +1638,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 33,
       "gigabit": false
     },
     {
@@ -1592,7 +1646,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 24076,
-      "control_request_id": 305895089,
+      "control_request_id": 24076,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1610,6 +1664,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 31,
       "gigabit": false
     },
     {
@@ -1617,7 +1672,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 30243,
-      "control_request_id": 305913737,
+      "control_request_id": 30243,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1635,6 +1690,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 35,
       "gigabit": false
     },
     {
@@ -1642,7 +1698,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 32807,
-      "control_request_id": 305880939,
+      "control_request_id": 32807,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1660,6 +1716,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Арташкин",
+      "reference_sequence": 37,
       "gigabit": false
     },
     {
@@ -1667,7 +1724,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 73572,
-      "control_request_id": 305887546,
+      "control_request_id": 73572,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1685,6 +1742,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Арташкин",
+      "reference_sequence": 57,
       "gigabit": false
     },
     {
@@ -1692,7 +1750,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 41962,
-      "control_request_id": 305898346,
+      "control_request_id": 41962,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -1709,7 +1767,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Белузин",
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 14,
       "gigabit": false
     },
     {
@@ -1717,7 +1776,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 97886,
-      "control_request_id": 305898353,
+      "control_request_id": 97886,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -1734,7 +1793,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Белузин",
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 15,
       "gigabit": false
     },
     {
@@ -1742,7 +1802,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 17349,
-      "control_request_id": 305898320,
+      "control_request_id": 17349,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -1760,6 +1820,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 27,
       "gigabit": false
     },
     {
@@ -1767,7 +1828,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 54964,
-      "control_request_id": 305883073,
+      "control_request_id": 54964,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -1785,6 +1846,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 49,
       "gigabit": false
     },
     {
@@ -1792,7 +1854,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 21367,
-      "control_request_id": 305896177,
+      "control_request_id": 21367,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -1810,6 +1872,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Свеженцев",
+      "reference_sequence": 28,
       "gigabit": false
     },
     {
@@ -1817,7 +1880,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 24980,
-      "control_request_id": 305896956,
+      "control_request_id": 24980,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -1835,6 +1898,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Свеженцев",
+      "reference_sequence": 32,
       "gigabit": false
     },
     {
@@ -1842,7 +1906,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 15648,
-      "control_request_id": 305898371,
+      "control_request_id": 15648,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -1860,6 +1924,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Свеженцев",
+      "reference_sequence": 26,
       "gigabit": false
     },
     {
@@ -1867,7 +1932,7 @@
       "territory_code": "vostok",
       "territory_name": "Восток",
       "request_id": 57299,
-      "control_request_id": 305914822,
+      "control_request_id": 57299,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -1885,6 +1950,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 50,
       "gigabit": false
     }
   ],

@@ -95,6 +95,7 @@ class JsonScenario:
     office_longitude: float | None = None  # Долгота офиса для отдельного маркера карты.
     reference_engineer_by_task: dict[str, str] = field(default_factory=dict)  # Ручной исполнитель из исходного JSON, если он указан.
     reference_status_by_task: dict[str, TaskStatus] = field(default_factory=dict)  # Исходный статус заявки для контрольного плана.
+    reference_sequence_by_task: dict[str, int] = field(default_factory=dict)  # Порядок строки контрольного плана, начиная с 1.
     control_request_id_by_task: dict[str, str] = field(default_factory=dict)  # Номер заявки из контрольного CSV, если он отличается от синтетического номера.
 
     def to_problem(
@@ -245,6 +246,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
     tasks: list[Task] = []
     reference_engineer_by_task: dict[str, str] = {}
     reference_status_by_task: dict[str, TaskStatus] = {}
+    reference_sequence_by_task: dict[str, int] = {}
     control_request_id_by_task: dict[str, str] = {}
     for item in _list(payload, "jobs"):
         job = _mapping_value(item, "job")
@@ -310,6 +312,13 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
         # контрольный план по-прежнему проверит имя инженера отдельно.
         reference_engineer_by_task[task_id] = reference_crew
         reference_status_by_task[task_id] = tasks[-1].status
+        reference_sequence = job.get("reference_sequence")
+        if reference_sequence is not None:
+            if isinstance(reference_sequence, bool) or not isinstance(reference_sequence, int):
+                raise ValueError("Поле 'reference_sequence' должно быть целым числом")
+            if reference_sequence <= 0:
+                raise ValueError("Поле 'reference_sequence' должно быть положительным")
+            reference_sequence_by_task[task_id] = reference_sequence
         if job.get("control_request_id") is not None:
             control_request_id_by_task[task_id] = str(job["control_request_id"])
 
@@ -324,6 +333,7 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
         office_longitude=office_coordinates[1],
         reference_engineer_by_task=reference_engineer_by_task,
         reference_status_by_task=reference_status_by_task,
+        reference_sequence_by_task=reference_sequence_by_task,
         control_request_id_by_task=control_request_id_by_task,
     )
 

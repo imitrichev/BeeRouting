@@ -35,6 +35,10 @@ from backend.optimization import (
 )
 from backend.optimization.scripts.generate_dataset_json import NominatimGeocoder
 from backend.optimization.constraints import engineer_has_required_equipment
+from backend.optimization.manual_planner import (
+    ManualAssignmentPlanner,
+    load_control_dataset_from_scenario,
+)
 from backend.web_mvp.api_v2.serializers.optimization import OptimizationResultSerializer, DatasetSerializer
 
 
@@ -135,6 +139,36 @@ class PlanningService:
         if self._scenario is None:
             return self.load_official_dataset()
         return self._scenario
+
+    def apply_reference_distribution(
+        self,
+        scenario: JsonScenario,
+        source_name: str,
+    ) -> tuple[JsonScenario, OptimizationResult]:
+        """Полностью заменяет рабочее состояние контрольным планом из JSON."""
+        self.reset()
+        self._scenario = scenario
+        self._source_name = source_name
+        self._ignore_task_statuses = False
+        self._preserve_assigned_tasks = False
+        problem = self._build_problem(scenario)
+        control = load_control_dataset_from_scenario(scenario)
+        if not control.consistent:
+            raise ValueError("; ".join(control.consistency_errors))
+        planner = ManualAssignmentPlanner(
+            control.plan(
+                {task.id: task for task in problem.tasks},
+                sort_by_window=False,
+            ).assignments_by_engineer
+        )
+        validation = planner.validate(problem)
+        if not validation.valid:
+            raise ValueError(
+                "; ".join(violation.message for violation in validation.violations)
+            )
+        self._problem = problem
+        self._result = planner.optimize(problem)
+        return scenario, self._result
 
     def optimize_current(
         self,
@@ -287,83 +321,6 @@ class PlanningService:
                 )
         self._scenario = replace(self._scenario, tasks=tuple(tasks))
 
-    def sync_statuses_from_reference(self) -> tuple[JsonScenario, OptimizationResult]:
-        """Накладывает статусы контрольного CSV на текущий рабочий план.
-
-        Исполнитель берётся из текущего результата, а не из
-        ``reference_crew``. Для статусов ``NOT_SENT``, ``COMPLETED`` и
-        ``CANCELLED`` заявка удаляется из текущего маршрута. Новые заявки,
-        которых нет в контрольных данных, остаются без изменений.
-        """
-        if self._scenario is None or self._result is None or self._problem is None:
-            raise ValueError("Сначала постройте текущий план")
-
-        current_engineer_by_task = {
-            stop.task_id: engineer_id
-            for engineer_id, route in self._result.routes.items()
-            for stop in route.stops
-        }
-        terminal_statuses = {
-            TaskStatus.NOT_SENT,
-            TaskStatus.COMPLETED,
-            TaskStatus.CANCELLED,
-        }
-        started_engineers: set[str] = set()
-        tasks = []
-        keep_task_ids: set[str] = set()
-        for task in self._scenario.tasks:
-            reference_status = self._scenario.reference_status_by_task.get(task.id)
-            if reference_status is None:
-                tasks.append(task)
-                if task.id in current_engineer_by_task:
-                    keep_task_ids.add(task.id)
-                continue
-
-            current_engineer_id = current_engineer_by_task.get(
-                task.id,
-                task.current_engineer_id,
-            )
-            effective_status = reference_status
-            if reference_status in terminal_statuses:
-                current_engineer_id = None
-            elif (
-                reference_status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}
-                and current_engineer_id is None
-            ):
-                raise ValueError(
-                    f"Для заявки {task.id} из контрольного распределения "
-                    f"со статусом {reference_status.value} не найден текущий инженер."
-                )
-            elif reference_status in {TaskStatus.EN_ROUTE, TaskStatus.IN_PROGRESS}:
-                # В domain-модели у одного инженера не может быть две
-                # одновременно начатые заявки. Если контрольный статус
-                # накладывается на текущий маршрут конфликтующим образом,
-                # сохраняем текущего исполнителя и переводим вторую заявку в
-                # ASSIGNED; её фактическое начало ещё должен подтвердить
-                # диспетчер.
-                assert current_engineer_id is not None
-                if current_engineer_id in started_engineers:
-                    effective_status = TaskStatus.ASSIGNED
-                else:
-                    started_engineers.add(current_engineer_id)
-                keep_task_ids.add(task.id)
-            else:
-                keep_task_ids.add(task.id)
-
-            tasks.append(
-                replace(
-                    task,
-                    status=effective_status,
-                    current_engineer_id=current_engineer_id,
-                )
-            )
-
-        self._scenario = replace(self._scenario, tasks=tuple(tasks))
-        self._ignore_task_statuses = False
-        self._preserve_assigned_tasks = False
-        self._result = self._filter_result_tasks(keep_task_ids)
-        return self._scenario, self._result
-
     def update_task_status(
         self, task_id: str, status: TaskStatus
     ) -> JsonScenario:
@@ -400,9 +357,9 @@ class PlanningService:
                     TaskStatus.ASSIGNED,
                     TaskStatus.EN_ROUTE,
                     TaskStatus.IN_PROGRESS,
+                    TaskStatus.OVERDUE,
                     TaskStatus.COMPLETED,
                     TaskStatus.CANCELLED,
-                    TaskStatus.OVERDUE,
                 }
             )
             allowed_statuses = (
@@ -410,6 +367,7 @@ class PlanningService:
                     TaskStatus.ASSIGNED,
                     TaskStatus.EN_ROUTE,
                     TaskStatus.IN_PROGRESS,
+                    TaskStatus.OVERDUE,
                     TaskStatus.COMPLETED,
                     TaskStatus.CANCELLED,
                 }
@@ -420,7 +378,7 @@ class PlanningService:
                 raise ValueError(
                     (
                         f"Для назначенной заявки {task_id} допустимы статусы: "
-                        "ASSIGNED, EN_ROUTE, IN_PROGRESS, COMPLETED, CANCELLED."
+                        "ASSIGNED, EN_ROUTE, IN_PROGRESS, OVERDUE, COMPLETED, CANCELLED."
                     )
                     if assigned
                     else f"Неназначенную заявку {task_id} можно только отменить."
