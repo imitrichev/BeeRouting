@@ -19,20 +19,32 @@ const props = withDefaults(defineProps<IProps>(), {
 </script>
 
 <template>
-  <v-dialog :model-value="true" opacity="0.8" persistent :max-width="350">
-    <v-card class="pa-3 elevation-2">
+  <v-dialog :model-value="true" opacity="0.8" persistent :max-width="380">
+    <v-card class="px-4 py-3 elevation-2">
       <v-form class="w-100" @submit.prevent="emit('close', true)">
-        <v-row class="w-100 ga-1 mb-4 mt-2 px-3">
-          <span class="text-center font-size-16">{{ props.text }}</span>
-
+        <div class="d-flex flex-column ga-3 mb-3 mt-1">
+          <span class="text-body-1 text-center">{{ props.text }}</span>
           <slot />
-        </v-row>
-        <v-divider class="mb-3"></v-divider>
-        <v-row no-gutters class="justify-end w-100">
-          <v-btn class="px-3 mr-3" :loading="loading" @click="emit('close', false)">
+        </div>
+
+        <v-divider class="mb-3" />
+
+        <v-row no-gutters class="justify-end w-100 ga-2">
+          <v-btn
+            variant="text"
+            class="text-none"
+            :loading="props.loading"
+            @click="emit('close', false)"
+          >
             {{ props.denyText }}
           </v-btn>
-          <v-btn class="form-btn form-btn px-3 mr-3" :loading="loading" type="submit">
+          <v-btn
+            variant="flat"
+            color="primary"
+            class="text-none px-4"
+            :loading="props.loading"
+            type="submit"
+          >
             {{ props.applyText }}
           </v-btn>
         </v-row>

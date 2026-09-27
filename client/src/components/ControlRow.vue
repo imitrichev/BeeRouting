@@ -7,6 +7,7 @@ import { computed, ref, watch } from 'vue'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import ApplyDialog from '@/templates/ApplyDialog.vue'
 import OptimizationDialog from '@/components/modals/OptimizationDialog.vue'
+import { useDisplay } from 'vuetify'
 
 interface IProps {
   loading: boolean
@@ -16,6 +17,8 @@ const props = defineProps<IProps>()
 
 const selectorsStore = useSelectorsStore()
 const districtDataStore = useDistrictDataStore()
+
+const { mdAndUp } = useDisplay()
 
 const territoriesSelectorItems = computed(() => selectorsStore.territories)
 const territoriesSelectorValue = ref<string | null>(null)
@@ -65,33 +68,59 @@ const closeOptimizationDialog = async () => {
     <template #loading>
       <v-skeleton-loader type="list-item-two-line" />
     </template>
-    <v-row no-gutters class="px-4 py-3">
+    <v-row no-gutters class="px-4 py-3 align-center">
       <v-select
         v-model="territoriesSelectorValue"
         :items="territoriesSelectorItems"
-        variant="outlined"
         item-value="code"
         item-title="name"
         label="Район"
         hide-details
+        density="compact"
+        variant="outlined"
         :loading="loadingDistrictData"
-        max-width="150"
+        max-width="300"
       />
-      <icon-button
-        tooltip-text="Сбросить изменения"
-        class="ml-3 my-2"
-        icon="restart_alt"
-        color="red"
-        :loading="loadingDistrictData"
-        @click="openResetDatasetsDialog"
-      />
-      <icon-button
-        tooltip-text="Назначить заявки"
-        class="mr-3 my-2"
-        icon="alt_route"
-        :loading="loadingDistrictData"
-        @click="openOptimizationDialog"
-      />
+      <v-spacer />
+
+      <template v-if="mdAndUp">
+        <v-btn
+          variant="text"
+          color="red"
+          :loading="loadingDistrictData"
+          prepend-icon="restart_alt"
+          class="px-3"
+          @click="openResetDatasetsDialog"
+        >
+          Сбросить изменения
+        </v-btn>
+        <v-btn
+          variant="text"
+          :loading="loadingDistrictData"
+          prepend-icon="alt_route"
+          class="px-3"
+          @click="openOptimizationDialog"
+        >
+          Назначить заявки
+        </v-btn>
+      </template>
+
+      <template v-else>
+        <icon-button
+          tooltip-text="Сбросить изменения"
+          class="ml-3"
+          icon="restart_alt"
+          color="red"
+          :loading="loadingDistrictData"
+          @click="openResetDatasetsDialog"
+        />
+        <icon-button
+          tooltip-text="Назначить заявки"
+          icon="alt_route"
+          :loading="loadingDistrictData"
+          @click="openOptimizationDialog"
+        />
+      </template>
     </v-row>
   </basic-card>
   <apply-dialog

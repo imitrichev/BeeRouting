@@ -11,12 +11,16 @@ import { useDistrictDataStore } from '@/stores/districtData.ts'
 import IconButton from '@/templates/IconButton.vue'
 import TaskExplanationDialog from '@/components/modals/TaskExplanationDialog.vue'
 import ReasignmentDialog from '@/components/modals/ReasignmentDialog.vue'
+import { useTheme } from 'vuetify'
 
 interface IProps {
   loading: boolean
 }
 
 const props = defineProps<IProps>()
+
+const theme = useTheme()
+const chipVariant = computed(() => (theme.global.current.value.dark ? 'flat' : 'tonal'))
 
 const districtDataStore = useDistrictDataStore()
 const tasks = computed<Task[]>(() => districtDataStore.getDistrictTasks)
@@ -222,7 +226,7 @@ const closeReassignmentDialog = () => {
       </template>
 
       <template #item.status="{ item }">
-        <v-chip size="small" variant="tonal" :color="taskStatusColor(item)">
+        <v-chip size="small" :variant="chipVariant" :color="taskStatusColor(item)">
           {{ taskStatusLabel(item) }}
         </v-chip>
       </template>

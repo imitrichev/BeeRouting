@@ -15,12 +15,10 @@ export default createVuetify({
     },
   },
   theme: {
-    defaultTheme: 'light',
+    defaultTheme: 'dark',
     themes: {
       light: {
-        colors: {
-
-        },
+        colors: {},
       },
     },
   },

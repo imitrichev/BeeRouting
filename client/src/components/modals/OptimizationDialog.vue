@@ -85,7 +85,15 @@ const optimize = async () => {
       </v-row>
       <template #bottom>
         <v-row no-gutters class="justify-end pb-2">
-          <v-btn :loading="loading" @click="optimize"> Подтвердить </v-btn>
+          <v-btn
+            :loading="loading"
+            color="primary"
+            variant="flat"
+            class="text-none"
+            @click="optimize"
+          >
+            Подтвердить
+          </v-btn>
         </v-row>
       </template>
     </basic-card>

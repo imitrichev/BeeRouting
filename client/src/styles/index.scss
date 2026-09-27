@@ -44,20 +44,28 @@
   }
 }
 
+:root {
+  --app-border-color: #d3d3d3;
+}
+
+.v-theme--dark {
+  --app-border-color: #444;
+}
+
 .border-bottom {
-  border-bottom: 1px solid lightgrey;
+  border-bottom: 1px solid var(--app-border-color);
 }
 
 .border-left {
-  border-left: 1px solid lightgrey;
+  border-left: 1px solid var(--app-border-color);
 }
 
 .border-right {
-  border-right: 1px solid lightgrey;
+  border-right: 1px solid var(--app-border-color);
 }
 
 .border-top {
-  border-top: 1px solid lightgrey;
+  border-top: 1px solid var(--app-border-color);
 }
 
 
