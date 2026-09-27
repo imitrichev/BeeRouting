@@ -25,7 +25,14 @@ const engineerHeaders = [
     sortable: false,
     align: 'center',
   },
-  { title: 'Доступность', key: 'availability', width: 200, sortable: false, align: 'center' },
+  {
+    title: 'Доступно роутеров',
+    key: 'available_router_count',
+    width: 160,
+    sortable: true,
+    align: 'center',
+  },
+  { title: 'Рабочий день', key: 'availability', width: 200, sortable: false, align: 'center' },
   {
     title: 'Стартовая локация',
     key: 'start_address',
@@ -76,6 +83,10 @@ const engineerHeaders = [
 
       <template #item.vehicle_type="{ item }">
         {{ getVehicleTypeTranslation(item.vehicle_type) }}
+      </template>
+
+      <template #item.available_router_count="{ item }">
+        {{ item.available_router_count }}
       </template>
 
       <template #item.availability="{ item }">

@@ -11,6 +11,7 @@ export type Engineer = {
   start_longitude: number | null
   available_from: string
   available_until: string
+  available_router_count: number
 }
 
 export type Task = {
@@ -26,6 +27,7 @@ export type Task = {
   priority: PriorityType
   required_vehicle_type: string | null
   required_equipment: string[]
+  required_router_count: number
   status: string
   current_engineer_id: string | null
   is_plannable: boolean

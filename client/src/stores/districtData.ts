@@ -218,6 +218,9 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     loadingManualReassignment.value = false
   }
 
+  const loadingReplan = ref<boolean>(false)
+  const loadReplan = async () => {}
+
   return {
     selectDistrict,
     loadDistrictData,
@@ -256,5 +259,8 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     clearManualReassignmentPreview,
     loadingManualReassignment,
     loadManualReassignment,
+
+    loadingReplan,
+    loadReplan,
   }
 })

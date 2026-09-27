@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import BasicCard from '@/templates/BasicCard.vue'
 import type { EngineerRoute, RouteStop, Task } from '@/types/entities.ts'
-import {
-  getPriorityTranslation,
-  getSkillTranslation,
-  getVehicleTypeTranslation,
-} from '@/utils/translations.ts'
+import { getPriorityTranslation, getSkillTranslation } from '@/utils/translations.ts'
 import { computed, ref } from 'vue'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import IconButton from '@/templates/IconButton.vue'
@@ -40,30 +36,22 @@ const assignedTaskIds = computed<Set<string>>(() => {
   return ids
 })
 
-// --- заголовки ---
 const baseHeaders = [
-  { title: 'Заявка', key: 'id', width: 160, sortable: false, align: 'center' },
-  { title: 'Тип', key: 'required_skill', width: 140, sortable: false, align: 'center' },
-  { title: 'Окно', key: 'window', width: 200, sortable: false, align: 'center' },
-  { title: 'Длит.', key: 'duration_minutes', width: 80, sortable: false, align: 'center' },
-  { title: 'Приоритет', key: 'priority', width: 120, sortable: false, align: 'center' },
+  { title: 'Заявка', key: 'id', width: 160, sortable: true, align: 'center' },
+  { title: 'Тип', key: 'required_skill', width: 140, sortable: true, align: 'center' },
+  { title: 'Окно', key: 'window_start', width: 200, sortable: true, align: 'center' },
+  { title: 'Длит.', key: 'duration_minutes', width: 80, sortable: true, align: 'center' },
+  { title: 'Приоритет', key: 'priority', width: 120, sortable: true, align: 'center' },
   {
-    title: 'Необходимый транспорт',
-    key: 'required_vehicle_type',
+    title: 'Необходимо роутеров',
+    key: 'required_router_count',
     width: 160,
-    sortable: false,
-    align: 'center',
-  },
-  {
-    title: 'Требуемое оборудование',
-    key: 'required_equipment',
-    width: 200,
-    sortable: false,
+    sortable: true,
     align: 'center',
   },
   { title: 'Локация', key: 'location', width: 240, sortable: false, align: 'start' },
-  { title: 'Статус', key: 'status', width: 160, sortable: false, align: 'center' },
-  { title: 'Инженер', key: 'current_engineer_id', width: 160, sortable: false, align: 'center' },
+  { title: 'Статус', key: 'status', width: 160, sortable: true, align: 'center' },
+  { title: 'Инженер', key: 'current_engineer_id', width: 160, sortable: true, align: 'center' },
 ]
 
 const taskHeaders = computed(() => {
@@ -192,7 +180,9 @@ const closeReassignmentDialog = () => {
         {{ getSkillTranslation(item.required_skill) }}
       </template>
 
-      <template #item.window="{ item }"> {{ item.window_start }} - {{ item.window_end }} </template>
+      <template #item.window_start="{ item }">
+        {{ item.window_start }} - {{ item.window_end }}
+      </template>
 
       <template #item.duration_minutes="{ item }"> {{ item.duration_minutes }} мин </template>
 
@@ -202,23 +192,8 @@ const closeReassignmentDialog = () => {
         </v-chip>
       </template>
 
-      <template #item.required_vehicle_type="{ item }">
-        {{ getVehicleTypeTranslation(item.required_vehicle_type) }}
-      </template>
-
-      <template #item.required_equipment="{ item }">
-        <template v-if="item.required_equipment.length">
-          <v-chip
-            v-for="eq in item.required_equipment"
-            :key="eq"
-            size="x-small"
-            variant="tonal"
-            class="ma-1"
-          >
-            {{ eq }}
-          </v-chip>
-        </template>
-        <span v-else>-</span>
+      <template #item.required_router_count="{ item }">
+        {{ item.required_router_count }}
       </template>
 
       <template #item.location="{ item }">
