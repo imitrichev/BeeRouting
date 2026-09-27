@@ -7,6 +7,7 @@ import { computed, ref, watch } from 'vue'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import ApplyDialog from '@/templates/ApplyDialog.vue'
 import OptimizationDialog from '@/components/modals/OptimizationDialog.vue'
+import ReplanDialog from '@/components/modals/ReplanDialog.vue'
 import { useDisplay } from 'vuetify'
 
 interface IProps {
@@ -29,6 +30,7 @@ const resetDatasetsDialogOpened = ref<boolean>(false)
 const loadingResetAllDatasets = computed(() => districtDataStore.loadingResetAllDatasets)
 
 const optimizationDialogOpened = ref<boolean>(false)
+const replanDialogOpened = ref<boolean>(false)
 
 watch(territoriesSelectorItems, (nVal) => {
   if (!nVal.length || !nVal[0]) return
@@ -60,6 +62,14 @@ const openOptimizationDialog = () => {
 
 const closeOptimizationDialog = async () => {
   optimizationDialogOpened.value = false
+}
+
+const openReplanDialog = () => {
+  replanDialogOpened.value = true
+}
+
+const closeReplanDialog = async () => {
+  replanDialogOpened.value = false
 }
 </script>
 
@@ -97,6 +107,16 @@ const closeOptimizationDialog = async () => {
         <v-btn
           variant="text"
           :loading="loadingDistrictData"
+          prepend-icon="autorenew"
+          color="warning"
+          class="px-3"
+          @click="openReplanDialog"
+        >
+          Перепланирование
+        </v-btn>
+        <v-btn
+          variant="text"
+          :loading="loadingDistrictData"
           prepend-icon="alt_route"
           class="px-3"
           @click="openOptimizationDialog"
@@ -115,6 +135,13 @@ const closeOptimizationDialog = async () => {
           @click="openResetDatasetsDialog"
         />
         <icon-button
+          tooltip-text="Перепланирование"
+          icon="autorenew"
+          color="warning"
+          :loading="loadingDistrictData"
+          @click="openReplanDialog"
+        />
+        <icon-button
           tooltip-text="Назначить заявки"
           icon="alt_route"
           :loading="loadingDistrictData"
@@ -130,5 +157,6 @@ const closeOptimizationDialog = async () => {
     @close="closeResetDatasetsDialog"
   />
   <optimization-dialog :opened="optimizationDialogOpened" @close="closeOptimizationDialog" />
+  <replan-dialog :opened="replanDialogOpened" @close="closeReplanDialog" />
 </template>
 <style scoped lang="scss"></style>

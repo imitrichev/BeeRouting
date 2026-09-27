@@ -56,6 +56,10 @@ const baseUrls = {
       path: '/api/v2/optimize/',
       method: HTTP_METHODS.POST,
     },
+    REPLAN: {
+      path: '/api/v2/replan/',
+      method: HTTP_METHODS.POST,
+    },
   },
 }
 

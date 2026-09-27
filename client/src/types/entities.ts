@@ -157,3 +157,37 @@ export type ErrorPreviewReassignmentObject = {
 
 export type PreviewReassignmentObject =
   ErrorPreviewReassignmentObject | SuccessPreviewReassignmentObject
+
+export type ReplanEventType = 'ENGINEER_UNAVAILABLE' | 'TASK_CANCELLED' | 'EMERGENCY_TASK'
+
+export interface EngineerUnavailableReplanRequestData {
+  event_type: 'ENGINEER_UNAVAILABLE'
+  consider_equipment: boolean
+  engineer_id: string
+}
+
+export interface TaskCancelledReplanRequestData {
+  event_type: 'TASK_CANCELLED'
+  consider_equipment: boolean
+  task_id: string
+}
+
+export interface EmergencyTaskReplanRequestData {
+  event_type: 'EMERGENCY_TASK'
+  consider_equipment: boolean
+  task: {
+    id: string
+    latitude: number
+    longitude: number
+    work_type: string
+    window_start: string
+    window_end: string
+    required_vehicle_type: string | null
+    required_router_count: number
+  }
+}
+
+export type ReplanRequestData =
+  | EngineerUnavailableReplanRequestData
+  | TaskCancelledReplanRequestData
+  | EmergencyTaskReplanRequestData

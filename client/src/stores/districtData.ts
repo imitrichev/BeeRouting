@@ -10,6 +10,7 @@ import type {
   OptimizationRequestData,
   PreviewReassignmentObject,
   PreviewReassignmentRequestData,
+  ReplanRequestData,
   RouteStopExplanationObject,
   Task,
   UnassignedTask,
@@ -20,6 +21,7 @@ export const useDistrictDataStore = defineStore('districtData', () => {
   const loadingDistrictData = ref<boolean>(true)
   const districtData = shallowRef<DistrictData | null>(null)
   const selectedRoutes = ref<string[]>([])
+  const currentConsiderEquipment = ref<boolean>(true)
 
   const isOptimized = computed((): boolean => {
     return !!districtData.value && !!districtData.value.result
@@ -86,6 +88,7 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     )
     if (response.isSuccess) {
       districtData.value = response.data
+      currentConsiderEquipment.value = response.data.planning_options.consider_equipment
       clearRouteSelection()
       loadingDistrictData.value = false
     }
@@ -111,6 +114,7 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     )
     if (response.isSuccess) {
       districtData.value = response.data
+      currentConsiderEquipment.value = data.consider_equipment
       clearRouteSelection()
     }
 
@@ -219,7 +223,21 @@ export const useDistrictDataStore = defineStore('districtData', () => {
   }
 
   const loadingReplan = ref<boolean>(false)
-  const loadReplan = async () => {}
+  const loadReplan = async (data: ReplanRequestData) => {
+    loadingReplan.value = true
+    const response = await sendRequest<DistrictData>(
+      baseUrls.DISTRICT.REPLAN,
+      data,
+      {},
+      { territory: String(districtCode.value) },
+    )
+    if (response.isSuccess) {
+      districtData.value = response.data
+      currentConsiderEquipment.value = data.consider_equipment
+      clearRouteSelection()
+    }
+    loadingReplan.value = false
+  }
 
   return {
     selectDistrict,
@@ -260,6 +278,7 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     loadingManualReassignment,
     loadManualReassignment,
 
+    currentConsiderEquipment,
     loadingReplan,
     loadReplan,
   }
