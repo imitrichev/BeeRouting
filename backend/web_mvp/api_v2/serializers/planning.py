@@ -7,6 +7,7 @@ from typing import Any
 from rest_framework import serializers
 
 from backend.optimization import (
+    TaskStatus,
     VehicleType,
     WorkType,
     hhmm_to_minutes,
@@ -66,7 +67,14 @@ class ReplanningEventSerializer(serializers.Serializer):
     event_type = serializers.ChoiceField(
         choices=("ENGINEER_UNAVAILABLE", "EMERGENCY_TASK", "TASK_CANCELLED")
     )
-    planning_time = serializers.RegexField(r"^\d{2}:\d{2}$")
+    # Время снимка больше не вводится диспетчером. Старое поле оставлено
+    # необязательным для обратной совместимости старых клиентов API.
+    planning_time = serializers.RegexField(
+        r"^(?:[01]\d|2[0-3]):[0-5]\d$",
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+    )
     engineer_id = serializers.CharField(required=False)
     task_id = serializers.CharField(required=False)
     task = TaskCreateSerializer(required=False)
@@ -84,6 +92,15 @@ class ReplanningEventSerializer(serializers.Serializer):
                 {required_field: "Поле обязательно для выбранного события."}
             )
         return attrs
+
+
+class TaskStatusUpdateSerializer(serializers.Serializer):
+    """Проверяет смену оперативного статуса без запуска оптимизатора."""
+
+    task_id = serializers.CharField(max_length=120)
+    status = serializers.ChoiceField(
+        choices=[status.value for status in TaskStatus]
+    )
 
 
 class ManualReassignmentPreviewSerializer(serializers.Serializer):

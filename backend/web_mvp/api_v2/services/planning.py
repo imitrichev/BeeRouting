@@ -59,12 +59,14 @@ class PlanningService:
         self._scenario: JsonScenario | None = None
         self._source_name: str | None = None
         self.routing_provider: RoutingProvider | None = None
+        self._routing_provider_requires_rebuild = False
         self.use_osrm = True
         self._problem: OptimizationProblem | None = None
         self._result: OptimizationResult | None = None
         self._preserve_assigned_tasks = False
         self._ignore_task_statuses = False
         self._consider_equipment = False
+        self._manual_status_update = False
         self._unavailable_engineer_ids: set[str] = set()
         self._geocoder: NominatimGeocoder | None = None
         self._manual_reassignment_proposals: dict[str, dict[str, Any]] = {}
@@ -78,6 +80,7 @@ class PlanningService:
         self._scenario = None
         self._source_name = None
         self.routing_provider = None
+        self._routing_provider_requires_rebuild = False
         self._problem = None
         self._result = None
         self._preserve_assigned_tasks = False
@@ -104,6 +107,7 @@ class PlanningService:
         # У нового dataset другой набор координат, поэтому старый provider и
         # его кэш ответов больше нельзя использовать.
         self.routing_provider = None
+        self._routing_provider_requires_rebuild = False
         self._unavailable_engineer_ids = set()
         return scenario
 
@@ -120,6 +124,7 @@ class PlanningService:
         self._result = None
         self._preserve_assigned_tasks = False
         self.routing_provider = None
+        self._routing_provider_requires_rebuild = False
         self._manual_reassignment_proposals.clear()
         self._late_day_manual_task_ids.clear()
         self._late_day_active_engineer_ids.clear()
@@ -151,6 +156,25 @@ class PlanningService:
         if solver not in {"ortools", "baseline"}:
             raise ValueError("solver должен быть 'ortools' или 'baseline'.")
         scenario = self.current_dataset()
+        current_routes: dict[str, tuple[str, ...]] | None = None
+        if not ignore_task_statuses and self._result is not None:
+            plannable_task_ids = {
+                task.id
+                for task in scenario.tasks
+                if task.status not in {TaskStatus.CANCELLED, TaskStatus.COMPLETED}
+            }
+            current_routes = {
+                engineer_id: tuple(
+                    stop.task_id
+                    for stop in route.stops
+                    if stop.task_id in plannable_task_ids
+                )
+                for engineer_id, route in self._result.routes.items()
+            }
+            if initial_routes_by_engineer is None:
+                initial_routes_by_engineer = current_routes
+            if reference_routes_by_engineer is None:
+                reference_routes_by_engineer = current_routes
         if not ignore_task_statuses and not planning_time:
             # Контрольный снимок относится к минимальному моменту, когда все
             # уже выполняемые заявки могли начаться в своих окнах. Для этого
@@ -172,6 +196,26 @@ class PlanningService:
             planning_time=planning_time,
             operational_states=states,
         )
+        if solver == "baseline" and current_routes:
+            # Baseline проходит заявки в порядке входных данных. Сначала
+            # ставим уже рассчитанные маршруты в их фактическом порядке, а
+            # затем новые неназначенные заявки. Так жадный алгоритм только
+            # дополняет план и не переставляет прежние остановки.
+            task_by_id = {task.id: task for task in problem.tasks}
+            ordered_ids = [
+                task_id
+                for engineer in problem.engineers
+                for task_id in current_routes.get(engineer.id, ())
+                if task_id in task_by_id
+            ]
+            existing_ids = set(ordered_ids)
+            ordered_ids.extend(
+                task.id for task in problem.tasks if task.id not in existing_ids
+            )
+            problem = replace(
+                problem,
+                tasks=tuple(task_by_id[task_id] for task_id in ordered_ids),
+            )
         config = OptimizerConfig(time_limit_minutes=1)
         if solver == "baseline":
             result = GreedyBaselineOptimizer(config).optimize(problem)
@@ -219,6 +263,8 @@ class PlanningService:
                 if not self._ignore_task_statuses and task.status in {
                     TaskStatus.EN_ROUTE,
                     TaskStatus.IN_PROGRESS,
+                    TaskStatus.COMPLETED,
+                    TaskStatus.CANCELLED,
                     TaskStatus.OVERDUE,
                 }:
                     status = task.status
@@ -317,6 +363,92 @@ class PlanningService:
         self._preserve_assigned_tasks = False
         self._result = self._filter_result_tasks(keep_task_ids)
         return self._scenario, self._result
+
+    def update_task_status(
+        self, task_id: str, status: TaskStatus
+    ) -> JsonScenario:
+        """Меняет статус заявки в текущем плане без запуска solver.
+
+        Для заявки, которая уже назначена маршруту или имеет текущего
+        исполнителя, разрешены рабочие и закрывающие статусы. У заявки без
+        исполнителя единственное допустимое ручное действие — отмена.
+        Такой метод намеренно не перестраивает маршрут: диспетчер фиксирует
+        факт, а отдельное действие перепланирования запускается явно.
+        """
+        if self._scenario is None:
+            raise ValueError("Сначала загрузите dataset")
+        if not isinstance(status, TaskStatus):
+            status = TaskStatus(status)
+
+        route_task_ids = {
+            stop.task_id
+            for route in (self._result.routes.values() if self._result else ())
+            for stop in route.stops
+        }
+        tasks = list(self._scenario.tasks)
+        for index, task in enumerate(tasks):
+            if task.id != task_id:
+                continue
+            # В официальном JSON current_engineer_id может содержать
+            # исполнителя из контрольного распределения при статусе NOT_SENT.
+            # Такой исторический reference не считается текущим назначением.
+            assigned = task.id in route_task_ids or (
+                self._result is not None
+                and task.current_engineer_id is not None
+                and task.status
+                in {
+                    TaskStatus.ASSIGNED,
+                    TaskStatus.EN_ROUTE,
+                    TaskStatus.IN_PROGRESS,
+                    TaskStatus.COMPLETED,
+                    TaskStatus.CANCELLED,
+                    TaskStatus.OVERDUE,
+                }
+            )
+            allowed_statuses = (
+                {
+                    TaskStatus.ASSIGNED,
+                    TaskStatus.EN_ROUTE,
+                    TaskStatus.IN_PROGRESS,
+                    TaskStatus.COMPLETED,
+                    TaskStatus.CANCELLED,
+                }
+                if assigned
+                else {TaskStatus.CANCELLED}
+            )
+            if status not in allowed_statuses:
+                raise ValueError(
+                    (
+                        f"Для назначенной заявки {task_id} допустимы статусы: "
+                        "ASSIGNED, EN_ROUTE, IN_PROGRESS, COMPLETED, CANCELLED."
+                    )
+                    if assigned
+                    else f"Неназначенную заявку {task_id} можно только отменить."
+                )
+            current_engineer_id = task.current_engineer_id if assigned else None
+            if current_engineer_id is None and self._result is not None:
+                current_engineer_id = next(
+                    (
+                        engineer_id
+                        for engineer_id, route in self._result.routes.items()
+                        if any(stop.task_id == task_id for stop in route.stops)
+                    ),
+                    None,
+                )
+            tasks[index] = replace(
+                task,
+                status=status,
+                current_engineer_id=current_engineer_id,
+            )
+            self._scenario = replace(self._scenario, tasks=tuple(tasks))
+            # Следующее сохранение должно считать новый operational status
+            # источником истины, а не контрольным JSON.
+            self._ignore_task_statuses = False
+            self._manual_status_update = True
+            if self._problem is not None:
+                self._problem = replace(self._problem, tasks=tuple(tasks))
+            return self._scenario
+        raise ValueError(f"Заявка {task_id!r} не найдена")
 
     def _filter_result_tasks(self, keep_task_ids: set[str]) -> OptimizationResult:
         """Удаляет из сохранённого результата заявки вне текущего плана."""
@@ -678,6 +810,19 @@ class PlanningService:
                 ),
             )
             self._scenario = scenario
+            # Удаляем только отменённую остановку из стартового снимка.
+            # Остальные маршруты используются как начальное решение без
+            # пересборки чужого порядка заявок.
+            if initial_routes is not None:
+                for engineer_id, route in initial_routes.items():
+                    initial_routes[engineer_id] = tuple(
+                        item for item in route if item != task_id
+                    )
+            if reference_routes is not None:
+                for engineer_id, route in reference_routes.items():
+                    reference_routes[engineer_id] = tuple(
+                        item for item in route if item != task_id
+                    )
             details["task_id"] = task_id
 
         elif event_type == "EMERGENCY_TASK":
@@ -690,16 +835,20 @@ class PlanningService:
         else:  # pragma: no cover — serializer ограничивает справочник.
             raise ValueError(f"Неизвестное событие {event_type!r}")
 
-        # ASSIGNED разрешено перестраивать, а EN_ROUTE/IN_PROGRESS остаются
-        # за текущими исполнителями через правила OptimizationProblem.
+        # Во всех оперативных сценариях обычные ASSIGNED и NOT_SENT можно
+        # перестраивать. EN_ROUTE/IN_PROGRESS остальных доступных инженеров
+        # остаются жёстко закреплёнными правилами OptimizationProblem.
+        # При недоступности инженера его активные заявки предварительно
+        # переводятся в NOT_SENT: физически отсутствующий исполнитель не
+        # может завершить даже уже начатую работу.
         self._problem = None
         self._result = None
         scenario, result = self.optimize_current(
-            preserve_assigned_tasks=False,
             ignore_task_statuses=False,
-            planning_time=event["planning_time"],
+            planning_time=event.get("planning_time"),
             initial_routes_by_engineer=initial_routes,
             reference_routes_by_engineer=reference_routes,
+            preserve_assigned_tasks=False,
             consider_equipment=bool(
                 event.get("consider_equipment", self._consider_equipment)
             ),
@@ -778,9 +927,17 @@ class PlanningService:
             location_coordinates=coordinates,
         )
         self._problem = None
-        self._result = None
+        if self._result is not None:
+            # После появления новой заявки текущий маршрут остаётся рабочим.
+            # Следующий запуск solver фиксирует эти назначения и добавляет
+            # только NOT_SENT-заявки.
+            self._ignore_task_statuses = False
+            self._preserve_assigned_tasks = True
         self._manual_reassignment_proposals.clear()
-        self.routing_provider = None
+        # Старый provider ещё нужен в этом ответе для geometry сохранённых
+        # маршрутов. Перед следующим расчётом он будет построен заново уже с
+        # координатой новой заявки.
+        self._routing_provider_requires_rebuild = True
         return self._scenario
 
     @staticmethod
@@ -915,7 +1072,7 @@ class PlanningService:
         В обычном web-запуске используется OSRM. Тесты переключают
         ``use_osrm`` в ``False`` и получают воспроизводимую локальную матрицу.
         """
-        if self.routing_provider is not None:
+        if self.routing_provider is not None and not self._routing_provider_requires_rebuild:
             provider = self.routing_provider
         elif self.use_osrm:
             provider = create_osrm_provider_from_environment(
@@ -930,6 +1087,7 @@ class PlanningService:
                 speed_km_per_hour=30.0,
             )
         self.routing_provider = provider
+        self._routing_provider_requires_rebuild = False
         vehicle_types = tuple(
             dict.fromkeys(engineer.vehicle_type for engineer in scenario.engineers)
         )

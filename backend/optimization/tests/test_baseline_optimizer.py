@@ -1,5 +1,7 @@
 """Тесты намеренно простого greedy baseline."""
 
+from dataclasses import replace
+
 from backend.optimization import (
     EngineerAvailability,
     GreedyBaselineOptimizer,
@@ -170,3 +172,28 @@ def test_in_memory_provider_returns_both_routing_matrices() -> None:
     assert provider.get_distance_matrix(("base-1", "customer-1"))["base-1"][
         "customer-1"
     ] == 1.0
+
+
+def test_baseline_equipment_flag_controls_router_stock_constraint() -> None:
+    """Baseline игнорирует запас роутеров только при выключенной опции."""
+    original = build_problem()
+    engineer = replace(original.engineers[0], available_router_count=0)
+    task = replace(original.tasks[0], required_router_count=1)
+    common = {
+        "engineers": (engineer,),
+        "availabilities": (original.availabilities[0],),
+        "tasks": (task,),
+        "travel_time_matrix": original.travel_time_matrix,
+        "travel_distance_matrix": original.travel_distance_matrix,
+    }
+
+    without_equipment = GreedyBaselineOptimizer().optimize(
+        OptimizationProblem(**common, consider_equipment=False)
+    )
+    with_equipment = GreedyBaselineOptimizer().optimize(
+        OptimizationProblem(**common, consider_equipment=True)
+    )
+
+    assert without_equipment.assigned_task_count == 1
+    assert with_equipment.assigned_task_count == 0
+    assert with_equipment.unassigned_reasons[task.id].code.value == "missing_equipment"

@@ -27,6 +27,7 @@ from .planning import (
     ManualReassignmentConfirmSerializer,
     OperationalStateSerializer,
     TaskCreateSerializer,
+    TaskStatusUpdateSerializer,
 )
 from .optimization import (
     DatasetEngineerSerializer,

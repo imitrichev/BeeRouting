@@ -48,7 +48,7 @@ async function switchTerritory(code: string): Promise<void> {
     selectedEngineerIds.value = []
     reassignmentOpen.value = false
     explanationOpen.value = false
-    await refreshMap()
+    await refreshMap(true)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Ошибка загрузки района'
   } finally { loading.value = false }
@@ -59,8 +59,8 @@ const result = ref<OptimizationResult | null>(null)
 const selectedFile = ref<File | null>(null)
 const loading = ref(false)
 const optimizing = ref(false)
-const syncingStatuses = ref(false)
 const errorMessage = ref('')
+const statusUpdatingTaskId = ref('')
 const selectedEngineerId = ref('')
 const selectedEngineerIds = ref<string[]>([])
 const mapContainer = ref<HTMLElement | null>(null)
@@ -91,7 +91,7 @@ const selectingTaskPoint = ref(false)
 const replanOpen = ref(false)
 const replanning = ref(false)
 const replanningEvent = ref({
-  event_type: 'ENGINEER_UNAVAILABLE', planning_time: '12:00',
+  event_type: 'ENGINEER_UNAVAILABLE',
   engineer_id: '', task_id: '', emergency_id: '',
   latitude: null as number | null, longitude: null as number | null,
   duration_minutes: 80, window_start: '12:00', window_end: '14:00',
@@ -213,13 +213,44 @@ const assignedTaskIds = computed(() => {
   return ids
 })
 
-const canRunBaseline = computed(() => Boolean(dataset.value) && !result.value)
-const canSyncReferenceStatuses = computed(() => Boolean(result.value))
-const canDistributeTasks = computed(() => {
-  if (!dataset.value) return false
-  if (!result.value) return dataset.value.tasks.length > 0
-  return result.value.metrics.unassigned_task_count > 0
+const unassignedTasks = computed(() => {
+  if (!dataset.value) return []
+  return dataset.value.tasks.filter((task) => {
+    if (['CANCELLED', 'COMPLETED'].includes(task.status)) return false
+    return !assignedTaskIds.value.has(task.id) && !task.current_engineer_id
+  })
 })
+const unassignedTaskCount = computed(() => unassignedTasks.value.length)
+
+const unassignedReasonByTask = computed(() => new Map(
+  (result.value?.unassigned ?? []).map((item) => [item.task_id, item.message]),
+))
+
+function unassignedTaskMessage(taskId: string): string {
+  return unassignedReasonByTask.value.get(taskId) ?? 'Ожидает распределения'
+}
+
+// Последний result перечисляет каждую рассмотренную solver заявку: она либо
+// попала в маршрут, либо возвращена в unassigned с явной причиной. Повторный
+// щелчок по Baseline/OR-Tools без изменения входных данных не нужен.
+const evaluatedTaskIds = computed(() => {
+  const ids = new Set(assignedTaskIds.value)
+  result.value?.unassigned.forEach((item) => ids.add(item.task_id))
+  return ids
+})
+
+// Обе кнопки снова становятся доступны только после появления новой
+// неназначенной заявки, отсутствующей в предыдущем результате. При создании
+// заявки старый result сохраняется, поэтому новая ID естественно попадёт сюда.
+const pendingDistributionTasks = computed(() =>
+  unassignedTasks.value.filter((task) => !evaluatedTaskIds.value.has(task.id)),
+)
+const canDistributeTasks = computed(() => pendingDistributionTasks.value.length > 0)
+
+// Количество в шапке метрик должно учитывать текущий dataset. После создания
+// новой заявки старый OptimizationResult намеренно сохраняется, поэтому его
+// счётчики до следующего запуска solver уже не описывают всю очередь.
+const currentAssignedTaskCount = computed(() => assignedTaskIds.value.size)
 
 const assignmentByTask = computed(() => {
   const assignments: Record<string, string> = {}
@@ -271,18 +302,64 @@ const STATUS_LABELS: Record<string, string> = {
   OVERDUE: 'просрочена',
 }
 
+const ASSIGNED_STATUS_OPTIONS = [
+  { title: 'Назначена в плане', value: 'ASSIGNED' },
+  { title: 'В пути', value: 'EN_ROUTE' },
+  { title: 'В работе', value: 'IN_PROGRESS' },
+  { title: 'Выполнена', value: 'COMPLETED' },
+  { title: 'Отменена', value: 'CANCELLED' },
+]
+
+function isTaskAssigned(task: Task): boolean {
+  return Boolean(task.current_engineer_id) || assignedTaskIds.value.has(task.id)
+}
+
+function taskStatusOptions(task: Task) {
+  return isTaskAssigned(task)
+    ? ASSIGNED_STATUS_OPTIONS
+    : [
+        ...(task.status !== 'CANCELLED'
+          ? [{ title: STATUS_LABELS[task.status] ?? task.status, value: task.status }]
+          : []),
+        { title: 'Отменена', value: 'CANCELLED' },
+      ]
+}
+
 function taskStatusLabel(task: Task): string {
   if (result.value && task.is_plannable) {
+    if (['COMPLETED', 'CANCELLED', 'EN_ROUTE', 'IN_PROGRESS', 'OVERDUE'].includes(task.status)) {
+      return STATUS_LABELS[task.status]
+    }
     if (assignedTaskIds.value.has(task.id)) {
-      // Оперативный статус начатой заявки важнее факта её наличия в маршруте.
-      if (['EN_ROUTE', 'IN_PROGRESS', 'OVERDUE'].includes(task.status)) {
-        return STATUS_LABELS[task.status]
-      }
       return 'назначена в плане'
     }
     return 'не назначена'
   }
   return STATUS_LABELS[task.status] ?? task.status
+}
+
+async function updateTaskStatus(taskId: string, status: string): Promise<void> {
+  statusUpdatingTaskId.value = taskId
+  errorMessage.value = ''
+  try {
+    const response = await apiFetch('/api/v2/jobs/status/', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task_id: taskId, status }),
+    })
+    const payload = await readResponse(response)
+    dataset.value = payload.dataset
+    result.value = payload.result ?? null
+    ignoreTaskStatuses.value = false
+    planningTime.value = ''
+    await refreshMap()
+  } catch (error) {
+    errorMessage.value = error instanceof Error
+      ? error.message
+      : 'Не удалось изменить статус заявки'
+  } finally {
+    statusUpdatingTaskId.value = ''
+  }
 }
 
 function taskStatusColor(task: Task): string {
@@ -319,7 +396,7 @@ async function loadOfficialDataset() {
     planningTime.value = ''
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
-    await refreshMap()
+    await refreshMap(true)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось загрузить dataset'
   } finally {
@@ -359,7 +436,7 @@ async function uploadDataset() {
     considerEquipment.value = payload.planning_options?.consider_equipment ?? false
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
-    await refreshMap()
+    await refreshMap(true)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось загрузить dataset'
   } finally {
@@ -367,10 +444,10 @@ async function uploadDataset() {
   }
 }
 
-async function optimize(ignoreStatuses: boolean, solver: 'baseline' | 'ortools') {
+async function optimize(solver: 'baseline' | 'ortools') {
   optimizing.value = true
   errorMessage.value = ''
-  ignoreTaskStatuses.value = ignoreStatuses
+  ignoreTaskStatuses.value = false
   planningTime.value = ''
   try {
     const response = await apiFetch('/api/v2/optimize/', {
@@ -378,10 +455,9 @@ async function optimize(ignoreStatuses: boolean, solver: 'baseline' | 'ortools')
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         solver,
-        ignore_task_statuses: ignoreStatuses,
-        planning_time: !ignoreStatuses && planningTime.value
-          ? planningTime.value
-          : null,
+        ignore_task_statuses: false,
+        preserve_assigned_tasks: true,
+        planning_time: null,
         consider_equipment: considerEquipment.value,
       }),
     })
@@ -392,37 +468,11 @@ async function optimize(ignoreStatuses: boolean, solver: 'baseline' | 'ortools')
     // остаться серыми, пока диспетчер сам не откроет нужный маршрут.
     selectedEngineerId.value = ''
     selectedEngineerIds.value = []
-    await refreshMap()
+    await refreshMap(true)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось запустить оптимизацию'
   } finally {
     optimizing.value = false
-  }
-}
-
-async function syncReferenceStatuses(): Promise<void> {
-  syncingStatuses.value = true
-  errorMessage.value = ''
-  try {
-    const response = await apiFetch('/api/v2/sync-reference-statuses/', {
-      method: 'POST',
-    })
-    const payload = await readResponse(response)
-    dataset.value = payload.dataset
-    result.value = payload.result ?? null
-    // После синхронизации показываем актуальные статусы и назначения из
-    // текущего рабочего плана, а не исполнителей из контрольного CSV.
-    ignoreTaskStatuses.value = false
-    planningTime.value = ''
-    selectedEngineerId.value = ''
-    selectedEngineerIds.value = []
-    await refreshMap()
-  } catch (error) {
-    errorMessage.value = error instanceof Error
-      ? error.message
-      : 'Не удалось загрузить статусы из контрольного распределения'
-  } finally {
-    syncingStatuses.value = false
   }
 }
 
@@ -447,9 +497,10 @@ async function createTask(): Promise<void> {
     })
     const payload = await readResponse(response)
     dataset.value = payload.dataset
-    result.value = null
-    selectedEngineerId.value = ''
-    selectedEngineerIds.value = []
+    // Новая заявка добавляется поверх текущего плана. Сохраняем результат,
+    // выбранных инженеров и показанные маршруты до явного распределения.
+    result.value = payload.result ?? result.value
+    ignoreTaskStatuses.value = payload.planning_options?.ignore_task_statuses ?? false
     createTaskOpen.value = false
     newTask.value = {
       id: '', address: '', latitude: null, longitude: null,
@@ -460,7 +511,7 @@ async function createTask(): Promise<void> {
     taskAddressError.value = ''
     draftLocationMarker?.remove()
     draftLocationMarker = null
-    await refreshMap()
+    await refreshMap(false)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось создать заявку'
   } finally {
@@ -536,7 +587,6 @@ async function replan(): Promise<void> {
     const form = replanningEvent.value
     const payload: Record<string, unknown> = {
       event_type: form.event_type,
-      planning_time: form.planning_time,
       consider_equipment: considerEquipment.value,
     }
     if (form.event_type === 'ENGINEER_UNAVAILABLE') payload.engineer_id = form.engineer_id
@@ -549,10 +599,8 @@ async function replan(): Promise<void> {
         work_type: 'EMERGENCY',
         window_start: form.window_start,
         window_end: form.window_end,
-        priority: 'URGENT',
         required_vehicle_type: form.required_vehicle_type,
         required_router_count: form.required_router_count,
-        status: 'NOT_SENT',
       }
     }
     const response = await apiFetch('/api/v2/replan/', {
@@ -684,7 +732,7 @@ function routeCoordinates(route: EngineerRoute): [number, number][] {
   return coordinates
 }
 
-function drawMap() {
+function drawMap(fitToDataset = false) {
   if (!map) return
   markers.forEach((marker) => marker.remove())
   markers = []
@@ -797,7 +845,7 @@ function drawMap() {
       ))
       .map((engineer) => [engineer.start_longitude as number, engineer.start_latitude as number] as [number, number]),
   ]
-  if (allCoordinates.length > 0) {
+  if (fitToDataset && allCoordinates.length > 0) {
     const bounds = allCoordinates.reduce(
       (currentBounds, coordinate) => currentBounds.extend(coordinate),
       new maplibregl.LngLatBounds(allCoordinates[0], allCoordinates[0]),
@@ -848,11 +896,11 @@ function createMap() {
       paint: { 'line-color': ['get', 'color'], 'line-width': 5, 'line-opacity': 0.9 },
     })
     map?.resize()
-    drawMap()
+    drawMap(true)
   })
 }
 
-async function refreshMap() {
+async function refreshMap(fitToDataset = false) {
   // Блок карты находится внутри v-if="dataset". До завершения загрузки
   // dataset контейнера ещё нет в DOM, поэтому попытка создать карту из
   // первоначального onMounted была слишком ранней.
@@ -862,7 +910,7 @@ async function refreshMap() {
     return
   }
   map?.resize()
-  drawMap()
+  drawMap(fitToDataset)
 }
 
 onMounted(async () => {
@@ -941,8 +989,8 @@ onBeforeUnmount(() => {
               color="secondary"
               variant="tonal"
               :loading="optimizing"
-              :disabled="!canRunBaseline"
-              @click="optimize(true, 'baseline')"
+              :disabled="!canDistributeTasks"
+              @click="optimize('baseline')"
             >
               Baseline (жадный алгоритм)
             </v-btn>
@@ -950,18 +998,9 @@ onBeforeUnmount(() => {
               color="success"
               :loading="optimizing"
               :disabled="!canDistributeTasks"
-              @click="optimize(true, 'ortools')"
+              @click="optimize('ortools')"
             >
               Распределить заявки (OR-Tools)
-            </v-btn>
-            <v-btn
-              color="info"
-              variant="tonal"
-              :loading="syncingStatuses"
-              :disabled="!canSyncReferenceStatuses"
-              @click="syncReferenceStatuses"
-            >
-              Статусы заявок из контрольного распределения
             </v-btn>
             <v-btn color="primary" variant="tonal" :disabled="!dataset" @click="createTaskOpen = true">
               Создать заявку
@@ -1078,7 +1117,6 @@ onBeforeUnmount(() => {
                     ]"
                   />
                 </v-col>
-                <v-col cols="12" sm="5"><v-text-field v-model="replanningEvent.planning_time" type="time" label="Текущее время *" /></v-col>
                 <v-col v-if="replanningEvent.event_type === 'ENGINEER_UNAVAILABLE'" cols="12">
                   <v-select v-model="replanningEvent.engineer_id" label="Недоступный инженер *" :items="dataset?.engineers ?? []" item-title="name" item-value="id" />
                 </v-col>
@@ -1086,13 +1124,12 @@ onBeforeUnmount(() => {
                   <v-select v-model="replanningEvent.task_id" label="Отменённая заявка *" :items="dataset?.tasks.filter((task) => !['CANCELLED', 'COMPLETED'].includes(task.status)) ?? []" item-title="id" item-value="id" />
                 </v-col>
                 <template v-if="replanningEvent.event_type === 'EMERGENCY_TASK'">
-                  <v-col cols="12"><v-alert type="info" density="compact">Навык EMERGENCY_WORKS и приоритет URGENT устанавливаются автоматически.</v-alert></v-col>
+                  <v-col cols="12"><v-alert type="info" density="compact">Навык EMERGENCY_WORKS и приоритет URGENT устанавливаются автоматически. Длительность берётся из норматива аварии; окно задаётся в формате ЧЧ:ММ.</v-alert></v-col>
                   <v-col cols="12" sm="6"><v-text-field v-model="replanningEvent.emergency_id" label="ID аварийной заявки *" /></v-col>
-                  <v-col cols="12" sm="6"><v-text-field model-value="80" readonly label="Норматив выполнения, минут" /></v-col>
                   <v-col cols="12" sm="6"><v-text-field v-model.number="replanningEvent.latitude" type="number" step="0.000001" label="Широта *" /></v-col>
                   <v-col cols="12" sm="6"><v-text-field v-model.number="replanningEvent.longitude" type="number" step="0.000001" label="Долгота *" /></v-col>
-                  <v-col cols="12" sm="6"><v-text-field v-model="replanningEvent.window_start" type="time" label="Начало окна *" /></v-col>
-                  <v-col cols="12" sm="6"><v-text-field v-model="replanningEvent.window_end" type="time" label="Конец окна *" /></v-col>
+                  <v-col cols="12" sm="6"><v-text-field v-model="replanningEvent.window_start" :rules="hhmmRules" type="text" inputmode="numeric" maxlength="5" placeholder="09:00" label="Начало окна, ЧЧ:ММ *" hint="24-часовой формат" persistent-hint /></v-col>
+                  <v-col cols="12" sm="6"><v-text-field v-model="replanningEvent.window_end" :rules="hhmmRules" type="text" inputmode="numeric" maxlength="5" placeholder="11:00" label="Конец окна, ЧЧ:ММ *" hint="24-часовой формат" persistent-hint /></v-col>
                   <v-col cols="12" sm="6"><v-select v-model="replanningEvent.required_vehicle_type" clearable label="Необходимый транспорт" :items="['CAR', 'WALK', 'BICYCLE', 'PUBLIC_TRANSPORT']" /></v-col>
                   <v-col cols="12" sm="6">
                     <v-text-field
@@ -1153,13 +1190,13 @@ onBeforeUnmount(() => {
 
             <v-card v-if="result" variant="outlined">
               <v-card-title>Unassigned заявки</v-card-title>
-              <v-card-text v-if="!result.unassigned.length" class="text-success">
+              <v-card-text v-if="unassignedTaskCount === 0" class="text-success">
                 Все заявки назначены
               </v-card-text>
               <v-list v-else density="compact">
-                <v-list-item v-for="item in result.unassigned" :key="item.task_id">
-                  <v-list-item-title>{{ item.task_id }}</v-list-item-title>
-                  <v-list-item-subtitle>{{ item.message }}</v-list-item-subtitle>
+                <v-list-item v-for="task in unassignedTasks" :key="task.id">
+                  <v-list-item-title>{{ task.id }}</v-list-item-title>
+                  <v-list-item-subtitle>{{ unassignedTaskMessage(task.id) }}</v-list-item-subtitle>
                 </v-list-item>
               </v-list>
             </v-card>
@@ -1171,7 +1208,7 @@ onBeforeUnmount(() => {
                 <v-card color="blue-lighten-5" variant="flat"><v-card-text><div class="metric-label">Задействовано</div><strong>{{ result.metrics.used_engineers_count }}</strong></v-card-text></v-card>
               </v-col>
               <v-col cols="6" sm="3">
-                <v-card color="green-lighten-5" variant="flat"><v-card-text><div class="metric-label">Назначено</div><strong>{{ result.metrics.assigned_task_count }}</strong></v-card-text></v-card>
+                <v-card color="green-lighten-5" variant="flat"><v-card-text><div class="metric-label">Назначено</div><strong>{{ currentAssignedTaskCount }}</strong></v-card-text></v-card>
               </v-col>
               <v-col cols="6" sm="3">
                 <v-card color="orange-lighten-5" variant="flat"><v-card-text><div class="metric-label">Пробег, км</div><strong>{{ formatNumber(result.metrics.total_distance_km) }}</strong></v-card-text></v-card>
@@ -1282,10 +1319,19 @@ onBeforeUnmount(() => {
                     <td>{{ task.required_router_count }}</td>
                     <td>{{ assignmentByTask[task.id] ?? '—' }}</td>
                     <td>
-                      <v-chip size="x-small" :color="taskStatusColor(task)">
-                        <v-icon v-if="task.assignment_locked" start size="x-small">mdi-lock</v-icon>
-                        {{ taskStatusLabel(task) }}
-                      </v-chip>
+                      <v-select
+                        :model-value="task.status === 'ASSIGNED' && assignedTaskIds.has(task.id) ? 'ASSIGNED' : task.status"
+                        :items="taskStatusOptions(task)"
+                        item-title="title"
+                        item-value="value"
+                        density="compact"
+                        variant="plain"
+                        hide-details
+                        :loading="statusUpdatingTaskId === task.id"
+                        :disabled="statusUpdatingTaskId !== ''"
+                        :color="taskStatusColor(task)"
+                        @update:model-value="updateTaskStatus(task.id, $event)"
+                      />
                     </td>
                   </tr>
                 </tbody>
