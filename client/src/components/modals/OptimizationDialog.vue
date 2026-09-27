@@ -64,7 +64,7 @@ const optimize = async () => {
           tooltip-text="Закрыть"
         />
       </template>
-      <v-row no-gutters class="overflow-list px-4 py-4">
+      <v-row no-gutters class="overflow-list default-scrollbar px-4 py-4">
         <v-select
           v-model="formData.solver"
           :items="solverSelectorItems"

@@ -41,3 +41,17 @@ const createReplacer = <T extends Record<string, string>>(map: T) => {
 export const replaceSkillTypes = createReplacer(SKILL_TYPE_MAP)
 export const replacePriorityTypes = createReplacer(PRIORITY_TYPE_MAP)
 export const replaceVehicleTypes = createReplacer(VEHICLE_TYPE_MAP)
+
+export const getWordDeclension = (
+  number: number,
+  one: string,
+  two: string,
+  five: string,
+): string => {
+  let n = Math.abs(number % 100)
+  if (n >= 5 && n <= 20) return five
+  n %= 10
+  if (n === 1) return one
+  if (n >= 2 && n <= 4) return two
+  return five
+}

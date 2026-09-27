@@ -17,6 +17,18 @@ const props = defineProps<IProps>()
 const districtDataStore = useDistrictDataStore()
 const routes = computed<EngineerRoute[]>(() => districtDataStore.getRoutes)
 
+const taskAddressById = computed<Record<string, string>>(() => {
+  const map: Record<string, string> = {}
+  for (const task of districtDataStore.getDistrictTasks) {
+    if (task.address) map[task.id] = task.address
+  }
+  return map
+})
+
+const getStopAddress = (stop: RouteStop): string => {
+  return taskAddressById.value[stop.task_id] ?? '-'
+}
+
 const selected = computed({
   get: () => districtDataStore.selectedRoutes,
   set: (v: string[]) => (districtDataStore.selectedRoutes = v),
@@ -44,31 +56,17 @@ const routeHeaders = [
     sortable: false,
     align: 'center',
   },
-]
+] as const
 
 const stopHeaders = [
   { title: '#', key: 'index', width: 60, sortable: false, align: 'center' },
   { title: 'Заявка', key: 'task_id', width: 160, sortable: false, align: 'center' },
   { title: 'Прибытие', key: 'arrival_time', width: 140, sortable: false, align: 'center' },
-  { title: 'Начало', key: 'service_start_time', width: 140, sortable: false, align: 'center' },
-  { title: 'Окончание', key: 'service_end_time', width: 140, sortable: false, align: 'center' },
-  {
-    title: 'В пути от пред.',
-    key: 'travel_time_from_previous',
-    width: 160,
-    sortable: false,
-    align: 'center',
-  },
-  {
-    title: 'Расстояние от пред.',
-    key: 'distance_from_previous_km',
-    width: 180,
-    sortable: false,
-    align: 'center',
-  },
-  { title: 'Координаты', key: 'coordinates', width: 100, sortable: false, align: 'center' },
+  { title: 'Время работы', key: 'service_time', width: 220, sortable: false, align: 'center' },
+  { title: 'От предыдущего', key: 'from_previous', width: 200, sortable: false, align: 'center' },
+  { title: 'Адрес', key: 'address', width: 240, sortable: false, align: 'start' },
   { title: 'Действия', key: 'actions', width: 100, sortable: false, align: 'center' },
-]
+] as const
 
 const formatKm = (v: number) => `${v.toFixed(2)} км`
 const formatMin = (v: number) => `${v.toFixed(0)} мин`
@@ -104,7 +102,7 @@ const closeReassignmentDialog = () => {
 </script>
 
 <template>
-  <basic-card :loading="props.loading" title="Маршруты">
+  <basic-card :loading="props.loading" title="Полная информация о маршрутах">
     <template #loading>
       <v-skeleton-loader type="list-item-two-line" />
     </template>
@@ -159,20 +157,20 @@ const closeReassignmentDialog = () => {
                   {{ index + 1 }}
                 </template>
 
-                <template #item.travel_time_from_previous="{ item }">
-                  {{ formatMin(item.travel_time_from_previous) }}
+                <template #item.service_time="{ item }">
+                  {{ item.service_start_time }} - {{ item.service_end_time }}
                 </template>
 
-                <template #item.distance_from_previous_km="{ item }">
-                  {{ formatKm(item.distance_from_previous_km) }}
+                <template #item.from_previous="{ item }">
+                  {{ formatMin(item.travel_time_from_previous) }} ({{
+                    formatKm(item.distance_from_previous_km)
+                  }})
                 </template>
 
-                <template #item.coordinates="{ item }">
-                  <span v-if="item.latitude && item.longitude">
-                    {{ item.latitude.toFixed(4) }}, {{ item.longitude.toFixed(4) }}
-                  </span>
-                  <span v-else>—</span>
+                <template #item.address="{ item }">
+                  {{ getStopAddress(item) }}
                 </template>
+
                 <template #item.actions="props">
                   <v-row no-gutters class="text-no-wrap justify-center">
                     <icon-button

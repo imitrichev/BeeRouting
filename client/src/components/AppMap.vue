@@ -5,8 +5,13 @@ import { Map, Popup, Marker, NavigationControl, GeoJSONSource, LngLatBounds } fr
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import { getEngineerColor, hasFiniteCoordinates } from '@/utils/map.ts'
-import { getPriorityTranslation, getSkillTranslation } from '@/utils/translations.ts'
+import {
+  getPriorityTranslation,
+  getSkillTranslation,
+  getWordDeclension,
+} from '@/utils/translations.ts'
 import type { EngineerRoute, RouteStop, Task } from '@/types/entities.ts'
+import { useDisplay } from 'vuetify/framework'
 
 interface IProps {
   loading: boolean
@@ -15,6 +20,7 @@ interface IProps {
 const props = defineProps<IProps>()
 
 const districtDataStore = useDistrictDataStore()
+const display = useDisplay()
 const tasks = computed(() => districtDataStore.getDistrictTasks)
 const routes = computed(() => districtDataStore.getRoutes)
 const isOptimized = computed(() => districtDataStore.isOptimized)
@@ -143,7 +149,7 @@ const getNotOptimizedMarker = (
         <strong>Заявка ${taskId}</strong><br/>
         <b>Тип:</b> ${getSkillTranslation(taskType)}<br/>
         <b>Длительность:</b> ${taskDuration} мин.<br/>
-        <b>Окно:</b> ${taskWindowStart} — ${taskWindowEnd}<br/>
+        <b>Окно:</b> ${taskWindowStart} - ${taskWindowEnd}<br/>
         <b>Приоритет:</b> ${getPriorityTranslation(taskPriority)}<br/>
       </div>
     `,
@@ -172,7 +178,7 @@ const getOptimizedMarker = (
         <strong>Заявка ${taskId}</strong><br/>
         ${taskEngineerName ? `<b>Назначена:</b> ${taskEngineerName}<br/>` : ''}
         <b>Прибытие:</b> ${engineerArrival}<br/>
-        <b>Работы:</b> ${engineerServiceStart} — ${engineerServiceEnd}<br/>
+        <b>Работы:</b> ${engineerServiceStart} - ${engineerServiceEnd}<br/>
         <b>Время от пред. остановки:</b> ${engineerTravelTimeFromPrev} мин.<br/>
         <b>Дистанция от пред. остановки:</b> ${engineerDistanceFromPrev} км.<br/>
       </div>
@@ -368,22 +374,77 @@ onBeforeUnmount(() => {
   map?.remove()
   map = null
 })
+
+const toggleSelect = (item: EngineerRoute) => {
+  districtDataStore.toggleRouteSelection(item.engineer_id)
+}
+
+const isSelected = (item: EngineerRoute) => {
+  return districtDataStore.isRouteSelected(item.engineer_id)
+}
 </script>
 
 <template>
-  <basic-card :loading="props.loading">
+  <basic-card :loading="props.loading" title="Карта">
     <template #loading v-if="!firstLoadingComplete">
       <v-skeleton-loader type="article" />
     </template>
-    <div v-if="firstLoadingComplete" ref="container" class="map-container" />
+    <v-row no-gutters>
+      <v-col v-if="isOptimized" class="border-right routes-col">
+        <v-list
+          class="overflow-list default-scrollbar py-1 pl-0 pr-2 map-container"
+          density="compact"
+        >
+          <v-list-item
+            density="compact"
+            class="pb-0 pt-1 px-2"
+            v-for="item in routes.filter((route) => !!route.stops.length)"
+            :key="item.engineer_id"
+            :title="item.engineer_name"
+            :subtitle="`${item.stops.length} ${getWordDeclension(item.stops.length, 'остановка', 'остановки', 'остановок')}`"
+          >
+            <template #prepend>
+              <v-checkbox-btn
+                :model-value="isSelected(item)"
+                density="comfortable"
+                hide-details
+                class="mr-2"
+                :color="getEngineerColor(item.engineer_id)"
+                @update:model-value="toggleSelect(item)"
+              />
+            </template>
+          </v-list-item>
+        </v-list>
+      </v-col>
+      <v-col :cols="display.smAndDown.value ? 12 : undefined">
+        <div v-if="firstLoadingComplete" ref="container" class="map-container" />
+      </v-col>
+    </v-row>
   </basic-card>
 </template>
 
 <style scoped lang="scss">
 .map-container {
   width: 100% !important;
-  height: calc(100vh - 66px - 24px - 110px) !important;
   min-height: 292px !important;
-  max-height: 100vw;
+  height: calc(100vh - 500px) !important;
+  max-height: 100vw !important;
+}
+
+.routes-col {
+  width: fit-content !important;
+  max-width: fit-content !important;
+  @media (max-width: 839px) {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+.overflow-list {
+  @media (max-width: 839px) {
+    min-height: auto !important;
+    max-height: 185px !important;
+    border-bottom: 1px solid lightgray;
+  }
 }
 </style>

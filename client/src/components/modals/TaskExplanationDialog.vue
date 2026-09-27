@@ -51,7 +51,11 @@ const loadTaskExplanation = (taskId: string) => {
       <template #toolbarAppend>
         <icon-button icon="close" class="ml-3" @click="emit('close')" tooltip-text="Закрыть" />
       </template>
-      <v-row no-gutters v-if="!loading && explanation" class="overflow-list px-4 py-4">
+      <v-row
+        no-gutters
+        v-if="!loading && explanation"
+        class="overflow-list default-scrollbar px-4 py-4"
+      >
         {{ explanation.explanation }}
       </v-row>
     </basic-card>

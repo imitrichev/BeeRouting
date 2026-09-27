@@ -15,19 +15,19 @@ const unassigned = computed<UnassignedTask[]>(() => districtDataStore.getUnassig
 </script>
 
 <template>
-  <basic-card :loading="props.loading" title="Неназначенные">
+  <basic-card :loading="props.loading" title="Неназначенные заявки">
     <template #loading>
       <v-skeleton-loader type="list-item-two-line" />
     </template>
 
     <v-alert
       v-if="unassigned.length === 0 && !props.loading"
-      class="d-flex align-center justify-center text-medium-emphasis py-4 rounded-0 data-height alert-height"
+      class="d-flex align-center justify-center text-medium-emphasis py-4 rounded-0"
     >
       Все заявки успешно распределены
     </v-alert>
 
-    <v-list v-else-if="!props.loading" class="overflow-list data-height" density="compact">
+    <v-list v-else-if="!props.loading" class="overflow-list default-scrollbar" density="compact">
       <v-list-item
         v-for="item in unassigned"
         :key="item.task_id"
@@ -39,17 +39,8 @@ const unassigned = computed<UnassignedTask[]>(() => districtDataStore.getUnassig
 </template>
 
 <style scoped lang="scss">
-.data-height {
-  height: calc(72px * 4) !important;
-  min-height: calc(72px * 4) !important;
-  max-height: calc(72px * 4) !important;
-}
-
-.alert-height {
-  @media (max-width: 839px) {
-    height: auto !important;
-    min-height: unset !important;
-    max-height: unset !important;
-  }
+.overflow-list {
+  max-height: 200px !important;
+  min-height: unset !important;
 }
 </style>

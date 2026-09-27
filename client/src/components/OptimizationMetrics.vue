@@ -20,33 +20,33 @@ const metrics = computed(() => districtDataStore.getMetrics)
       <v-skeleton-loader type="list-item-two-line" />
     </template>
     <v-row no-gutters v-if="metrics && !props.loading">
-      <v-col cols="12" class="fill-height">
+      <v-col cols="6" lg="3" class="fill-height">
         <v-card color="blue-lighten-4 fill-height" class="rounded-0 elevation-0" variant="flat">
-          <v-card-text>
+          <v-card-text class="px-3 py-2">
             Инженеров: <br />
             <strong>{{ metrics.used_engineers_count }}</strong>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" class="fill-height">
+      <v-col cols="6" lg="3" class="fill-height">
         <v-card color="green-lighten-4 fill-height" class="rounded-0 elevation-0" variant="flat">
-          <v-card-text>
+          <v-card-text class="px-3 py-2">
             Задач: <br />
             <strong>{{ metrics.assigned_task_count }}</strong>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" class="fill-height">
+      <v-col cols="6" lg="3" class="fill-height">
         <v-card color="red-lighten-4 fill-height" class="rounded-0 elevation-0" variant="flat">
-          <v-card-text>
+          <v-card-text class="px-3 py-2">
             Пробег, км: <br />
             <strong>{{ metrics.total_distance_km.toFixed(1) }}</strong>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="12" class="fill-height">
+      <v-col cols="6" lg="3" class="fill-height">
         <v-card color="purple-lighten-4 fill-height" class="rounded-0 elevation-0" variant="flat">
-          <v-card-text>
+          <v-card-text class="px-3 py-2">
             Objective: <br />
             <strong>{{ metrics.total_objective }}</strong>
           </v-card-text>

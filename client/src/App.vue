@@ -38,8 +38,8 @@ onMounted(() => {
                 <control-row :loading="selectorsStore.loadingTerritories" />
               </v-col>
             </v-row>
-            <v-row no-gutters v-if="districtDataStore.isOptimized">
-              <v-col cols="12" md="6" :class="display.mdAndUp.value ? 'pr-3' : ''" class="mb-3">
+            <v-row no-gutters>
+              <v-col cols="12" v-if="districtDataStore.isOptimized" class="mb-3">
                 <optimization-metrics
                   :loading="
                     selectorsStore.loadingTerritories ||
@@ -48,56 +48,42 @@ onMounted(() => {
                   "
                 />
               </v-col>
-              <v-col cols="12" md="6" class="mb-3">
-                <unassigned-tasks
-                  :loading="
-                    selectorsStore.loadingTerritories ||
-                    districtDataStore.loadingDistrictData ||
-                    districtDataStore.loadingOptimization
-                  "
-                />
-              </v-col>
               <v-col cols="12" class="mb-3">
-                <routes-table
+                <app-map
                   :loading="
-                    selectorsStore.loadingTerritories ||
-                    districtDataStore.loadingDistrictData ||
-                    districtDataStore.loadingOptimization
+                    selectorsStore.loadingTerritories || districtDataStore.loadingDistrictData
                   "
                 />
               </v-col>
-            </v-row>
-            <v-row no-gutters>
-              <v-col cols="12" md="5" xl="6">
-                <v-row no-gutters>
-                  <v-col
-                    cols="12"
-                    xl="6"
-                    class="mb-3 fill-height"
-                    :class="display.mdAndUp.value ? 'pr-3' : ''"
-                  >
-                    <app-tasks
-                      :loading="
-                        selectorsStore.loadingTerritories || districtDataStore.loadingDistrictData
-                      "
-                    />
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    xl="6"
-                    class="mb-3 fill-height"
-                    :class="display.mdAndUp.value ? 'pr-3' : ''"
-                  >
-                    <app-engineers
-                      :loading="
-                        selectorsStore.loadingTerritories || districtDataStore.loadingDistrictData
-                      "
-                    />
-                  </v-col>
-                </v-row>
+              <v-col cols="12" class="mb-3 fill-height">
+                <app-tasks
+                  :loading="
+                    selectorsStore.loadingTerritories || districtDataStore.loadingDistrictData
+                  "
+                />
               </v-col>
-              <v-col cols="12" md="7" xl="6" class="mb-3">
-                <app-map
+              <template v-if="districtDataStore.isOptimized">
+                <v-col cols="12" class="mb-3">
+                  <unassigned-tasks
+                    :loading="
+                      selectorsStore.loadingTerritories ||
+                      districtDataStore.loadingDistrictData ||
+                      districtDataStore.loadingOptimization
+                    "
+                  />
+                </v-col>
+                <v-col cols="12" class="mb-3">
+                  <routes-table
+                    :loading="
+                      selectorsStore.loadingTerritories ||
+                      districtDataStore.loadingDistrictData ||
+                      districtDataStore.loadingOptimization
+                    "
+                  />
+                </v-col>
+              </template>
+              <v-col cols="12" class="mb-3 fill-height">
+                <app-engineers
                   :loading="
                     selectorsStore.loadingTerritories || districtDataStore.loadingDistrictData
                   "

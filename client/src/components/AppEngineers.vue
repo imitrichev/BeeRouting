@@ -13,11 +13,27 @@ interface IProps {
 const props = defineProps<IProps>()
 
 const districtDataStore = useDistrictDataStore()
-const engineers = computed(() => districtDataStore.getDistrictEngineers)
+const engineers = computed<Engineer[]>(() => districtDataStore.getDistrictEngineers)
 
-const getSubtitle = (item: Engineer): string => {
-  return `${getVehicleTypeTranslation(item.vehicle_type)} • ${item.available_from} - ${item.available_until}`
-}
+const engineerHeaders = [
+  { title: 'Название', key: 'name', width: 200, sortable: true, align: 'start' },
+  { title: 'Квалификации', key: 'qualifications', width: 260, sortable: false, align: 'center' },
+  {
+    title: 'Тип транспорта',
+    key: 'vehicle_type',
+    width: 160,
+    sortable: false,
+    align: 'center',
+  },
+  { title: 'Доступность', key: 'availability', width: 200, sortable: false, align: 'center' },
+  {
+    title: 'Стартовая локация',
+    key: 'start_address',
+    width: 240,
+    sortable: false,
+    align: 'center',
+  },
+] as const
 </script>
 
 <template>
@@ -25,61 +41,61 @@ const getSubtitle = (item: Engineer): string => {
     <template #loading>
       <v-skeleton-loader type="list-item-two-line" />
     </template>
-    <v-list v-if="!props.loading" class="overflow-list" density="compact">
-      <v-list-group v-for="item in engineers" :key="item.id">
-        <template #activator="{ props: activatorProps }">
-          <v-list-item v-bind="activatorProps" :title="item.name" :subtitle="getSubtitle(item)">
-            <template #prepend>
-              <v-avatar :color="getEngineerColor(item.id)"></v-avatar>
-            </template>
-          </v-list-item>
-        </template>
 
-        <v-list-item>
-          <v-list-item-title class="text-subtitle-2">Квалификации</v-list-item-title>
-          <div class="d-flex flex-wrap ga-1 mt-1">
-            <v-chip
-              v-for="skill in item.qualifications"
-              :key="skill"
-              size="small"
-              color="primary"
-              variant="tonal"
-            >
-              {{ getSkillTranslation(skill) }}
-            </v-chip>
-            <span v-if="!item.qualifications.length" class="text-medium-emphasis text-body-2">
-              Нет данных
-            </span>
-          </div>
-        </v-list-item>
+    <v-data-table-virtual
+      v-if="!props.loading"
+      class="engineers-table"
+      :headers="engineerHeaders"
+      :items="engineers"
+      item-value="id"
+      density="comfortable"
+      fixed-header
+      height="300"
+    >
+      <template #item.name="{ item }">
+        <div class="d-flex align-center justify-start ga-2">
+          <v-avatar size="20" :color="getEngineerColor(item.id)" />
+          <span>{{ item.name }}</span>
+        </div>
+      </template>
 
-        <v-list-item>
-          <v-list-item-title class="text-subtitle-2">Тип транспорта</v-list-item-title>
-          <div class="text-body-2 text-medium-emphasis mt-1">
-            {{ getVehicleTypeTranslation(item.vehicle_type) }}
-          </div>
-        </v-list-item>
+      <template #item.qualifications="{ item }">
+        <div class="d-flex flex-wrap justify-center ga-1 py-1">
+          <v-chip
+            v-for="skill in item.qualifications"
+            :key="skill"
+            size="x-small"
+            color="primary"
+            variant="tonal"
+          >
+            {{ getSkillTranslation(skill) }}
+          </v-chip>
+          <span v-if="!item.qualifications.length" class="text-medium-emphasis">-</span>
+        </div>
+      </template>
 
-        <v-list-item>
-          <v-list-item-title class="text-subtitle-2">Доступность</v-list-item-title>
-          <div class="text-body-2 text-medium-emphasis mt-1">
-            {{ item.available_from }} — {{ item.available_until }}
-          </div>
-        </v-list-item>
+      <template #item.vehicle_type="{ item }">
+        {{ getVehicleTypeTranslation(item.vehicle_type) }}
+      </template>
 
-        <v-list-item>
-          <v-list-item-title class="text-subtitle-2">Стартовая локация</v-list-item-title>
-          <div class="text-body-2 text-medium-emphasis mt-1">
-            ID: {{ item.start_location_id }}
-            <template v-if="item.start_latitude !== null && item.start_longitude !== null">
-              <br />
-              Координаты: {{ item.start_latitude }}, {{ item.start_longitude }}
-            </template>
-          </div>
-        </v-list-item>
-      </v-list-group>
-    </v-list>
+      <template #item.availability="{ item }">
+        {{ item.available_from }} - {{ item.available_until }}
+      </template>
+
+      <template #item.start_address="{ item }">
+        {{ item.start_address || '-' }}
+      </template>
+    </v-data-table-virtual>
   </basic-card>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.engineers-table :deep(.v-table__wrapper),
+.engineers-table :deep(.v-table__wrapper > table) {
+  min-width: 0;
+}
+
+:deep(.v-table__wrapper) {
+  overflow-x: auto !important;
+}
+</style>

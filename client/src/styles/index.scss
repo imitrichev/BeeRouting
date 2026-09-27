@@ -1,8 +1,11 @@
 .overflow-list {
   overflow-y: auto;
-  max-height: calc((100vh - 66px - 100px) - 80px) !important;
-  min-height: 240px !important;
+  width: 100% !important;
+  min-height: 292px !important;
+  max-height: min(100vh - 550px, 100vw) !important;
+}
 
+.default-scrollbar {
   // Firefox
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--v-theme-on-surface), 0.2) transparent;
@@ -39,14 +42,18 @@
   &::-webkit-scrollbar-corner {
     background: transparent;
   }
-
-  @media (max-width: 1544px) {
-    max-height: calc((100vh - 66px - 100px) / 2 - 71px) !important;
-  }
 }
 
 .border-bottom {
   border-bottom: 1px solid lightgrey;
+}
+
+.border-left {
+  border-left: 1px solid lightgrey;
+}
+
+.border-right {
+  border-right: 1px solid lightgrey;
 }
 
 .border-top {

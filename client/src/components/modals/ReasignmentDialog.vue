@@ -130,7 +130,7 @@ const deltaText = (value: number) => `${value > 0 ? '+' : ''}${value}`
         />
       </template>
 
-      <v-container class="overflow-list px-4 py-4">
+      <v-container class="overflow-list default-scrollbar px-4 py-4">
         <v-select
           v-model="formData.engineerId"
           :items="engineersSelectorItems"
