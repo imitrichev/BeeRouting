@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue'
 import BasicCard from '@/templates/BasicCard.vue'
 import IconButton from '@/templates/IconButton.vue'
 import type { PreviewReassignmentObjectMetrics } from '@/types/entities.ts'
+import { replaceSkillTypes } from '@/utils/translations.ts'
 
 const emit = defineEmits<{
   close: []
@@ -142,14 +143,8 @@ const deltaText = (value: number) => `${value > 0 ? '+' : ''}${value}`
         />
 
         <template v-if="!loadingPreview && previewObject">
-          <v-alert
-            v-if="!previewObject.feasible"
-            type="error"
-            variant="tonal"
-            class="mt-4"
-            density="comfortable"
-          >
-            {{ previewObject.message }}
+          <v-alert v-if="!previewObject.feasible" type="error" class="mt-4" density="comfortable">
+            {{ replaceSkillTypes(previewObject.message) }}
           </v-alert>
 
           <template v-else>
