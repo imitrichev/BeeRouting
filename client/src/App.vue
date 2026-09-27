@@ -4,7 +4,6 @@ import ControlRow from '@/components/ControlRow.vue'
 import AppTasks from '@/components/AppTasks.vue'
 import AppEngineers from '@/components/AppEngineers.vue'
 import AppMap from '@/components/AppMap.vue'
-import { useDisplay } from 'vuetify/framework'
 import { onMounted } from 'vue'
 import { useSelectorsStore } from '@/stores/selectors.ts'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
@@ -12,7 +11,6 @@ import OptimizationMetrics from '@/components/OptimizationMetrics.vue'
 import RoutesTable from '@/components/RoutesTable.vue'
 import UnassignedTasks from '@/components/UnassignedTasks.vue'
 
-const display = useDisplay()
 const selectorsStore = useSelectorsStore()
 const districtDataStore = useDistrictDataStore()
 
