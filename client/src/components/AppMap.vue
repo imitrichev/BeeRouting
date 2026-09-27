@@ -4,7 +4,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Map, Popup, Marker, NavigationControl, GeoJSONSource, LngLatBounds } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
-import { getEngineerColor } from '@/utils/map.ts'
+import { getEngineerColor, hasFiniteCoordinates } from '@/utils/map.ts'
 import { getPriorityTranslation, getSkillTranslation } from '@/utils/translations.ts'
 import type { EngineerRoute, RouteStop, Task } from '@/types/entities.ts'
 
@@ -19,6 +19,7 @@ const tasks = computed(() => districtDataStore.getDistrictTasks)
 const routes = computed(() => districtDataStore.getRoutes)
 const isOptimized = computed(() => districtDataStore.isOptimized)
 const selectedRoutes = computed(() => districtDataStore.selectedRoutes)
+const districtData = computed(() => districtDataStore.getDistrictData)
 const firstLoadingComplete = ref<boolean>(false)
 
 let map: Map | null = null
@@ -78,12 +79,37 @@ const renderMap = () => {
         type: 'line',
         source: ROUTE_SOURCE_ID,
         layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: { 'line-color': '#ff0000', 'line-width': 4, 'line-opacity': 0.8 },
+        paint: { 'line-color': ['get', 'color'], 'line-width': 4, 'line-opacity': 0.8 },
       })
     }
 
     renderTasks()
+    recompileRoutesData()
   })
+}
+
+const createDepotMarkerElement = (): HTMLElement => {
+  const element = document.createElement('div')
+  element.className = 'depot-marker'
+  element.setAttribute('aria-label', 'Депо')
+  element.innerHTML = `
+    <span class="depot-marker-shape">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 10.5 12 3l9 7.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5v-9Z" />
+        <path class="depot-door" d="M9 21v-6h6v6" />
+      </svg>
+    </span>
+  `
+  return element
+}
+
+const createTaskMarkerElement = (stopIndex: number | undefined, color: string): HTMLElement => {
+  const element = document.createElement('div')
+  element.className = 'task-marker'
+  element.style.setProperty('--marker-color', color)
+  element.setAttribute('aria-label', stopIndex ? `Остановка ${stopIndex}` : 'Заявка')
+  element.innerHTML = `<span class="task-marker-shape"><span>${stopIndex ?? ''}</span></span>`
+  return element
 }
 
 const getTaskMarkerWithPopup = (
@@ -91,9 +117,13 @@ const getTaskMarkerWithPopup = (
   longitude: number,
   latitude: number,
   color: string,
+  stopIndex?: number,
 ): Marker => {
   const popup = new Popup({ offset: 25 }).setHTML(popupContent)
-  return new Marker({ color }).setLngLat([longitude, latitude]).setPopup(popup).addTo(map!)
+  return new Marker({ color, element: createTaskMarkerElement(stopIndex, color) })
+    .setLngLat([longitude, latitude])
+    .setPopup(popup)
+    .addTo(map!)
 }
 
 const getNotOptimizedMarker = (
@@ -134,6 +164,7 @@ const getOptimizedMarker = (
   engineerDistanceFromPrev: string,
   taskLongitude: number,
   taskLatitude: number,
+  stopIndex: number,
 ): Marker => {
   return getTaskMarkerWithPopup(
     `
@@ -149,6 +180,7 @@ const getOptimizedMarker = (
     taskLongitude,
     taskLatitude,
     color,
+    stopIndex,
   )
 }
 
@@ -157,10 +189,48 @@ const clearMarkers = () => {
   markers = []
 }
 
+const recompileRoutesData = () => {
+  if (!map) return
+
+  const source = map.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
+  if (!source) return
+
+  const features = routes.value
+    .filter((route) => {
+      if (selectedRoutes.value.length === 0) return false
+      return selectedRoutes.value.includes(route.engineer_id)
+    })
+    .map((route) => {
+      const g = route.geometry
+      if (!g || g.type !== 'LineString') {
+        console.warn('[routes] no geometry for', route.engineer_id)
+        return null
+      }
+      if (!Array.isArray(g.coordinates) || g.coordinates.length < 2) return null
+      return {
+        type: 'Feature' as const,
+        properties: {
+          engineer_id: route.engineer_id,
+          engineer_name: route.engineer_name,
+          color: getEngineerColor(route.engineer_id),
+        },
+        geometry: {
+          type: 'LineString' as const,
+          coordinates: g.coordinates,
+        },
+      }
+    })
+    .filter((f): f is NonNullable<typeof f> => f !== null)
+
+  source.setData({ type: 'FeatureCollection', features })
+}
+
 const renderTasks = () => {
   if (!map) return
 
   clearMarkers()
+
+  const bounds = new LngLatBounds()
 
   tasks.value.forEach((task) => {
     if (task.latitude === null || task.longitude === null) return
@@ -186,11 +256,6 @@ const renderTasks = () => {
       return 0
     }
 
-    const taskRoute = getTaskRoute(task)
-    const taskRouteStop = taskRoute ? getRouteTaskStop(task, taskRoute) : null
-    const taskRouteStopIndex =
-      taskRoute && taskRouteStop ? getRouteTaskStopIndex(taskRoute, taskRouteStop) : null
-
     const getTaskColor = (task: Task): string => {
       if (routes.value.length === 0) return '#888888'
       for (const route of routes.value) {
@@ -202,10 +267,17 @@ const renderTasks = () => {
       }
       return '#888888'
     }
+
+    const taskRoute = getTaskRoute(task)
+    const taskRouteStop = taskRoute ? getRouteTaskStop(task, taskRoute) : null
+    const taskRouteStopIndex =
+      taskRoute && taskRouteStop ? getRouteTaskStopIndex(taskRoute, taskRouteStop) : null
+    const taskColor = getTaskColor(task)
+
     if (!taskRoute) {
       markers.push(
         getNotOptimizedMarker(
-          getTaskColor(task),
+          taskColor,
           task.id,
           task.required_skill,
           task.duration_minutes,
@@ -216,10 +288,10 @@ const renderTasks = () => {
           task.latitude,
         ),
       )
-    } else if (taskRouteStop && taskRouteStopIndex) {
+    } else if (taskRouteStop && taskRouteStopIndex !== null) {
       markers.push(
         getOptimizedMarker(
-          getTaskColor(task),
+          taskColor,
           taskRouteStop.task_id,
           `${taskRoute.engineer_name} (#${taskRouteStopIndex + 1})`,
           taskRouteStop.arrival_time,
@@ -229,29 +301,66 @@ const renderTasks = () => {
           taskRouteStop.distance_from_previous_km.toFixed(2),
           Number(taskRouteStop.longitude),
           Number(taskRouteStop.latitude),
+          taskRouteStopIndex + 1,
         ),
       )
     }
+    if (!selectedRoutes.value.length || taskColor !== '#888888') {
+      bounds.extend([Number(task.longitude), Number(task.latitude)])
+    }
   })
+
+  const dataset = districtData.value?.dataset
+  if (dataset && hasFiniteCoordinates(dataset.office_latitude, dataset.office_longitude)) {
+    const depotMarker = new Marker({
+      element: createDepotMarkerElement(),
+      anchor: 'bottom',
+    })
+      .setLngLat([dataset.office_longitude as number, dataset.office_latitude as number])
+      .setPopup(
+        new Popup({ offset: 16 }).setHTML(
+          '<strong>Офис</strong><br>' + `${dataset.office_address ?? 'Адрес не указан'}`,
+        ),
+      )
+      .addTo(map)
+    markers.push(depotMarker)
+  }
+
+  if (!bounds.isEmpty()) {
+    map.fitBounds(bounds, { padding: 40, maxZoom: 12 })
+  }
+
+  recompileRoutesData()
 }
 
 watch(
   () => props.loading,
   async (nVal) => {
-    if (nVal) return
+    if (nVal) {
+      clearMarkers()
+      if (!map) return
+      const source = map.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
+      if (!source) return
+      source.setData({ type: 'FeatureCollection', features: [] })
+      return
+    }
     firstLoadingComplete.value = true
     await nextTick()
     renderMap()
   },
 )
 
-watch(() => [...selectedRoutes.value], renderTasks)
+watch(
+  () => [...selectedRoutes.value],
+  () => {
+    renderTasks()
+    recompileRoutesData()
+  },
+)
 
 watch(isOptimized, () => {
-  if (!map) return
-  const source = map.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined
-  source?.setData({ type: 'FeatureCollection', features: [] })
   renderTasks()
+  recompileRoutesData()
 })
 
 onBeforeUnmount(() => {
