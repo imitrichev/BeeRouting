@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import * as maplibregl from 'maplibre-gl'
-import type { Map as MapLibreMap, Marker } from 'maplibre-gl'
+import maplibregl, { type Map as MapLibreMap, type Marker } from 'maplibre-gl'
 
 import type {
   ApiResponse,
@@ -294,11 +293,11 @@ const plannableTaskCount = computed(
 )
 
 const STATUS_LABELS: Record<string, string> = {
-  NOT_SENT: 'не отправлена',
+  NOT_SENT: 'Не отправлена',
   ASSIGNED: 'назначена',
   EN_ROUTE: 'в пути',
   IN_PROGRESS: 'в работе',
-  COMPLETED: 'выполнена',
+  COMPLETED: 'Выполнена',
   CANCELLED: 'отменена',
   OVERDUE: 'просрочена',
 }
