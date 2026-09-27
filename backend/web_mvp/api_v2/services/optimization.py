@@ -14,7 +14,7 @@ from backend.optimization import (
     create_osrm_provider_from_environment,
     load_json_scenario_data,
 )
-from .planning import PlanningService
+from .planning import OFFICIAL_DATASET_PATHS, PlanningService
 from ..models import (
     District, Engineer, Job, Priority, ReassignmentProposal, RescheduleEvent,
     Skill, Territory, VehicleType,
@@ -51,6 +51,17 @@ class OptimizationWebService(PlanningService):
         self.__dict__.update(restored.__dict__)
         self._territory_code = territory.code
         return self.current_dataset()
+
+    def reload_reference_distribution(self):
+        """Читает свежий JSON района и заменяет текущий план контрольным."""
+        for path in OFFICIAL_DATASET_PATHS:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            if payload.get("territory_code") == self._territory_code:
+                scenario = load_json_scenario_data(payload)
+                return self.apply_reference_distribution(scenario, path.name)
+        raise ValueError(
+            f"Официальный JSON района {self._territory_code!r} не найден"
+        )
 
     def rebuild_territory_from_models(self, territory: Territory):
         """Пересобирает domain-сценарий после CRUD-изменений моделей API v2.

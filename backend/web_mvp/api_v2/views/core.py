@@ -112,10 +112,6 @@ def optimize_view(request: Request) -> Response:
 
 @api_view(["POST"])
 def sync_reference_statuses_view(request: Request) -> Response:
-    """Синхронизирует только статусы с контрольным распределением.
-
-    Маршруты и текущие исполнители берутся из сохранённого рабочего плана;
-    ``reference_crew`` из контрольных данных намеренно не используется.
-    """
-    scenario, result = optimization_service.sync_statuses_from_reference()
+    """Полностью перезагружает район контрольным планом из свежего JSON."""
+    scenario, result = optimization_service.reload_reference_distribution()
     return Response(optimization_service.serialize_response(scenario, result))

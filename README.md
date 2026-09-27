@@ -322,9 +322,9 @@ BEEROUTING_MODE=production .venv/bin/python backend/web_mvp/manage.py runserver 
    причины невозможности или старые и новые метрики, затем отдельное
    подтверждение изменит план.
 
-Контрольное распределение составителей используется только для сравнения в
-benchmark и может нарушать hard constraints. В рабочем интерфейсе его статусы
-не синхронизируются автоматически. Диспетчер меняет operational-статус заявки
+Кнопка «Контрольное распределение» отбрасывает текущее состояние выбранного
+района, заново читает его официальный JSON и восстанавливает контрольные
+назначения, порядок и статусы. Диспетчер меняет operational-статус заявки
 через выпадающий список без запуска solver: у назначенной заявки доступны
 «Назначена в плане», «В пути», «В работе», «Выполнена» и «Отменена», а у
 неназначенной — только «Отменена».
@@ -342,7 +342,7 @@ API доступен под `/api/v2/`; старого API v1 в проекте 
 | `POST` | `/api/v2/dataset/upload/` | Загрузка JSON в поле `file` |
 | `POST` | `/api/v2/optimize/` | Baseline или OR-Tools |
 | `PATCH` | `/api/v2/jobs/status/` | Изменить operational-статус без перепланирования |
-| `POST` | `/api/v2/sync-reference-statuses/` | Синхронизация статусов контрольного CSV |
+| `POST` | `/api/v2/sync-reference-statuses/` | Полная загрузка контрольного плана из JSON |
 | `POST` | `/api/v2/tasks/` | Создание заявки с нормативной длительностью |
 | `POST` | `/api/v2/geocode/` | Проверка адреса и координат |
 | `POST` | `/api/v2/replan/` | Три события перепланирования |
@@ -356,18 +356,36 @@ views и serializers; математическое ядро от Django не з�
 
 ## Benchmark и решатели
 
-Основной сравнительный сценарий —
-`backend/optimization/benchmarks/benchmark_yugo_center.py`. Он сравнивает
+Основные сравнительные сценарии находятся в `backend/optimization/benchmarks/`:
+`benchmark_yugo_center.py`, `benchmark_vostok.py` и
+`benchmark_yugo_vostok.py`. Они сравнивают
 контрольный план составителей, Baseline и OR-Tools; ICO-DE и Timefold
 подключаются отдельно. Benchmark выводит время, назначенные заявки,
 неназначенные заявки, задействованных инженеров, расстояние, travel time,
 декомпозицию objective, процентное сравнение OR-Tools с Baseline и пробег по
 каждому инженеру.
 
+Все три entry point вызывают общий `benchmark_region.py`. Его можно применять
+к другому району, передав `--path`; контрольный план читается из reference-полей
+этого же JSON.
+
 ```bash
 .venv/bin/python -m backend.optimization.benchmarks.benchmark_yugo_center \
   --routing-provider coordinate --iterations 1
 ```
+
+Для двух других районов используются те же параметры:
+
+```bash
+.venv/bin/python -m backend.optimization.benchmarks.benchmark_vostok \
+  --routing-provider coordinate --iterations 1
+.venv/bin/python -m backend.optimization.benchmarks.benchmark_yugo_vostok \
+  --routing-provider coordinate --iterations 1
+```
+
+CSV контрольного распределения используется только генератором JSON и его
+тестами. Runtime benchmark к CSV не обращается. Подробнее это описано в
+[документации benchmark](docs/benchmarks.md).
 
 Для реальных дорог:
 

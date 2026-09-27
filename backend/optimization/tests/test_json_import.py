@@ -24,7 +24,7 @@ from backend.optimization.scripts.generate_dataset_json import (
 
 
 JSON_PATH = Path(__file__).parents[3] / "Югоцентр.json"
-CONTROL_CSV_PATH = Path(__file__).parents[3] / "Югоцентр Контрольное распределение..csv"
+CONTROL_CSV_PATH = Path(__file__).parents[3] / "Югоцентр Контрольное распределение.csv"
 
 
 def test_each_region_uses_its_own_office_as_engineer_start() -> None:
@@ -95,6 +95,9 @@ def test_yugo_center_json_loads_into_domain_models() -> None:
     assert scenario.engineers[0].vehicle_type == VehicleType.CAR
     assert scenario.tasks[0].duration_minutes == 70
     assert scenario.tasks[0].window_start == "18:00"
+    assert sorted(scenario.reference_sequence_by_task.values()) == list(
+        range(1, len(scenario.tasks) + 1)
+    )
     payload = json.loads(JSON_PATH.read_text(encoding="utf-8"))
     office = payload["office_start_point"]
     assert scenario.location_coordinates["office_start"] == (
@@ -222,7 +225,7 @@ def test_generator_uses_synthetic_ids_and_time_norms(tmp_path: Path) -> None:
     generate_dataset(
         source_root / "Югоцентр Синтетические данные.csv",
         output_path,
-        source_root / "Югоцентр Контрольное распределение..csv",
+        source_root / "Югоцентр Контрольное распределение.csv",
         source_root / "engineers.csv",
         geocoder=lambda _address: (55.70000123, 37.64000456),
     )
@@ -233,11 +236,14 @@ def test_generator_uses_synthetic_ids_and_time_norms(tmp_path: Path) -> None:
     assert Counter(task.duration_minutes for task in scenario.tasks) == Counter(
         {70: 28, 30: 25, 20: 2, 80: 1}
     )
-    assert scenario.control_request_id_by_task[scenario.tasks[0].id] == "305894566"
+    assert scenario.control_request_id_by_task[scenario.tasks[0].id] == "32840"
     assert scenario.engineers[1].vehicle_type == VehicleType.WALK
     assert Skill.LOCAL_WORKS in scenario.engineers[1].qualifications
     assert scenario.engineers[0].available_router_count >= 0
     assert any(task.required_router_count > 0 for task in scenario.tasks)
+    assert sorted(scenario.reference_sequence_by_task.values()) == list(
+        range(1, len(scenario.tasks) + 1)
+    )
 
 
 def test_generator_normalizes_apartment_before_geocoding(tmp_path: Path) -> None:

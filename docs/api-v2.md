@@ -26,7 +26,7 @@ solver повторно.
 | `POST` | `/api/v2/dataset/upload/` | Импорт JSON из multipart-поля `file` |
 | `POST` | `/api/v2/optimize/?territory=...` | Расчёт Baseline или OR-Tools |
 | `PATCH` | `/api/v2/jobs/status/?territory=...` | Изменить operational-статус без запуска solver |
-| `POST` | `/api/v2/sync-reference-statuses/?territory=...` | Только синхронизация reference-статусов |
+| `POST` | `/api/v2/sync-reference-statuses/?territory=...` | Полная перезагрузка района и контрольного плана из официального JSON |
 | `POST` | `/api/v2/tasks/?territory=...` | Создание заявки |
 | `POST` | `/api/v2/geocode/?territory=...` | Геокодирование адреса |
 | `POST` | `/api/v2/replan/?territory=...` | Оперативное перепланирование |

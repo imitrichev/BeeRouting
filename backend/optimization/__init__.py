@@ -35,6 +35,7 @@ from .manual_planner import (
     ManualAssignmentValidation,
     ManualAssignmentViolation,
     load_control_dataset,
+    load_control_dataset_from_scenario,
 )
 from .routing_provider import (
     CoordinateRoutingProvider,
@@ -76,6 +77,7 @@ __all__ = [
     "ManualAssignmentValidation",
     "ManualAssignmentViolation",
     "load_control_dataset",
+    "load_control_dataset_from_scenario",
     "RouteOptimizer",
     "RouteStop",
     "InMemoryRoutingProvider",

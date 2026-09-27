@@ -218,7 +218,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 32840,
-      "control_request_id": 305894566,
+      "control_request_id": 32840,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -235,7 +235,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Капитанчук Александр",
+      "reference_crew": "Выговский Сергей",
+      "reference_sequence": 2,
       "gigabit": false
     },
     {
@@ -243,7 +244,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 78540,
-      "control_request_id": 305923871,
+      "control_request_id": 78540,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -260,7 +261,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Отправлена",
-      "reference_crew": "Капитанчук Александр",
+      "reference_crew": "Сакур Тимофей",
+      "reference_sequence": 13,
       "gigabit": false
     },
     {
@@ -268,7 +270,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 66376,
-      "control_request_id": 305857442,
+      "control_request_id": 66376,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -285,7 +287,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Исхаков Денис",
+      "reference_crew": "Сакур Тимофей",
+      "reference_sequence": 14,
       "gigabit": false
     },
     {
@@ -293,7 +296,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 23637,
-      "control_request_id": 305848096,
+      "control_request_id": 23637,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -310,7 +313,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Отправлена",
-      "reference_crew": "Брюзгин Ярослав",
+      "reference_crew": "Выговский Сергей",
+      "reference_sequence": 6,
       "gigabit": false
     },
     {
@@ -318,7 +322,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 97770,
-      "control_request_id": 305715188,
+      "control_request_id": 97770,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -335,7 +339,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Отправлена",
-      "reference_crew": "Бахарев Андрей",
+      "reference_crew": "Переладов Алексей",
+      "reference_sequence": 9,
       "gigabit": false
     },
     {
@@ -343,7 +348,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 55711,
-      "control_request_id": 305885689,
+      "control_request_id": 55711,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -361,6 +366,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Прокопенко Вячеслав",
+      "reference_sequence": 33,
       "gigabit": false
     },
     {
@@ -368,7 +374,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 76944,
-      "control_request_id": 305896115,
+      "control_request_id": 76944,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -386,6 +392,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Выговский Сергей",
+      "reference_sequence": 39,
       "gigabit": false
     },
     {
@@ -393,7 +400,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 75881,
-      "control_request_id": 305826867,
+      "control_request_id": 75881,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -411,6 +418,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 37,
       "gigabit": false
     },
     {
@@ -418,7 +426,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 85188,
-      "control_request_id": 305888827,
+      "control_request_id": 85188,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -436,6 +444,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Данилов Даниил",
+      "reference_sequence": 44,
       "gigabit": false
     },
     {
@@ -443,7 +452,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 19376,
-      "control_request_id": 305923588,
+      "control_request_id": 19376,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -461,6 +470,7 @@
       "required_router_count": 2,
       "reference_status": "В работе",
       "reference_crew": "Выговский Сергей",
+      "reference_sequence": 1,
       "gigabit": false
     },
     {
@@ -468,7 +478,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 6185,
-      "control_request_id": 305911433,
+      "control_request_id": 6185,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -486,6 +496,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 7,
       "gigabit": false
     },
     {
@@ -493,7 +504,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 80548,
-      "control_request_id": 305885500,
+      "control_request_id": 80548,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -511,6 +522,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Сакур Тимофей",
+      "reference_sequence": 12,
       "gigabit": false
     },
     {
@@ -518,7 +530,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 76452,
-      "control_request_id": 305896271,
+      "control_request_id": 76452,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -536,6 +548,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Прокопенко Вячеслав",
+      "reference_sequence": 38,
       "gigabit": false
     },
     {
@@ -543,7 +556,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 47560,
-      "control_request_id": 305862599,
+      "control_request_id": 47560,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -561,6 +574,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
+      "reference_sequence": 28,
       "gigabit": false
     },
     {
@@ -568,7 +582,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 79707,
-      "control_request_id": 305885170,
+      "control_request_id": 79707,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -586,6 +600,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
+      "reference_sequence": 40,
       "gigabit": false
     },
     {
@@ -593,7 +608,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 23142,
-      "control_request_id": 305894946,
+      "control_request_id": 23142,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -611,6 +626,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
+      "reference_sequence": 23,
       "gigabit": false
     },
     {
@@ -618,7 +634,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 10776,
-      "control_request_id": 305897647,
+      "control_request_id": 10776,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -636,6 +652,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
+      "reference_sequence": 15,
       "gigabit": false
     },
     {
@@ -643,7 +660,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 94447,
-      "control_request_id": 305848336,
+      "control_request_id": 94447,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -661,6 +678,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
+      "reference_sequence": 54,
       "gigabit": false
     },
     {
@@ -668,7 +686,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 94575,
-      "control_request_id": 305924398,
+      "control_request_id": 94575,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -686,6 +704,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 55,
       "gigabit": false
     },
     {
@@ -693,7 +712,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 94431,
-      "control_request_id": 305597759,
+      "control_request_id": 94431,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -711,6 +730,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 53,
       "gigabit": false
     },
     {
@@ -718,7 +738,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 52576,
-      "control_request_id": 305773274,
+      "control_request_id": 52576,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -736,6 +756,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 31,
       "gigabit": false
     },
     {
@@ -743,7 +764,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 66315,
-      "control_request_id": 305892707,
+      "control_request_id": 66315,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -761,6 +782,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 35,
       "gigabit": false
     },
     {
@@ -768,7 +790,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 93544,
-      "control_request_id": 305853788,
+      "control_request_id": 93544,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -786,6 +808,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 52,
       "gigabit": false
     },
     {
@@ -793,7 +816,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 19203,
-      "control_request_id": 305865903,
+      "control_request_id": 19203,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -811,6 +834,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 21,
       "gigabit": false
     },
     {
@@ -818,7 +842,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 16024,
-      "control_request_id": 305836042,
+      "control_request_id": 16024,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -836,6 +860,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Сакур Тимофей",
+      "reference_sequence": 18,
       "gigabit": false
     },
     {
@@ -843,7 +868,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 90373,
-      "control_request_id": 305857303,
+      "control_request_id": 90373,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -861,6 +886,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Сакур Тимофей",
+      "reference_sequence": 48,
       "gigabit": false
     },
     {
@@ -868,7 +894,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 79719,
-      "control_request_id": 305888542,
+      "control_request_id": 79719,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -886,6 +912,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Данилов Даниил",
+      "reference_sequence": 41,
       "gigabit": false
     },
     {
@@ -893,7 +920,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 6957,
-      "control_request_id": 305893538,
+      "control_request_id": 6957,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -911,6 +938,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Данилов Даниил",
+      "reference_sequence": 36,
       "gigabit": false
     },
     {
@@ -918,7 +946,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 78036,
-      "control_request_id": 305866081,
+      "control_request_id": 78036,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
@@ -935,7 +963,8 @@
       "required_vehicle": null,
       "required_router_count": 2,
       "reference_status": "Отправлена",
-      "reference_crew": "Брюзгин Ярослав",
+      "reference_crew": "Выговский Сергей",
+      "reference_sequence": 5,
       "gigabit": false
     },
     {
@@ -943,7 +972,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 49105,
-      "control_request_id": 305914018,
+      "control_request_id": 49105,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
@@ -961,6 +990,7 @@
       "required_router_count": 2,
       "reference_status": "Отменена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 29,
       "gigabit": false
     },
     {
@@ -968,7 +998,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 27023,
-      "control_request_id": 305927115,
+      "control_request_id": 27023,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -986,6 +1016,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Выговский Сергей",
+      "reference_sequence": 4,
       "gigabit": false
     },
     {
@@ -993,7 +1024,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 26177,
-      "control_request_id": 305897880,
+      "control_request_id": 26177,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1010,7 +1041,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Рыбалкин Егор",
+      "reference_crew": "Прокопенко Вячеслав",
+      "reference_sequence": 11,
       "gigabit": false
     },
     {
@@ -1018,7 +1050,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 77795,
-      "control_request_id": 305887153,
+      "control_request_id": 77795,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1035,7 +1067,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Брюзгин Ярослав",
+      "reference_crew": "Выговский Сергей",
+      "reference_sequence": 3,
       "gigabit": false
     },
     {
@@ -1043,7 +1076,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 24132,
-      "control_request_id": 305887469,
+      "control_request_id": 24132,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1061,6 +1094,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 8,
       "gigabit": false
     },
     {
@@ -1068,7 +1102,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 99841,
-      "control_request_id": 305892304,
+      "control_request_id": 99841,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1086,6 +1120,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Прокопенко Вячеслав",
+      "reference_sequence": 10,
       "gigabit": false
     },
     {
@@ -1093,7 +1128,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 20263,
-      "control_request_id": 305866266,
+      "control_request_id": 20263,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1111,6 +1146,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Прокопенко Вячеслав",
+      "reference_sequence": 22,
       "gigabit": false
     },
     {
@@ -1118,7 +1154,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 51133,
-      "control_request_id": 305889051,
+      "control_request_id": 51133,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1136,6 +1172,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
+      "reference_sequence": 30,
       "gigabit": false
     },
     {
@@ -1143,7 +1180,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 90709,
-      "control_request_id": 305889406,
+      "control_request_id": 90709,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1161,6 +1198,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
+      "reference_sequence": 49,
       "gigabit": false
     },
     {
@@ -1168,7 +1206,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 84074,
-      "control_request_id": 305910621,
+      "control_request_id": 84074,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1186,6 +1224,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
+      "reference_sequence": 43,
       "gigabit": false
     },
     {
@@ -1193,7 +1232,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 12263,
-      "control_request_id": 305868762,
+      "control_request_id": 12263,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1211,6 +1250,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
+      "reference_sequence": 16,
       "gigabit": false
     },
     {
@@ -1218,7 +1258,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 95501,
-      "control_request_id": 305886206,
+      "control_request_id": 95501,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1236,6 +1276,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
+      "reference_sequence": 56,
       "gigabit": false
     },
     {
@@ -1243,7 +1284,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 86002,
-      "control_request_id": 305835850,
+      "control_request_id": 86002,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1261,6 +1302,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 45,
       "gigabit": false
     },
     {
@@ -1268,7 +1310,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 92618,
-      "control_request_id": 305845228,
+      "control_request_id": 92618,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1286,6 +1328,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 50,
       "gigabit": false
     },
     {
@@ -1293,7 +1336,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 26845,
-      "control_request_id": 305886379,
+      "control_request_id": 26845,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1311,6 +1354,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 24,
       "gigabit": false
     },
     {
@@ -1318,7 +1362,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 80308,
-      "control_request_id": 305889212,
+      "control_request_id": 80308,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1336,6 +1380,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 42,
       "gigabit": false
     },
     {
@@ -1343,7 +1388,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 93276,
-      "control_request_id": 305920660,
+      "control_request_id": 93276,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1361,6 +1406,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 51,
       "gigabit": false
     },
     {
@@ -1368,7 +1414,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 61311,
-      "control_request_id": 305924262,
+      "control_request_id": 61311,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1386,6 +1432,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 34,
       "gigabit": false
     },
     {
@@ -1393,7 +1440,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 46513,
-      "control_request_id": 305856351,
+      "control_request_id": 46513,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1411,6 +1458,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 27,
       "gigabit": false
     },
     {
@@ -1418,7 +1466,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 35265,
-      "control_request_id": 305893337,
+      "control_request_id": 35265,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1436,6 +1484,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 26,
       "gigabit": false
     },
     {
@@ -1443,7 +1492,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 13203,
-      "control_request_id": 305897498,
+      "control_request_id": 13203,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1461,6 +1510,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 17,
       "gigabit": false
     },
     {
@@ -1468,7 +1518,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 26896,
-      "control_request_id": 304468627,
+      "control_request_id": 26896,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1486,6 +1536,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 25,
       "gigabit": false
     },
     {
@@ -1493,7 +1544,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 87819,
-      "control_request_id": 305820725,
+      "control_request_id": 87819,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1511,6 +1562,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 47,
       "gigabit": false
     },
     {
@@ -1518,7 +1570,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 5406,
-      "control_request_id": 305832359,
+      "control_request_id": 5406,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1536,6 +1588,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 32,
       "gigabit": false
     },
     {
@@ -1543,7 +1596,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 86864,
-      "control_request_id": 305922446,
+      "control_request_id": 86864,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1561,6 +1614,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 46,
       "gigabit": false
     },
     {
@@ -1568,7 +1622,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 17896,
-      "control_request_id": 305915645,
+      "control_request_id": 17896,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1586,6 +1640,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 19,
       "gigabit": false
     },
     {
@@ -1593,7 +1648,7 @@
       "territory_code": "yugo_tsentr",
       "territory_name": "Юго-центр",
       "request_id": 18023,
-      "control_request_id": 305816952,
+      "control_request_id": 18023,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -1611,6 +1666,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Выговский Сергей",
+      "reference_sequence": 20,
       "gigabit": false
     }
   ],

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import maplibregl, { type Map as MapLibreMap, type Marker } from 'maplibre-gl'
+import * as maplibregl from 'maplibre-gl'
+import type { Map as MapLibreMap, Marker } from 'maplibre-gl'
 
 import type {
   ApiResponse,
@@ -306,6 +307,7 @@ const ASSIGNED_STATUS_OPTIONS = [
   { title: 'Назначена в плане', value: 'ASSIGNED' },
   { title: 'В пути', value: 'EN_ROUTE' },
   { title: 'В работе', value: 'IN_PROGRESS' },
+  { title: 'Просрочена', value: 'OVERDUE' },
   { title: 'Выполнена', value: 'COMPLETED' },
   { title: 'Отменена', value: 'CANCELLED' },
 ]
@@ -399,6 +401,35 @@ async function loadOfficialDataset() {
     await refreshMap(true)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Не удалось загрузить dataset'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadReferenceDistribution(): Promise<void> {
+  loading.value = true
+  errorMessage.value = ''
+  try {
+    const response = await apiFetch('/api/v2/sync-reference-statuses/', {
+      method: 'POST',
+    })
+    const payload = await readResponse(response)
+    dataset.value = payload.dataset
+    result.value = payload.result ?? null
+    ignoreTaskStatuses.value = false
+    considerEquipment.value = payload.planning_options?.consider_equipment ?? false
+    planningTime.value = payload.planning_options?.planning_time ?? ''
+    selectedEngineerId.value = ''
+    selectedEngineerIds.value = []
+    reassignmentOpen.value = false
+    explanationOpen.value = false
+    createTaskOpen.value = false
+    replanOpen.value = false
+    await refreshMap(true)
+  } catch (error) {
+    errorMessage.value = error instanceof Error
+      ? error.message
+      : 'Не удалось загрузить контрольное распределение'
   } finally {
     loading.value = false
   }
@@ -856,7 +887,7 @@ function drawMap(fitToDataset = false) {
 
 function createMap() {
   if (!mapContainer.value) return
-  map = new maplibregl.Map({
+  const createdMap = new maplibregl.Map({
     container: mapContainer.value,
     // Для понятной проверки MVP используем публичную raster-подложку OSM.
     // OSRM по-прежнему отвечает только за дорожные матрицы и geometry маршрутов.
@@ -881,8 +912,9 @@ function createMap() {
     center: [37.61, 55.617],
     zoom: 10,
   })
-  map.addControl(new maplibregl.NavigationControl(), 'top-right')
-  map.on('load', () => {
+  map = createdMap
+  createdMap.addControl(new maplibregl.NavigationControl(), 'top-right')
+  createdMap.on('load', () => {
     map?.addSource('routes', {
       type: 'geojson',
       data: { type: 'FeatureCollection', features: [] },
@@ -984,6 +1016,15 @@ onBeforeUnmount(() => {
             />
             <v-btn variant="tonal" :disabled="!selectedFile" :loading="loading" @click="uploadDataset">
               Загрузить JSON
+            </v-btn>
+            <v-btn
+              color="info"
+              variant="tonal"
+              :loading="loading"
+              :disabled="!dataset || optimizing || replanning || reassignmentLoading || creatingTask"
+              @click="loadReferenceDistribution"
+            >
+              Контрольное распределение
             </v-btn>
             <v-btn
               color="secondary"
