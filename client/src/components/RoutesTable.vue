@@ -6,7 +6,7 @@ import type { EngineerRoute, RouteStop } from '@/types/entities.ts'
 import { getVehicleTypeTranslation } from '@/utils/translations.ts'
 import { getEngineerColor } from '@/utils/map.ts'
 import IconButton from '@/templates/IconButton.vue'
-import StopExplanationDialog from '@/components/modals/StopExplanationDialog.vue'
+import TaskExplanationDialog from '@/components/modals/TaskExplanationDialog.vue'
 import ReasignmentDialog from '@/components/modals/ReasignmentDialog.vue'
 interface IProps {
   loading: boolean
@@ -195,7 +195,7 @@ const closeReassignmentDialog = () => {
         </tr>
       </template>
     </v-data-table-virtual>
-    <stop-explanation-dialog
+    <task-explanation-dialog
       :opened="explanationDialogOpened"
       :stop="selectedStop"
       :route="selectedRoute"
