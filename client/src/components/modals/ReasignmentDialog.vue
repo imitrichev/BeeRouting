@@ -118,7 +118,7 @@ const deltaText = (value: number) => `${value > 0 ? '+' : ''}${value}`
 </script>
 
 <template>
-  <v-dialog :model-value="props.opened" max-width="720">
+  <v-dialog :model-value="props.opened" max-width="720" persistent>
     <basic-card :title="getDialogTitle" :show-bottom="true">
       <template #toolbarAppend>
         <icon-button

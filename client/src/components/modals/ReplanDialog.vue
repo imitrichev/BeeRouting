@@ -320,6 +320,7 @@ const replan = async () => {
 
 <template>
   <v-dialog
+    persistent
     :model-value="props.opened"
     max-width="600"
     @after-enter="

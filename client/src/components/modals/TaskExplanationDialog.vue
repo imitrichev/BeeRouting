@@ -49,7 +49,7 @@ const loadTaskExplanation = (taskId: string) => {
 </script>
 
 <template>
-  <v-dialog :model-value="opened" max-width="800">
+  <v-dialog :model-value="opened" max-width="800" persistent>
     <basic-card :loading="loading" :title="getDialogTitle">
       <template #loading>
         <v-skeleton-loader type="article" />

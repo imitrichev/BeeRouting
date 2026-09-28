@@ -20,7 +20,7 @@ const metrics = computed(() => store.getMetrics)
 </script>
 
 <template>
-  <v-dialog :model-value="props.opened" max-width="480">
+  <v-dialog :model-value="props.opened" max-width="480" persistent>
     <basic-card title="Результаты перепланирования">
       <template #toolbarAppend>
         <icon-button icon="close" class="ml-3" tooltip-text="Закрыть" @click="emit('close')" />

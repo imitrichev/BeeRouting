@@ -244,7 +244,7 @@ const createTask = async () => {
 </script>
 
 <template>
-  <v-dialog :model-value="props.opened" max-width="600" @after-enter="initMap">
+  <v-dialog :model-value="props.opened" max-width="600" @after-enter="initMap" persistent>
     <basic-card title="Создание заявки" :show-bottom="true">
       <template #toolbarAppend>
         <icon-button

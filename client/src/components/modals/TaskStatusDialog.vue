@@ -107,7 +107,7 @@ const updateStatus = async () => {
 </script>
 
 <template>
-  <v-dialog :model-value="props.opened" max-width="480">
+  <v-dialog :model-value="props.opened" max-width="480" persistent>
     <basic-card title="Изменение статуса заявки" :show-bottom="true">
       <template #toolbarAppend>
         <icon-button

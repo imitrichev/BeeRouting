@@ -53,7 +53,7 @@ const optimize = async () => {
 </script>
 
 <template>
-  <v-dialog :model-value="props.opened" max-width="600">
+  <v-dialog :model-value="props.opened" max-width="600" persistent>
     <basic-card title="Распределение заявок" :show-bottom="true">
       <template #toolbarAppend>
         <icon-button
