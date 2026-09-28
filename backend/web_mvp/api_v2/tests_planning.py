@@ -466,6 +466,20 @@ class OptimizationApiTests(TestCase):
         )
         self.assertEqual(new_task["status"], "NOT_SENT")
         self.assertIsNone(new_task["current_engineer_id"])
+        pending = next(
+            item
+            for item in created.data["result"]["unassigned"]
+            if item["task_id"] == task_id
+        )
+        self.assertEqual(pending["reason_code"], "not_distribution_attempted")
+        self.assertEqual(
+            pending["message"],
+            "С момента создания этой заявки не было попыток её распределения",
+        )
+        self.assertEqual(
+            created.data["result"]["metrics"]["unassigned_task_count"],
+            initial.data["result"]["metrics"]["unassigned_task_count"] + 1,
+        )
 
         updated = self.client.post(
             "/api/v2/optimize/",

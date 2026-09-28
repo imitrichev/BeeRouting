@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import * as maplibregl from 'maplibre-gl'
-import type { Map as MapLibreMap, Marker } from 'maplibre-gl'
+import maplibregl, { type Map as MapLibreMap, type Marker } from 'maplibre-gl'
 
 import type {
   ApiResponse,
@@ -228,7 +227,8 @@ const unassignedReasonByTask = computed(() => new Map(
 ))
 
 function unassignedTaskMessage(taskId: string): string {
-  return unassignedReasonByTask.value.get(taskId) ?? 'Ожидает распределения'
+  return unassignedReasonByTask.value.get(taskId)
+    ?? 'С момента создания этой заявки не было попыток её распределения'
 }
 
 // Последний result перечисляет каждую рассмотренную solver заявку: она либо
@@ -236,7 +236,11 @@ function unassignedTaskMessage(taskId: string): string {
 // щелчок по Baseline/OR-Tools без изменения входных данных не нужен.
 const evaluatedTaskIds = computed(() => {
   const ids = new Set(assignedTaskIds.value)
-  result.value?.unassigned.forEach((item) => ids.add(item.task_id))
+  result.value?.unassigned.forEach((item) => {
+    // Служебная причина означает, что solver эту заявку ещё не рассматривал.
+    // Она должна отображаться в очереди, но не блокировать кнопки расчёта.
+    if (item.reason_code !== 'not_distribution_attempted') ids.add(item.task_id)
+  })
   return ids
 })
 
@@ -294,11 +298,11 @@ const plannableTaskCount = computed(
 )
 
 const STATUS_LABELS: Record<string, string> = {
-  NOT_SENT: 'не отправлена',
+  NOT_SENT: 'Не отправлена',
   ASSIGNED: 'назначена',
   EN_ROUTE: 'в пути',
   IN_PROGRESS: 'в работе',
-  COMPLETED: 'выполнена',
+  COMPLETED: 'Выполнена',
   CANCELLED: 'отменена',
   OVERDUE: 'просрочена',
 }
@@ -1229,7 +1233,7 @@ onBeforeUnmount(() => {
               </v-list>
             </v-card>
 
-            <v-card v-if="result" variant="outlined">
+            <v-card v-if="dataset" variant="outlined">
               <v-card-title>Unassigned заявки</v-card-title>
               <v-card-text v-if="unassignedTaskCount === 0" class="text-success">
                 Все заявки назначены

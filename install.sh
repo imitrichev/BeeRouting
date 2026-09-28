@@ -12,7 +12,7 @@ mkdir -p routing/osm
 mkdir -p routing/otp
 
 PBF="routing/osm/moscow-region.osm.pbf"
-GTFS="routing/otp/latest.zip"
+GTFS="routing/otp/latest_raw.zip"
 
 # Скачиваем только если каких-то данных ещё нет
 if [ ! -f "$PBF" ] || [ ! -f "$GTFS" ]; then
@@ -67,7 +67,7 @@ print(data["href"])
         -name "moscow-region.osm.pbf" -print -quit)
 
     FOUND_GTFS=$(find .routing-download -type f \
-        -name "latest.zip" -print -quit)
+        -name "latest_raw.zip" -print -quit)
 
     if [ -z "$FOUND_PBF" ]; then
         echo "ERROR: moscow-region.osm.pbf not found in archive"
@@ -75,7 +75,7 @@ print(data["href"])
     fi
 
     if [ -z "$FOUND_GTFS" ]; then
-        echo "ERROR: latest.zip not found in archive"
+        echo "ERROR: latest_raw.zip not found in archive"
         exit 1
     fi
 
@@ -102,6 +102,10 @@ fi
 cd routing
 
 PBF="./osm/moscow-region.osm.pbf"
+
+# clean data: latest_raw to latest
+python3 patch2.py
+
 GTFS="./otp/latest.zip"
 OTP_GRAPH="./otp/graph.obj"
 

@@ -27,6 +27,8 @@ from backend.optimization import (
     Skill,
     Task,
     TaskStatus,
+    UnassignedReason,
+    UnassignedReasonCode,
     VehicleType,
     WORK_NORMS,
     WorkType,
@@ -889,6 +891,7 @@ class PlanningService:
             # После появления новой заявки текущий маршрут остаётся рабочим.
             # Следующий запуск solver фиксирует эти назначения и добавляет
             # только NOT_SENT-заявки.
+            self._result = self._result_with_pending_task(self._result, task.id)
             self._ignore_task_statuses = False
             self._preserve_assigned_tasks = True
         self._manual_reassignment_proposals.clear()
@@ -897,6 +900,34 @@ class PlanningService:
         # координатой новой заявки.
         self._routing_provider_requires_rebuild = True
         return self._scenario
+
+    @staticmethod
+    def _result_with_pending_task(
+        result: OptimizationResult,
+        task_id: str,
+    ) -> OptimizationResult:
+        """Добавляет новую заявку в сохранённый результат без запуска solver.
+
+        Метрики маршрутов и objective относятся к последнему фактическому
+        расчёту и поэтому не пересчитываются. Меняется только список текущих
+        неназначенных заявок: он нужен диспетчеру до следующего запуска
+        Baseline или OR-Tools.
+        """
+        if task_id in result.unassigned_reasons:
+            return result
+        reasons = dict(result.unassigned_reasons)
+        reasons[task_id] = UnassignedReason(
+            code=UnassignedReasonCode.NOT_DISTRIBUTION_ATTEMPTED,
+            message=(
+                "С момента создания этой заявки не было попыток её распределения"
+            ),
+        )
+        return replace(
+            result,
+            unassigned_task_ids=(*result.unassigned_task_ids, task_id),
+            unassigned_reasons=reasons,
+            unassigned_task_count=result.unassigned_task_count + 1,
+        )
 
     @staticmethod
     def _is_late_day(scenario: JsonScenario) -> bool:

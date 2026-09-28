@@ -12,16 +12,17 @@
   "office_start_point": {
     "lat": 55.6020854,
     "lon": 37.6653422,
-    "address": "г. Москва, ул Бирюлёвская, д 1 к 1"
+    "address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия"
   },
   "engineers": [
     {
       "engineer_id": "yugo_vostok-E01",
       "name": "Бригада Паршин",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "37, улица Андропова, Центральный микрорайон, Ступино, городской округ Ступино, 142803, Россия",
+      "start_lat": 54.8858274,
+      "start_lon": 38.0821597,
+      "shift_start": "15:00",
+      "shift_end": "24:00",
       "skills": [
         "connection_orders",
         "emergency_works",
@@ -38,10 +39,11 @@
     {
       "engineer_id": "yugo_vostok-E02",
       "name": "Бригада Андреев",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "11:00",
+      "shift_end": "20:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -50,15 +52,16 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "car",
       "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E03",
       "name": "Бригада Белоновский",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "10:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -74,9 +77,10 @@
     {
       "engineer_id": "yugo_vostok-E04",
       "name": "Бригада Рыбин",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "10:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -92,9 +96,10 @@
     {
       "engineer_id": "yugo_vostok-E05",
       "name": "Бригада Горбанев",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "10:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -112,10 +117,11 @@
     {
       "engineer_id": "yugo_vostok-E06",
       "name": "Бригада Бузань",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "11:00",
+      "shift_end": "20:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -124,15 +130,16 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "bicycle",
       "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E07",
       "name": "Бригада Козырь",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "10:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -144,16 +151,17 @@
         "Аварийные работы",
         "Локальные работы"
       ],
-      "vehicle_type": "bicycle",
+      "vehicle_type": "car",
       "available_router_count": 2
     },
     {
       "engineer_id": "yugo_vostok-E08",
       "name": "Бригада Царьков",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "15:00",
+      "shift_end": "20:00",
       "skills": [
         "connection_orders"
       ],
@@ -166,10 +174,11 @@
     {
       "engineer_id": "yugo_vostok-E09",
       "name": "Бригада Саламатин",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "19, Центральная улица, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
+      "start_lat": 54.8415134,
+      "start_lon": 38.2407727,
+      "shift_start": "11:10",
+      "shift_end": "23:10",
       "skills": [
         "connection_orders",
         "emergency_works",
@@ -186,10 +195,11 @@
     {
       "engineer_id": "yugo_vostok-E10",
       "name": "Бригада Макаров",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "08:00",
+      "shift_end": "17:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -204,26 +214,28 @@
     {
       "engineer_id": "yugo_vostok-E11",
       "name": "Бригада Каушнян",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "11:00",
+      "shift_end": "20:00",
       "skills": [
         "connection_orders"
       ],
       "skills_ru": [
         "Работы на подключение и дозаказы"
       ],
-      "vehicle_type": "bicycle",
+      "vehicle_type": "car",
       "available_router_count": 3
     },
     {
       "engineer_id": "yugo_vostok-E12",
       "name": "Бригада Демин",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "1 к1, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115404, Россия",
+      "start_lat": 55.6020854,
+      "start_lon": 37.6653422,
+      "shift_start": "11:00",
+      "shift_end": "20:00",
       "skills": [
         "local_works"
       ],
@@ -246,7 +258,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Домодедово",
-      "address": "Домодедово, проезд.Советский 1-й, д. 1А",
+      "address": "1А, 1-й Советский проезд, микрорайон Северный, Домодедово, городской округ Домодедово, 142000, Россия",
       "lat": 55.4407054,
       "lon": 37.7700883,
       "window_start": "16:00",
@@ -257,8 +269,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Козырь",
-      "reference_sequence": 20,
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 6,
       "gigabit": false
     },
     {
@@ -272,7 +284,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Орехово Борисово Южное",
-      "address": "Город Москва, проезд.Гурьевский, д. 23 к 1",
+      "address": "23 к1, Гурьевский проезд, район Орехово-Борисово Южное, Москва, 115597, Россия",
       "lat": 55.6074243,
       "lon": 37.7536622,
       "window_start": "18:00",
@@ -284,7 +296,7 @@
       "required_router_count": 2,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 8,
+      "reference_sequence": 13,
       "gigabit": false
     },
     {
@@ -298,7 +310,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Зябликово",
-      "address": "Город Москва, ул.Кустанайская, д. 8 к 1",
+      "address": "8 к1, Кустанайская улица, район Зябликово, Москва, 115682, Россия",
       "lat": 55.6188601,
       "lon": 37.7516036,
       "window_start": "16:00",
@@ -310,7 +322,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 7,
+      "reference_sequence": 11,
       "gigabit": false
     },
     {
@@ -324,7 +336,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Орехово Борисово Южное",
-      "address": "Город Москва, ш.Каширское, д. 136",
+      "address": "136, Каширское шоссе, район Орехово-Борисово Южное, Москва, 115191, Россия",
       "lat": 55.5996618,
       "lon": 37.7219087,
       "window_start": "16:00",
@@ -336,7 +348,7 @@
       "required_router_count": 1,
       "reference_status": "В пути",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 13,
+      "reference_sequence": 21,
       "gigabit": false
     },
     {
@@ -344,13 +356,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 66944,
-      "control_request_id": 66944,
+      "control_request_id": 75745,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Домодедово",
-      "address": "Домодедово, ул.Зеленая, д. 85",
+      "address": "85, Зелёная улица, Домодедово, городской округ Домодедово, 142000, Россия",
       "lat": 55.425109,
       "lon": 37.7700594,
       "window_start": "10:00",
@@ -360,9 +372,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 1,
-      "reference_status": "Отменена",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 70,
+      "reference_status": "Выполнена",
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 2,
       "gigabit": false
     },
     {
@@ -376,7 +388,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Москворечье - Сабурово",
-      "address": "Город Москва, ул.Москворечье, д. 4 к 6",
+      "address": "4 к6, улица Москворечье, район Москворечье-Сабурово, Москва, 115447, Россия",
       "lat": 55.643317,
       "lon": 37.6548482,
       "window_start": "12:00",
@@ -388,7 +400,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 54,
+      "reference_sequence": 78,
       "gigabit": false
     },
     {
@@ -396,13 +408,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 23807,
-      "control_request_id": 23807,
+      "control_request_id": 876,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Бирюлево Восточное",
-      "address": "Город Москва, проезд.Загорьевский, д. 9",
+      "address": "9, Загорьевский проезд, район Бирюлёво Восточное, Москва, 115598, Россия",
       "lat": 55.5780853,
       "lon": 37.6775523,
       "window_start": "10:00",
@@ -412,9 +424,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отменена",
+      "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 43,
+      "reference_sequence": 44,
       "gigabit": false
     },
     {
@@ -428,7 +440,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Бирюлево Восточное",
-      "address": "Город Москва, ул.6-я Радиальная, д. 5 к 3",
+      "address": "5 к3, 6-я Радиальная улица, район Бирюлёво Восточное, Москва, 115404, Россия",
       "lat": 55.6048694,
       "lon": 37.6607974,
       "window_start": "14:00",
@@ -440,7 +452,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 62,
+      "reference_sequence": 81,
       "gigabit": false
     },
     {
@@ -454,7 +466,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Бирюлево Восточное",
-      "address": "Город Москва, ул.Бирюлёвская, д. 39",
+      "address": "39, Бирюлёвская улица, Бирюлёво, район Бирюлёво Восточное, Москва, 115372, Россия",
       "lat": 55.5881256,
       "lon": 37.6658771,
       "window_start": "14:00",
@@ -466,7 +478,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 66,
+      "reference_sequence": 82,
       "gigabit": false
     },
     {
@@ -480,7 +492,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Кашира",
-      "address": "Кашира, ул.Победы, д. 9",
+      "address": "9, улица Победы, Кашира-3, Кашира, городской округ Кашира, 142903, Россия",
       "lat": 54.8386455,
       "lon": 38.1934317,
       "window_start": "14:00",
@@ -492,7 +504,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 55,
+      "reference_sequence": 79,
       "gigabit": false
     },
     {
@@ -506,7 +518,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Братеево",
-      "address": "Город Москва, ул.Братеевская, д. 18 к 1",
+      "address": "18 к1, Братеевская улица, район Братеево, Москва, 115408, Россия",
       "lat": 55.6362442,
       "lon": 37.7692583,
       "window_start": "12:00",
@@ -518,7 +530,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 59,
+      "reference_sequence": 80,
       "gigabit": false
     },
     {
@@ -532,7 +544,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Зябликово",
-      "address": "Город Москва, б-р.Ореховый, д. 35 к 1",
+      "address": "35 к1, Ореховый бульвар, район Зябликово, Москва, 115583, Россия",
       "lat": 55.6149375,
       "lon": 37.7354256,
       "window_start": "12:00",
@@ -544,7 +556,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 9,
+      "reference_sequence": 1,
       "gigabit": false
     },
     {
@@ -558,7 +570,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Зябликово",
-      "address": "Город Москва, б-р.Ореховый, д. 35 к 1",
+      "address": "35 к1, Ореховый бульвар, район Зябликово, Москва, 115583, Россия",
       "lat": 55.6149375,
       "lon": 37.7354256,
       "window_start": "12:00",
@@ -570,7 +582,7 @@
       "required_router_count": 2,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 45,
+      "reference_sequence": 27,
       "gigabit": false
     },
     {
@@ -584,7 +596,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Царицыно",
-      "address": "Город Москва, пр-кт.Пролетарский, д. 14А",
+      "address": "14А, Пролетарский проспект, район Царицыно, Москва, 115447, Россия",
       "lat": 55.6360111,
       "lon": 37.6533634,
       "window_start": "16:00",
@@ -596,7 +608,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Царьков",
-      "reference_sequence": 71,
+      "reference_sequence": 29,
       "gigabit": false
     },
     {
@@ -610,7 +622,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Домодедово",
-      "address": "Домодедово, ул.Корнеева, д. 50",
+      "address": "50, улица Корнеева, Домодедово, городской округ Домодедово, 142000, Россия",
       "lat": 55.4226672,
       "lon": 37.7779539,
       "window_start": "12:00",
@@ -621,8 +633,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Выполнена",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 57,
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 3,
       "gigabit": false
     },
     {
@@ -636,7 +648,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Домодедово",
-      "address": "Домодедово, ул.Корнеева, д. 40",
+      "address": "40, улица Корнеева, Домодедово, городской округ Домодедово, 142000, Россия",
       "lat": 55.4255128,
       "lon": 37.7783486,
       "window_start": "14:00",
@@ -647,8 +659,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Выполнена",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 48,
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 5,
       "gigabit": false
     },
     {
@@ -656,13 +668,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 75745,
-      "control_request_id": 75745,
+      "control_request_id": 66944,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Домодедово",
-      "address": "Домодедово, ул.Зеленая, д. 85",
+      "address": "85, Зелёная улица, Домодедово, городской округ Домодедово, 142000, Россия",
       "lat": 55.425109,
       "lon": 37.7700594,
       "window_start": "10:00",
@@ -672,9 +684,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 1,
-      "reference_status": "Выполнена",
+      "reference_status": "Отменена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 73,
+      "reference_sequence": 83,
       "gigabit": false
     },
     {
@@ -688,7 +700,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Царицыно",
-      "address": "Город Москва, ул.Ереванская, д. 29",
+      "address": "29, Ереванская улица, район Царицыно, Москва, 115304, Россия",
       "lat": 55.629584,
       "lon": 37.6790583,
       "window_start": "10:00",
@@ -700,7 +712,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 69,
+      "reference_sequence": 31,
       "gigabit": false
     },
     {
@@ -714,7 +726,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Царицыно",
-      "address": "Город Москва, ул.Севанская, д. 15 к 1",
+      "address": "15 к1, Севанская улица, район Царицыно, Москва, 115516, Россия",
       "lat": 55.6234951,
       "lon": 37.6538926,
       "window_start": "10:00",
@@ -726,7 +738,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 52,
+      "reference_sequence": 30,
       "gigabit": false
     },
     {
@@ -740,7 +752,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Бирюлево Восточное",
-      "address": "Город Москва, ул.6-я Радиальная, д. 7/1 к 2",
+      "address": "7/1 к2, 6-я Радиальная улица, район Бирюлёво Восточное, Москва, 115404, Россия",
       "lat": 55.6037747,
       "lon": 37.6510228,
       "window_start": "16:00",
@@ -752,7 +764,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 75,
+      "reference_sequence": 45,
       "gigabit": false
     },
     {
@@ -760,13 +772,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 876,
-      "control_request_id": 876,
+      "control_request_id": 23807,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Бирюлево Восточное",
-      "address": "Город Москва, проезд.Загорьевский, д. 9",
+      "address": "9, Загорьевский проезд, район Бирюлёво Восточное, Москва, 115598, Россия",
       "lat": 55.5780853,
       "lon": 37.6775523,
       "window_start": "10:00",
@@ -776,9 +788,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Выполнена",
+      "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 80,
+      "reference_sequence": 76,
       "gigabit": false
     },
     {
@@ -792,7 +804,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кашира",
-      "address": "Кашира, ул.Садовая, д. 18",
+      "address": "18, Садовая улица, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8423286,
       "lon": 38.2453976,
       "window_start": "10:00",
@@ -804,7 +816,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 64,
+      "reference_sequence": 48,
       "gigabit": false
     },
     {
@@ -818,7 +830,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Кашира",
-      "address": "Кашира, ул.Садовая, д. 2/11",
+      "address": "2/11, Садовая улица, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8500604,
       "lon": 38.2443522,
       "window_start": "12:00",
@@ -830,7 +842,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 58,
+      "reference_sequence": 49,
       "gigabit": false
     },
     {
@@ -844,7 +856,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заявка на подключение",
       "district": "Братеево",
-      "address": "Город Москва, ул.Паромная, д. 9 к 1",
+      "address": "9 к1, Паромная улица, район Братеево, Москва, 115408, Россия",
       "lat": 55.6369125,
       "lon": 37.7630982,
       "window_start": "14:00",
@@ -856,7 +868,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
-      "reference_sequence": 41,
+      "reference_sequence": 60,
       "gigabit": false
     },
     {
@@ -870,7 +882,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Братеево",
-      "address": "Город Москва, ул.Братеевская, д. 16 к 1",
+      "address": "16 к1, Братеевская улица, район Братеево, Москва, 115408, Россия",
       "lat": 55.6343465,
       "lon": 37.7658937,
       "window_start": "10:00",
@@ -882,7 +894,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
-      "reference_sequence": 39,
+      "reference_sequence": 59,
       "gigabit": false
     },
     {
@@ -890,13 +902,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 78920,
-      "control_request_id": 51603,
+      "control_request_id": 78920,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
       "request_type_hd": "Заявка на подключение",
       "district": "Братеево",
-      "address": "Город Москва, ул.Борисовские Пруды, д. 20 к 1",
+      "address": "20 к1, улица Борисовские Пруды, район Братеево, Москва, 115612, Россия",
       "lat": 55.6379834,
       "lon": 37.7518423,
       "window_start": "12:00",
@@ -906,9 +918,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отправлена",
-      "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 11,
+      "reference_status": "Выполнена",
+      "reference_crew": "Бригада Макаров",
+      "reference_sequence": 26,
       "gigabit": false
     },
     {
@@ -922,7 +934,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кашира",
-      "address": "Кашира, ул.Юбилейная, д. 9",
+      "address": "9, Юбилейная улица, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8400884,
       "lon": 38.2494867,
       "window_start": "10:00",
@@ -934,7 +946,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 76,
+      "reference_sequence": 62,
       "gigabit": false
     },
     {
@@ -948,7 +960,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кашира",
-      "address": "Кашира, ул.8 Марта, д. 22",
+      "address": "22, улица 8-го Марта, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8442956,
       "lon": 38.2387126,
       "window_start": "12:00",
@@ -960,7 +972,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 42,
+      "reference_sequence": 63,
       "gigabit": false
     },
     {
@@ -974,7 +986,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заявка на подключение",
       "district": "Орехово Борисово Северное",
-      "address": "Город Москва, б-р.Ореховый, д. 7 к 1",
+      "address": "7 к1, Ореховый бульвар, район Орехово-Борисово Северное, Москва, 115551, Россия",
       "lat": 55.6096657,
       "lon": 37.7060471,
       "window_start": "10:00",
@@ -986,7 +998,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 78,
+      "reference_sequence": 14,
       "gigabit": false
     },
     {
@@ -1000,7 +1012,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Орехово Борисово Северное",
-      "address": "Город Москва, ш.Каширское, д. 94 к 1",
+      "address": "94 к1, Каширское шоссе (дублёр), Орехово-Борисово, район Орехово-Борисово Северное, Москва, 115551, Россия",
       "lat": 55.614969,
       "lon": 37.7137838,
       "window_start": "12:00",
@@ -1012,7 +1024,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 61,
+      "reference_sequence": 17,
       "gigabit": false
     },
     {
@@ -1026,7 +1038,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Орехово Борисово Северное",
-      "address": "Город Москва, б-р.Ореховый, д. 11 к 1",
+      "address": "11 к1, Ореховый бульвар, Орехово-Борисово, район Орехово-Борисово Северное, Москва, 115551, Россия",
       "lat": 55.6108754,
       "lon": 37.7128459,
       "window_start": "12:00",
@@ -1038,7 +1050,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 79,
+      "reference_sequence": 15,
       "gigabit": false
     },
     {
@@ -1052,7 +1064,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заявка на подключение",
       "district": "Орехово Борисово Северное",
-      "address": "Город Москва, проезд.Борисовский, д. 44 к 3",
+      "address": "44 к3, Борисовский проезд, район Орехово-Борисово Северное, Москва, 115563, Россия",
       "lat": 55.6144125,
       "lon": 37.7226952,
       "window_start": "10:00",
@@ -1064,7 +1076,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 51,
+      "reference_sequence": 7,
       "gigabit": false
     },
     {
@@ -1078,7 +1090,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Зябликово",
-      "address": "Город Москва, проезд.Ореховый, д. 41",
+      "address": "41, Ореховый проезд, район Зябликово, Москва, 115573, Россия",
       "lat": 55.6165342,
       "lon": 37.7307244,
       "window_start": "10:00",
@@ -1090,7 +1102,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 82,
+      "reference_sequence": 23,
       "gigabit": false
     },
     {
@@ -1104,7 +1116,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Домодедово",
-      "address": "Домодедово, ул.Ильюшина, д. 20",
+      "address": "20, улица Ильюшина, микрорайон Авиационный, Домодедово, городской округ Домодедово, 142007, Россия",
       "lat": 55.4105367,
       "lon": 37.8378227,
       "window_start": "14:00",
@@ -1116,7 +1128,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
-      "reference_sequence": 81,
+      "reference_sequence": 4,
       "gigabit": false
     },
     {
@@ -1130,7 +1142,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кашира",
-      "address": "Кашира, ул.Юбилейная, д. 8",
+      "address": "8, Юбилейная улица, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8419626,
       "lon": 38.248056,
       "window_start": "14:00",
@@ -1142,7 +1154,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 26,
+      "reference_sequence": 52,
       "gigabit": false
     },
     {
@@ -1156,7 +1168,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Зябликово",
-      "address": "Город Москва, ул.Кустанайская, д. 9 к 1",
+      "address": "9 к1, Кустанайская улица, район Зябликово, Москва, 115682, Россия",
       "lat": 55.6180751,
       "lon": 37.7543157,
       "window_start": "12:00",
@@ -1168,7 +1180,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 6,
+      "reference_sequence": 10,
       "gigabit": false
     },
     {
@@ -1182,7 +1194,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Дозаказ оборудования",
       "district": "Царицыно",
-      "address": "Город Москва, пр-кт.Пролетарский, д. 18 к 4",
+      "address": "18 к4, Пролетарский проспект, район Царицыно, Москва, 115447, Россия",
       "lat": 55.6338547,
       "lon": 37.6538396,
       "window_start": "18:00",
@@ -1194,7 +1206,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 18,
+      "reference_sequence": 46,
       "gigabit": false
     },
     {
@@ -1202,13 +1214,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 51603,
-      "control_request_id": 78920,
+      "control_request_id": 51603,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Братеево",
-      "address": "Город Москва, ул.Борисовские Пруды, д. 20 к 1",
+      "address": "20 к1, улица Борисовские Пруды, район Братеево, Москва, 115612, Россия",
       "lat": 55.6379834,
       "lon": 37.7518423,
       "window_start": "18:00",
@@ -1218,9 +1230,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 1,
-      "reference_status": "Выполнена",
-      "reference_crew": "Бригада Макаров",
-      "reference_sequence": 77,
+      "reference_status": "Отправлена",
+      "reference_crew": "Бригада Белоновский",
+      "reference_sequence": 61,
       "gigabit": false
     },
     {
@@ -1234,7 +1246,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кашира",
-      "address": "Кашира, ул.Кржижановского, д. 7",
+      "address": "7, улица Кржижановского, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8398702,
       "lon": 38.2399045,
       "window_start": "20:00",
@@ -1246,7 +1258,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 31,
+      "reference_sequence": 56,
       "gigabit": false
     },
     {
@@ -1260,7 +1272,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Дозаказ оборудования",
       "district": "Бирюлево Западное",
-      "address": "Город Москва, ул.Медынская, д. 5 к 1",
+      "address": "5 к1, Медынская улица, район Бирюлёво Западное, Москва, 117546, Россия",
       "lat": 55.5899951,
       "lon": 37.6483741,
       "window_start": "14:00",
@@ -1272,7 +1284,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 72,
+      "reference_sequence": 34,
       "gigabit": false
     },
     {
@@ -1286,7 +1298,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Домодедово",
-      "address": "Домодедово, ул.Гагарина, д. 55/2",
+      "address": "55 к2, улица Гагарина, микрорайон Северный, Домодедово, городской округ Домодедово, 142000, Россия",
       "lat": 55.4515305,
       "lon": 37.7394233,
       "window_start": "16:00",
@@ -1297,8 +1309,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Козырь",
-      "reference_sequence": 21,
+      "reference_crew": "Бригада Демин",
+      "reference_sequence": 68,
       "gigabit": false
     },
     {
@@ -1312,7 +1324,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Домодедово",
-      "address": "Домодедово, ул.1-я Коммунистическая, д. 39",
+      "address": "39, 1-я Коммунистическая улица, микрорайон Северный, Домодедово, городской округ Домодедово, 142001, Россия",
       "lat": 55.4546029,
       "lon": 37.7444395,
       "window_start": "18:00",
@@ -1323,8 +1335,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Козырь",
-      "reference_sequence": 22,
+      "reference_crew": "Бригада Демин",
+      "reference_sequence": 69,
       "gigabit": false
     },
     {
@@ -1338,7 +1350,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Работа с кабелем",
       "district": "Братеево",
-      "address": "Город Москва, ул.Борисовские Пруды, д. 48 к 2",
+      "address": "48 к2, улица Борисовские Пруды, район Братеево, Москва, 109469, Россия",
       "lat": 55.6418225,
       "lon": 37.7747995,
       "window_start": "18:00",
@@ -1350,7 +1362,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 12,
+      "reference_sequence": 28,
       "gigabit": false
     },
     {
@@ -1364,7 +1376,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Работа с кабелем",
       "district": "Ступино",
-      "address": "Ступино, ул.Калинина, д. 34",
+      "address": "34, улица Калинина, Северо-Западный микрорайон, Ступино, городской округ Ступино, 142802, Россия",
       "lat": 54.8917937,
       "lon": 38.0692054,
       "window_start": "20:00",
@@ -1375,8 +1387,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Демин",
-      "reference_sequence": 34,
+      "reference_crew": "Бригада Паршин",
+      "reference_sequence": 72,
       "gigabit": false
     },
     {
@@ -1390,7 +1402,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Низкая скорость",
       "district": "Орехово Борисово Южное",
-      "address": "Город Москва, проезд.Шипиловский, д. 59 к 2",
+      "address": "59 к2, Шипиловский проезд, район Орехово-Борисово Южное, Москва, 115191, Россия",
       "lat": 55.6060564,
       "lon": 37.7067109,
       "window_start": "20:00",
@@ -1402,7 +1414,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 14,
+      "reference_sequence": 22,
       "gigabit": false
     },
     {
@@ -1416,7 +1428,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Бирюлево Западное",
-      "address": "Город Москва, проезд.Востряковский, д. 15 к 2",
+      "address": "15 к2, Востряковский проезд, район Бирюлёво Западное, Москва, 117403, Россия",
       "lat": 55.5760549,
       "lon": 37.6461681,
       "window_start": "20:00",
@@ -1428,7 +1440,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 16,
+      "reference_sequence": 42,
       "gigabit": false
     },
     {
@@ -1442,7 +1454,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Бирюлево Восточное",
-      "address": "Город Москва, ул.Бирюлёвская, д. 58 к 3",
+      "address": "58 к3, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115372, Россия",
       "lat": 55.5806701,
       "lon": 37.6681476,
       "window_start": "18:00",
@@ -1454,7 +1466,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 17,
+      "reference_sequence": 47,
       "gigabit": false
     },
     {
@@ -1468,7 +1480,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Низкая скорость",
       "district": "Орехово Борисово Южное",
-      "address": "Город Москва, ул.Домодедовская, д. 31",
+      "address": "31, Домодедовская улица, район Орехово-Борисово Южное, Москва, 127474, Россия",
       "lat": 55.6039003,
       "lon": 37.7161258,
       "window_start": "12:00",
@@ -1480,7 +1492,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 5,
+      "reference_sequence": 9,
       "gigabit": false
     },
     {
@@ -1488,13 +1500,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 24482,
-      "control_request_id": 11872,
+      "control_request_id": 24482,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Рост ошибок на порту",
       "district": "Царицыно",
-      "address": "Город Москва, ул.Весёлая, д. 33 к 7",
+      "address": "33 к7, Весёлая улица, район Царицыно, Москва, 115516, Россия",
       "lat": 55.6235129,
       "lon": 37.6631328,
       "window_start": "20:00",
@@ -1504,9 +1516,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Выполнена",
+      "reference_status": "Отменена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 35,
+      "reference_sequence": 41,
       "gigabit": false
     },
     {
@@ -1520,7 +1532,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Работа с кабелем",
       "district": "Ступино",
-      "address": "Ступино, ул.Калинина, д. 34",
+      "address": "34, улица Калинина, Северо-Западный микрорайон, Ступино, городской округ Ступино, 142802, Россия",
       "lat": 54.8917937,
       "lon": 38.0692054,
       "window_start": "10:00",
@@ -1532,7 +1544,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 50,
+      "reference_sequence": 77,
       "gigabit": false
     },
     {
@@ -1546,7 +1558,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Домодедово",
-      "address": "Домодедово, ул.Ильюшина, д. 11 к 2",
+      "address": "11 к2, улица Ильюшина, микрорайон Авиационный, Домодедово, городской округ Домодедово, 142007, Россия",
       "lat": 55.4144868,
       "lon": 37.8424754,
       "window_start": "12:00",
@@ -1557,8 +1569,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "В работе",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 1,
+      "reference_crew": "Бригада Демин",
+      "reference_sequence": 67,
       "gigabit": false
     },
     {
@@ -1572,7 +1584,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Роутер. Замена техническим специалистом",
       "district": "Бирюлево Западное",
-      "address": "Город Москва, проезд.Востряковский, д. 15 к 4",
+      "address": "15 к4, Востряковский проезд, район Бирюлёво Западное, Москва, 117403, Россия",
       "lat": 55.5768738,
       "lon": 37.6492402,
       "window_start": "16:00",
@@ -1584,7 +1596,7 @@
       "required_router_count": 1,
       "reference_status": "В работе",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 15,
+      "reference_sequence": 36,
       "gigabit": false
     },
     {
@@ -1598,7 +1610,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Домодедово",
-      "address": "Домодедово, ул.Корнеева, д. 48",
+      "address": "48, улица Корнеева, Домодедово, городской округ Домодедово, 142000, Россия",
       "lat": 55.4235837,
       "lon": 37.7782889,
       "window_start": "10:00",
@@ -1609,8 +1621,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Выполнена",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 65,
+      "reference_crew": "Бригада Демин",
+      "reference_sequence": 66,
       "gigabit": false
     },
     {
@@ -1624,7 +1636,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Переключение на Гбит/с",
       "district": "Царицыно",
-      "address": "Город Москва, ул.Луганская, д. 4 к 1",
+      "address": "4 к1, Луганская улица, район Царицыно, Москва, 115516, Россия",
       "lat": 55.6248172,
       "lon": 37.665112,
       "window_start": "18:00",
@@ -1636,7 +1648,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 74,
+      "reference_sequence": 40,
       "gigabit": false
     },
     {
@@ -1650,7 +1662,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "TVE/ENT. Замена приставки техником",
       "district": "Царицыно",
-      "address": "Город Москва, ул.Луганская, д. 3 к 1",
+      "address": "3 к1, Луганская улица, район Царицыно, Москва, 115516, Россия",
       "lat": 55.6278364,
       "lon": 37.664554,
       "window_start": "12:00",
@@ -1662,7 +1674,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 40,
+      "reference_sequence": 32,
       "gigabit": false
     },
     {
@@ -1670,13 +1682,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 11872,
-      "control_request_id": 24482,
+      "control_request_id": 11872,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Рост ошибок на порту",
       "district": "Царицыно",
-      "address": "Город Москва, ул.Весёлая, д. 33 к 7",
+      "address": "33 к7, Весёлая улица, район Царицыно, Москва, 115516, Россия",
       "lat": 55.6235129,
       "lon": 37.6631328,
       "window_start": "14:00",
@@ -1686,9 +1698,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отменена",
+      "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 44,
+      "reference_sequence": 75,
       "gigabit": false
     },
     {
@@ -1702,7 +1714,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "IP-адрес 169...",
       "district": "Царицыно",
-      "address": "Город Москва, ул.Луганская, д. 1",
+      "address": "1, Луганская улица, район Царицыно, Москва, 115516, Россия",
       "lat": 55.6287028,
       "lon": 37.6637203,
       "window_start": "16:00",
@@ -1714,7 +1726,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 56,
+      "reference_sequence": 37,
       "gigabit": false
     },
     {
@@ -1728,7 +1740,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Низкая скорость",
       "district": "Царицыно",
-      "address": "Город Москва, ул.Кантемировская, д. 5 к 2",
+      "address": "5 к2, Кантемировская улица, район Царицыно, Москва, 115409, Россия",
       "lat": 55.6351144,
       "lon": 37.6773965,
       "window_start": "18:00",
@@ -1740,7 +1752,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 53,
+      "reference_sequence": 39,
       "gigabit": false
     },
     {
@@ -1754,7 +1766,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Низкая скорость",
       "district": "Бирюлево Восточное",
-      "address": "Город Москва, проезд.Загорьевский, д. 7 к 2",
+      "address": "7 к2, Загорьевский проезд, район Бирюлёво Восточное, Москва, 115547, Россия",
       "lat": 55.574132,
       "lon": 37.6663646,
       "window_start": "10:00",
@@ -1766,7 +1778,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 36,
+      "reference_sequence": 43,
       "gigabit": false
     },
     {
@@ -1780,7 +1792,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Переключение на Гбит/с",
       "district": "Орехово Борисово Северное",
-      "address": "Город Москва, ул.Маршала Захарова, д. 18 к 1",
+      "address": "18 к1, улица Маршала Захарова, район Орехово-Борисово Северное, Москва, 115569, Россия",
       "lat": 55.6204412,
       "lon": 37.6958848,
       "window_start": "16:00",
@@ -1792,7 +1804,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 63,
+      "reference_sequence": 19,
       "gigabit": false
     },
     {
@@ -1806,7 +1818,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Орехово Борисово Южное",
-      "address": "Город Москва, ул.Генерала Белова, д. 45 к 2",
+      "address": "45 к2, улица Генерала Белова, район Орехово-Борисово Южное, Москва, 109387, Россия",
       "lat": 55.6072105,
       "lon": 37.7261342,
       "window_start": "14:00",
@@ -1818,7 +1830,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 47,
+      "reference_sequence": 18,
       "gigabit": false
     },
     {
@@ -1832,7 +1844,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "IP-адрес 169...",
       "district": "Орехово Борисово Северное",
-      "address": "Город Москва, ул.Шипиловская, д. 38",
+      "address": "38, Шипиловская улица, район Орехово-Борисово Северное, Москва, 115563, Россия",
       "lat": 55.6205105,
       "lon": 37.7245073,
       "window_start": "12:00",
@@ -1844,7 +1856,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 67,
+      "reference_sequence": 16,
       "gigabit": false
     },
     {
@@ -1858,7 +1870,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "TVE/ENT. Замена приставки техником",
       "district": "Орехово Борисово Южное",
-      "address": "Город Москва, проезд.Гурьевский, д. 19 к 2",
+      "address": "19 к2, Гурьевский проезд, район Орехово-Борисово Южное, Москва, 115597, Россия",
       "lat": 55.607134,
       "lon": 37.7503407,
       "window_start": "16:00",
@@ -1870,7 +1882,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 68,
+      "reference_sequence": 20,
       "gigabit": false
     },
     {
@@ -1884,7 +1896,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Рост ошибок на порту",
       "district": "Орехово Борисово Северное",
-      "address": "Город Москва, проезд.Борисовский, д. 44 к 3",
+      "address": "44 к3, Борисовский проезд, район Орехово-Борисово Северное, Москва, 115563, Россия",
       "lat": 55.6144125,
       "lon": 37.7226952,
       "window_start": "10:00",
@@ -1896,7 +1908,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 60,
+      "reference_sequence": 8,
       "gigabit": false
     },
     {
@@ -1910,7 +1922,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Зябликово",
-      "address": "Город Москва, проезд.Ореховый, д. 23 к 1",
+      "address": "23 к1, Ореховый проезд, район Зябликово, Москва, 115573, Россия",
       "lat": 55.6228247,
       "lon": 37.7313782,
       "window_start": "18:00",
@@ -1922,7 +1934,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 49,
+      "reference_sequence": 12,
       "gigabit": false
     },
     {
@@ -1936,7 +1948,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Разрывы",
       "district": "Бирюлево Западное",
-      "address": "Город Москва, ул.Булатниковская, д. 4 к 1",
+      "address": "4 к1, Булатниковская улица, район Бирюлёво Западное, Москва, 117403, Россия",
       "lat": 55.5812013,
       "lon": 37.6475142,
       "window_start": "12:00",
@@ -1947,8 +1959,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Выполнена",
-      "reference_crew": "Бригада Демин",
-      "reference_sequence": 37,
+      "reference_crew": "Бригада Горбанев",
+      "reference_sequence": 33,
       "gigabit": false
     },
     {
@@ -1962,7 +1974,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Зябликово",
-      "address": "Город Москва, б-р.Ореховый, д. 61 к 1",
+      "address": "61 к1, Ореховый бульвар, район Зябликово, Москва, 115682, Россия",
       "lat": 55.6166365,
       "lon": 37.7582297,
       "window_start": "10:00",
@@ -1974,7 +1986,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 83,
+      "reference_sequence": 24,
       "gigabit": false
     },
     {
@@ -1988,7 +2000,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Домодедово",
-      "address": "Домодедово, проезд.Кутузовский, д. 16",
+      "address": "16, Кутузовский проезд, микрорайон Северный, Домодедово, городской округ Домодедово, 142000, Россия",
       "lat": 55.4371874,
       "lon": 37.7619456,
       "window_start": "14:00",
@@ -2000,7 +2012,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 19,
+      "reference_sequence": 64,
       "gigabit": false
     },
     {
@@ -2014,7 +2026,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Кашира",
-      "address": "Кашира, ул.Ленина, д. 11 к 3",
+      "address": "11 к3, улица Ленина, Кашира-3, Кашира, городской округ Кашира, 142903, Россия",
       "lat": 54.8429121,
       "lon": 38.1907273,
       "window_start": "12:00",
@@ -2025,8 +2037,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Просрочена",
-      "reference_crew": "Бригада Демин",
-      "reference_sequence": 32,
+      "reference_crew": "Бригада Саламатин",
+      "reference_sequence": 50,
       "gigabit": false
     },
     {
@@ -2040,7 +2052,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Рост ошибок на порту",
       "district": "Кашира",
-      "address": "Кашира, ул.Металлургов, д. 5 к 3",
+      "address": "5 к3, улица Металлургов, Кашира-3, Кашира, городской округ Кашира, 142903, Россия",
       "lat": 54.8409976,
       "lon": 38.1897638,
       "window_start": "14:00",
@@ -2051,8 +2063,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Просрочена",
-      "reference_crew": "Бригада Демин",
-      "reference_sequence": 33,
+      "reference_crew": "Бригада Саламатин",
+      "reference_sequence": 51,
       "gigabit": false
     },
     {
@@ -2066,7 +2078,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "IP-адрес 169...",
       "district": "Зябликово",
-      "address": "Город Москва, ул.Мусы Джалиля, д. 9 к 1",
+      "address": "9 к1, улица Мусы Джалиля, район Зябликово, Москва, 115573, Россия",
       "lat": 55.6274499,
       "lon": 37.7437967,
       "window_start": "12:00",
@@ -2078,7 +2090,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 10,
+      "reference_sequence": 25,
       "gigabit": false
     },
     {
@@ -2092,7 +2104,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Домодедово",
-      "address": "обл.Московская область, г.Домодедово, пгт.Востряково-1, ул.Жуковского, д. 14/18",
+      "address": "14/18, улица Жуковского, микрорайон Авиационный, Домодедово, городской округ Домодедово, 142007, Россия",
       "lat": 55.4118698,
       "lon": 37.8397236,
       "window_start": "20:00",
@@ -2104,7 +2116,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 23,
+      "reference_sequence": 65,
       "gigabit": false
     },
     {
@@ -2118,7 +2130,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Кашира",
-      "address": "МО, г. Кашира Центральная ул. д. 21",
+      "address": "21, Центральная улица, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8421235,
       "lon": 38.2397671,
       "window_start": "00:01",
@@ -2130,7 +2142,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 4,
+      "reference_sequence": 74,
       "gigabit": false
     },
     {
@@ -2138,13 +2150,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 98998,
-      "control_request_id": 98998,
+      "control_request_id": 45243,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Кашира",
-      "address": "МО, г. Кашира Кржижановского ул. д. 5/1",
+      "address": "5 к1, улица Кржижановского, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8404598,
       "lon": 38.2404648,
       "window_start": "00:01",
@@ -2156,7 +2168,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 29,
+      "reference_sequence": 54,
       "gigabit": false
     },
     {
@@ -2170,7 +2182,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Кашира",
-      "address": "МО, г. Кашира Кржижановского ул. д. 7к2",
+      "address": "7 к2, улица Кржижановского, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8399225,
       "lon": 38.2415926,
       "window_start": "00:01",
@@ -2182,7 +2194,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 28,
+      "reference_sequence": 57,
       "gigabit": false
     },
     {
@@ -2196,7 +2208,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Кашира",
-      "address": "МО, г. Кашира Кржижановского ул. д. 5/3",
+      "address": "5 к3, улица Кржижановского, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8408174,
       "lon": 38.242988,
       "window_start": "00:01",
@@ -2207,8 +2219,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 27,
+      "reference_crew": "Бригада Паршин",
+      "reference_sequence": 73,
       "gigabit": false
     },
     {
@@ -2222,7 +2234,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Кашира",
-      "address": "МО, г. Кашира Кржижановского ул. д. 5/2",
+      "address": "5 к2, улица Кржижановского, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8406569,
       "lon": 38.2420016,
       "window_start": "00:01",
@@ -2234,7 +2246,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 25,
+      "reference_sequence": 58,
       "gigabit": false
     },
     {
@@ -2242,13 +2254,13 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 45243,
-      "control_request_id": 45243,
+      "control_request_id": 98998,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Кашира",
-      "address": "МО, г. Кашира Кржижановского ул. д. 5/1",
+      "address": "5 к1, улица Кржижановского, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8404598,
       "lon": 38.2404648,
       "window_start": "00:01",
@@ -2260,7 +2272,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 30,
+      "reference_sequence": 55,
       "gigabit": false
     },
     {
@@ -2274,7 +2286,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Ступино",
-      "address": "МО, г. Ступино Андропова ул. д. 37",
+      "address": "37, улица Андропова, Центральный микрорайон, Ступино, городской округ Ступино, 142803, Россия",
       "lat": 54.8858274,
       "lon": 38.0821597,
       "window_start": "00:01",
@@ -2286,7 +2298,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 2,
+      "reference_sequence": 70,
       "gigabit": false
     },
     {
@@ -2300,7 +2312,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Ступино",
-      "address": "МО, г. Ступино Андропова ул. д. 33",
+      "address": "33, улица Андропова, Центральный микрорайон, Ступино, городской округ Ступино, 142803, Россия",
       "lat": 54.8857555,
       "lon": 38.082999,
       "window_start": "00:01",
@@ -2312,7 +2324,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 3,
+      "reference_sequence": 71,
       "gigabit": false
     },
     {
@@ -2326,7 +2338,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Кашира",
-      "address": "МО, г. Кашира Центральная ул. д. 19",
+      "address": "19, Центральная улица, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "lat": 54.8415134,
       "lon": 38.2407727,
       "window_start": "00:01",
@@ -2338,7 +2350,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 24,
+      "reference_sequence": 53,
       "gigabit": false
     },
     {
@@ -2352,7 +2364,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Бирюлево Восточное",
-      "address": "Москва Бирюлевская ул. д. 44",
+      "address": "44/6, Бирюлёвская улица, район Бирюлёво Восточное, Москва, 115372, Россия",
       "lat": 55.5864357,
       "lon": 37.664566,
       "window_start": "00:01",
@@ -2378,7 +2390,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Бирюлево Западное",
-      "address": "Москва Булатниковский пр-зд. д. 6к1",
+      "address": "6 к1, Булатниковский проезд, район Бирюлёво Западное, Москва, 115403, Россия",
       "lat": 55.5936117,
       "lon": 37.6513869,
       "window_start": "00:01",
@@ -2390,7 +2402,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 46,
+      "reference_sequence": 35,
       "gigabit": false
     }
   ],

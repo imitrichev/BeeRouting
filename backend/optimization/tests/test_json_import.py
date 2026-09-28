@@ -237,7 +237,7 @@ def test_generator_uses_synthetic_ids_and_time_norms(tmp_path: Path) -> None:
         {70: 28, 30: 25, 20: 2, 80: 1}
     )
     assert scenario.control_request_id_by_task[scenario.tasks[0].id] == "32840"
-    assert scenario.engineers[1].vehicle_type == VehicleType.WALK
+    assert scenario.engineers[1].vehicle_type == VehicleType.PUBLIC_TRANSPORT
     assert Skill.LOCAL_WORKS in scenario.engineers[1].qualifications
     assert scenario.engineers[0].available_router_count >= 0
     assert any(task.required_router_count > 0 for task in scenario.tasks)
@@ -280,6 +280,7 @@ def test_engineers_csv_contains_start_address_and_coordinates() -> None:
     assert "start_lon" in header
     assert "available_router_count" in header
     territory_index = header.index("territory_code")
+    engineer_index = header.index("engineer_id")
     lat_index = header.index("start_lat")
     lon_index = header.index("start_lon")
     expected = {
@@ -287,11 +288,18 @@ def test_engineers_csv_contains_start_address_and_coordinates() -> None:
         "yugo_vostok": (55.5868278, 37.6654561),
         "yugo_tsentr": (55.6638404, 37.6138686),
     }
+    # Удалённые бригады начинают день в обслуживаемом городе, а не в
+    # московском офисе района. Это предусмотрено доменной моделью инженера.
+    individual_starts = {
+        "yugo_vostok-E01": (54.8858274, 38.0821597),
+        "yugo_vostok-E09": (54.8415134, 38.2407727),
+    }
     for raw_row in rows[1:]:
         row = raw_row.split(";")
-        assert (float(row[lat_index]), float(row[lon_index])) == expected[
-            row[territory_index]
-        ]
+        expected_start = individual_starts.get(
+            row[engineer_index], expected[row[territory_index]]
+        )
+        assert (float(row[lat_index]), float(row[lon_index])) == expected_start
 
 
 def test_address_normalization_does_not_truncate_moscow() -> None:
@@ -373,6 +381,32 @@ def test_nominatim_tries_next_variant_after_result_without_house_number(tmp_path
 
     assert coordinates == (55.602, 37.665)
     assert len(calls) >= 2
+
+
+def test_nominatim_caches_and_returns_resolved_display_address(tmp_path: Path) -> None:
+    """В JSON можно записать найденный Nominatim адрес вместо сырого CSV."""
+    cache_path = tmp_path / "nominatim.json"
+    geocoder = NominatimGeocoder(
+        cache_path=cache_path,
+        endpoint="http://127.0.0.1:8080/search",
+    )
+    geocoder._request = lambda _query, _original: [{  # type: ignore[method-assign]
+        "lat": "55.737",
+        "lon": "37.674",
+        "addresstype": "building",
+        "display_name": "24 к1, проспект Маршала Жукова, Москва, Россия",
+        "address": {"house_number": "24 к1"},
+    }]
+
+    resolved = geocoder.resolve("г.Город Москва, пр-кт.Маршала Жукова,д.24кор1")
+
+    assert resolved == (
+        55.737,
+        37.674,
+        "24 к1, проспект Маршала Жукова, Москва, Россия",
+    )
+    cached = json.loads(cache_path.read_text(encoding="utf-8"))
+    assert next(iter(cached.values()))["display_name"] == resolved[2]
 
 
 def test_nominatim_delay_depends_on_endpoint(tmp_path: Path) -> None:
