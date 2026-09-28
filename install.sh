@@ -13,9 +13,14 @@ mkdir -p routing/otp
 
 PBF="routing/osm/moscow-region.osm.pbf"
 GTFS="routing/otp/latest_raw.zip"
+GRAPH="routing/otp/graph.obj"
+METRO_GTFS="routing/otp/moscow_metro_final.zip"
 
-# Скачиваем только если каких-то данных ещё нет
-if [ ! -f "$PBF" ] || [ ! -f "$GTFS" ]; then
+# Скачиваем архив, если отсутствует хотя бы один файл
+if [ ! -f "$PBF" ] || \
+   [ ! -f "$GTFS" ] || \
+   [ ! -f "$GRAPH" ] || \
+   [ ! -f "$METRO_GTFS" ]; then
 
     echo "Getting Yandex Disk download URL..."
 
@@ -60,15 +65,20 @@ print(data["href"])
 
     unzip -q yandex-routing.zip -d .routing-download
 
-    # Ищем файлы независимо от того, лежат они в Files/
-    # или Яндекс изменил структуру архива.
-
+    # Ищем файлы независимо от структуры каталогов внутри архива
     FOUND_PBF=$(find .routing-download -type f \
         -name "moscow-region.osm.pbf" -print -quit)
 
     FOUND_GTFS=$(find .routing-download -type f \
         -name "latest_raw.zip" -print -quit)
 
+    FOUND_GRAPH=$(find .routing-download -type f \
+        -name "graph.obj" -print -quit)
+
+    FOUND_METRO_GTFS=$(find .routing-download -type f \
+        -name "moscow_metro_final.zip" -print -quit)
+
+    # Проверяем наличие необходимых файлов в архиве
     if [ -z "$FOUND_PBF" ]; then
         echo "ERROR: moscow-region.osm.pbf not found in archive"
         exit 1
@@ -79,8 +89,17 @@ print(data["href"])
         exit 1
     fi
 
-    # Копируем только то, чего ещё нет
+    if [ -z "$FOUND_GRAPH" ]; then
+        echo "ERROR: graph.obj not found in archive"
+        exit 1
+    fi
 
+    if [ -z "$FOUND_METRO_GTFS" ]; then
+        echo "ERROR: moscow_metro_final.zip not found in archive"
+        exit 1
+    fi
+
+    # Копируем только отсутствующие файлы
     if [ ! -f "$PBF" ]; then
         mv "$FOUND_PBF" "$PBF"
         echo "Installed: $PBF"
@@ -91,11 +110,21 @@ print(data["href"])
         echo "Installed: $GTFS"
     fi
 
+    if [ ! -f "$GRAPH" ]; then
+        mv "$FOUND_GRAPH" "$GRAPH"
+        echo "Installed: $GRAPH"
+    fi
+
+    if [ ! -f "$METRO_GTFS" ]; then
+        mv "$FOUND_METRO_GTFS" "$METRO_GTFS"
+        echo "Installed: $METRO_GTFS"
+    fi
+
     rm -rf .routing-download
     rm -f yandex-routing.zip
 
 else
-    echo "OSM and GTFS already downloaded."
+    echo "OSM, GTFS, OTP graph and Metro GTFS already downloaded."
 fi
 
 # create OSM/OTP and docker compose
@@ -104,7 +133,7 @@ cd routing
 PBF="./osm/moscow-region.osm.pbf"
 
 # clean data: latest_raw to latest
-python3 patch2.py
+../.venv/bin/python patch2.py
 
 GTFS="./otp/latest.zip"
 OTP_GRAPH="./otp/graph.obj"
@@ -119,9 +148,6 @@ if [ ! -f "$GTFS" ]; then
     echo "ERROR: GTFS file not found: $GTFS"
     exit 1
 fi
-
-#ptach URLs for companies
-../.venv/bin/python patch.py
 
 # Строим OTP-граф только если его ещё нет
 if [ ! -f "$OTP_GRAPH" ]; then

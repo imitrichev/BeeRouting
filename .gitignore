@@ -1,3 +1,13 @@
+
+#local temp files ang big objects
+routing/pat.py
+routing/patch.py
+routing/patch3.py
+routing/gtfs_ex
+routing/osm/*pbf
+routing/otp/*pbf
+routing/otp/*zip
+routing/otp/*obj
 # Python: кэш, виртуальные окружения и результаты инструментов
 __pycache__/
 *.py[cod]

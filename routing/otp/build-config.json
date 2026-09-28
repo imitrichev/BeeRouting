@@ -1,0 +1,12 @@
+{
+  "transitFeeds": [
+    {
+      "type": "gtfs",
+      "source": "latest.zip"
+    },
+    {
+      "type": "gtfs",
+      "source": "moscow_metro_final.zip"
+    }
+  ]
+}
