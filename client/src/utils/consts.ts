@@ -38,7 +38,7 @@ export const WORK_TYPE_MAP = {
 } as const
 
 export const TASK_STATUS_MAP = {
-  NOT_SENT: 'не отправлена',
+  NOT_SENT: 'не назначена',
   ASSIGNED: 'назначена',
   EN_ROUTE: 'в пути',
   IN_PROGRESS: 'в работе',

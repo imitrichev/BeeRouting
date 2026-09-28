@@ -2,7 +2,7 @@
 import BasicCard from '@/templates/BasicCard.vue'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import { computed, ref } from 'vue'
-import type { EngineerRoute, RouteStop } from '@/types/entities.ts'
+import type { Engineer, EngineerRoute, RouteStop } from '@/types/entities.ts'
 import { getVehicleTypeTranslation } from '@/utils/translations.ts'
 import { getEngineerColor } from '@/utils/map.ts'
 import { getTaskStatusColor, getTaskStatusLabel, isTerminalStatus } from '@/utils/task.ts'
@@ -139,6 +139,8 @@ const closeStatusDialog = () => {
   statusDialogOpened.value = false
   selectedStatusTaskId.value = null
 }
+
+const engineers = computed<Engineer[]>(() => districtDataStore.getDistrictEngineers)
 </script>
 
 <template>
@@ -161,7 +163,7 @@ const closeStatusDialog = () => {
           :model-value="isSelected(item)"
           density="comfortable"
           hide-details
-          :color="getEngineerColor(item.engineer_id)"
+          :color="getEngineerColor(item.engineer_id, engineers)"
           @update:model-value="toggleSelect(item)"
         />
       </template>

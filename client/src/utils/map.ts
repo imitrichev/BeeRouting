@@ -1,4 +1,8 @@
-export const getEngineerColor = (engineerId: string): string => {
+import type { Engineer } from '@/types/entities.ts'
+
+export const getEngineerColor = (engineerId: string, engineers: Engineer[]): string => {
+  const index = engineers.findIndex((e) => e.id === engineerId)
+  if (index === -1) return '#CCC'
   // 30 разнообразных цветов, перемешаны в новом порядке
   const palette: string[] = [
     'hsl(280, 55%, 70%)', // лавандовый
@@ -10,7 +14,6 @@ export const getEngineerColor = (engineerId: string): string => {
     'hsl(345, 90%, 55%)', // ярко-малиновый
     'hsl(200, 60%, 75%)', // пастельный голубой
     'hsl(35, 95%, 45%)', // насыщенный оранжевый
-    'hsl(265, 75%, 40%)', // глубокий фиолет
     'hsl(105, 60%, 65%)', // светло-салатовый
     'hsl(330, 85%, 70%)', // светло-розовый
     'hsl(220, 95%, 35%)', // тёмно-синий
@@ -33,23 +36,7 @@ export const getEngineerColor = (engineerId: string): string => {
     'hsl(285, 90%, 45%)', // насыщенный фиолетовый
   ]
 
-  // FNV-1a
-  let hash = 2166136261
-  for (let i = 0; i < engineerId.length; i++) {
-    hash ^= engineerId.charCodeAt(i)
-    hash = Math.imul(hash, 16777619)
-  }
-  hash >>>= 0
-
-  // MurmurHash3 finalizer для лучшего перемешивания
-  hash ^= hash >>> 16
-  hash = Math.imul(hash, 2246822507)
-  hash ^= hash >>> 13
-  hash = Math.imul(hash, 3266489909)
-  hash ^= hash >>> 16
-  hash >>>= 0
-
-  return String(palette[hash % palette.length])
+  return String(palette[index % palette.length])
 }
 export const hasFiniteCoordinates = (
   latitude: number | null | undefined,

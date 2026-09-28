@@ -10,7 +10,7 @@ import {
   getSkillTranslation,
   getWordDeclension,
 } from '@/utils/translations.ts'
-import type { EngineerRoute, RouteStop, Task } from '@/types/entities.ts'
+import type { Engineer, EngineerRoute, RouteStop, Task } from '@/types/entities.ts'
 
 interface IProps {
   loading: boolean
@@ -204,6 +204,8 @@ const clearMarkers = () => {
   markers = []
 }
 
+const engineers = computed<Engineer[]>(() => districtDataStore.getDistrictEngineers)
+
 const recompileRoutesData = () => {
   if (!map) return
 
@@ -227,7 +229,7 @@ const recompileRoutesData = () => {
         properties: {
           engineer_id: route.engineer_id,
           engineer_name: route.engineer_name,
-          color: getEngineerColor(route.engineer_id),
+          color: getEngineerColor(route.engineer_id, engineers.value),
         },
         geometry: {
           type: 'LineString' as const,
@@ -276,7 +278,7 @@ const renderTasks = () => {
     const getTaskColor = (task: Task): string => {
       if (routes.value.length === 0) return '#888888'
       for (const route of routes.value) {
-        const engineerColor = getEngineerColor(route.engineer_id)
+        const engineerColor = getEngineerColor(route.engineer_id, engineers.value)
         if (route.stops.map((item) => item.task_id).includes(task.id)) {
           if (selectedRoutes.value.includes(route.engineer_id)) return engineerColor
           return '#888888'
@@ -451,7 +453,7 @@ const routesPanelOpen = ref<boolean>(true)
                   density="comfortable"
                   hide-details
                   class="mr-2"
-                  :color="getEngineerColor(item.engineer_id)"
+                  :color="getEngineerColor(item.engineer_id, engineers)"
                   @update:model-value="toggleSelect(item)"
                 />
               </template>

@@ -62,7 +62,7 @@ const engineerHeaders = [
     >
       <template #item.name="{ item }">
         <div class="d-flex align-center justify-start ga-2">
-          <v-avatar size="20" :color="getEngineerColor(item.id)" />
+          <v-avatar size="20" :color="getEngineerColor(item.id, engineers)" />
           <span>{{ item.name }}</span>
         </div>
       </template>
