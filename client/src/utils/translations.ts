@@ -1,5 +1,10 @@
-import { PRIORITY_TYPE_MAP, SKILL_TYPE_MAP, VEHICLE_TYPE_MAP } from '@/utils/consts.ts'
-import type { PriorityType, SkillType, VehicleType } from '@/types/utils.ts'
+import {
+  PRIORITY_TYPE_MAP,
+  SKILL_TYPE_MAP,
+  VEHICLE_TYPE_MAP,
+  WORK_TYPE_MAP,
+} from '@/utils/consts.ts'
+import type { PriorityType, SkillType, VehicleType, WorkType } from '@/types/utils.ts'
 
 export const getVehicleTypeTranslation = (type: string | null): string => {
   if (!type) return '-'
@@ -17,6 +22,12 @@ export const getPriorityTranslation = (type: string): string => {
   if (!type) return '-'
   if (!Object.keys(PRIORITY_TYPE_MAP).includes(type)) return 'Неизвестно'
   return PRIORITY_TYPE_MAP[type as PriorityType]
+}
+
+export const getWorkTypeTranslation = (type: string): string => {
+  if (!type) return '-'
+  if (!Object.keys(WORK_TYPE_MAP).includes(type)) return 'Неизвестно'
+  return WORK_TYPE_MAP[type as WorkType]
 }
 
 const createReplacer = <T extends Record<string, string>>(map: T) => {
@@ -41,6 +52,7 @@ const createReplacer = <T extends Record<string, string>>(map: T) => {
 export const replaceSkillTypes = createReplacer(SKILL_TYPE_MAP)
 export const replacePriorityTypes = createReplacer(PRIORITY_TYPE_MAP)
 export const replaceVehicleTypes = createReplacer(VEHICLE_TYPE_MAP)
+export const replaceWorkTypes = createReplacer(WORK_TYPE_MAP)
 
 export const getWordDeclension = (
   number: number,

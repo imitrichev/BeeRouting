@@ -27,3 +27,10 @@ export const PRIORITY_TYPE_MAP = {
   URGENT: 'Срочный',
   NORMAL: 'Обычный',
 } as const
+
+export const WORK_TYPE_MAP = {
+  CONNECTION: 'Подключение клиентов',
+  EMERGENCY: 'Авария',
+  EQUIPMENT_ORDER: 'Дозаказ оборудования',
+  LOCAL: 'Локальная заявка / ремонт',
+} as const

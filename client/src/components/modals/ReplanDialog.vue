@@ -366,7 +366,7 @@ const replan = async () => {
           />
         </template>
         <template v-if="formData.type === 'EMERGENCY_TASK'">
-          <v-alert type="info" variant="tonal" class="w-100 my-3">
+          <v-alert type="info" variant="flat" class="w-100 my-3">
             Тип "Аварийные работы" и приоритет "срочный" устанавливаются автоматически. Длительность
             берётся из норматива аварии.
           </v-alert>

@@ -13,6 +13,7 @@ import type {
   ReplanRequestData,
   RouteStopExplanationObject,
   Task,
+  TaskCreateRequestData,
   UnassignedTask,
 } from '@/types/entities.ts'
 
@@ -239,6 +240,22 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     loadingReplan.value = false
   }
 
+  const loadingCreateTask = ref<boolean>(false)
+
+  const loadCreateTask = async (data: TaskCreateRequestData) => {
+    loadingCreateTask.value = true
+    const response = await sendRequest<DistrictData>(
+      baseUrls.TASKS.CREATE,
+      data,
+      {},
+      { territory: String(districtCode.value) },
+    )
+    if (response.isSuccess) {
+      districtData.value = response.data
+    }
+    loadingCreateTask.value = false
+  }
+
   return {
     selectDistrict,
     loadDistrictData,
@@ -281,5 +298,8 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     currentConsiderEquipment,
     loadingReplan,
     loadReplan,
+
+    loadingCreateTask,
+    loadCreateTask,
   }
 })

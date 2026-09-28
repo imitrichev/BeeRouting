@@ -32,6 +32,10 @@ const baseUrls = {
     method: HTTP_METHODS.POST,
   },
   TASKS: {
+    CREATE: {
+      path: '/api/v2/tasks/',
+      method: HTTP_METHODS.POST,
+    },
     EXPLAIN: {
       path: '/api/v2/explain/{task_id}/',
       method: HTTP_METHODS.POST,

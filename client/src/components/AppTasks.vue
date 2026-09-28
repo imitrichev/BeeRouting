@@ -8,6 +8,7 @@ import IconButton from '@/templates/IconButton.vue'
 import TaskExplanationDialog from '@/components/modals/TaskExplanationDialog.vue'
 import ReasignmentDialog from '@/components/modals/ReasignmentDialog.vue'
 import { useTheme } from 'vuetify'
+import TaskCreateDialog from '@/components/modals/TaskCreateDialog.vue'
 
 interface IProps {
   loading: boolean
@@ -159,12 +160,25 @@ const closeReassignmentDialog = () => {
   reassignmentDialogOpened.value = false
   selectedTaskId.value = null
 }
+
+const createTaskDialogOpened = ref(false)
+
+const openCreateTaskDialog = () => {
+  createTaskDialogOpened.value = true
+}
+
+const closeCreateTaskDialog = () => {
+  createTaskDialogOpened.value = false
+}
 </script>
 
 <template>
   <basic-card title="Заявки" :loading="props.loading">
     <template #loading>
       <v-skeleton-loader type="list-item-two-line" />
+    </template>
+    <template #toolbarAppend>
+      <icon-button tooltip-text="Добавить заявку" @click="openCreateTaskDialog" />
     </template>
 
     <v-data-table-virtual
@@ -241,6 +255,7 @@ const closeReassignmentDialog = () => {
       :task-id="selectedTaskId"
       @close="closeReassignmentDialog"
     />
+    <task-create-dialog :opened="createTaskDialogOpened" @close="closeCreateTaskDialog" />
   </basic-card>
 </template>
 

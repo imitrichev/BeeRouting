@@ -1,4 +1,4 @@
-import type { PriorityType, SkillType, VehicleType } from '@/types/utils.ts'
+import type { PriorityType, SkillType, VehicleType, WorkType } from '@/types/utils.ts'
 
 export type Engineer = {
   id: string
@@ -179,7 +179,7 @@ export interface EmergencyTaskReplanRequestData {
     id: string
     latitude: number
     longitude: number
-    work_type: string
+    work_type: WorkType
     window_start: string
     window_end: string
     required_vehicle_type: string | null
@@ -191,3 +191,15 @@ export type ReplanRequestData =
   | EngineerUnavailableReplanRequestData
   | TaskCancelledReplanRequestData
   | EmergencyTaskReplanRequestData
+
+export type TaskCreateRequestData = {
+  id: string
+  address: string
+  latitude: number
+  longitude: number
+  work_type: WorkType
+  window_start: string
+  window_end: string
+  required_vehicle_type: string | null
+  required_router_count: number
+}
