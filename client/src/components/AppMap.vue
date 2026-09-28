@@ -382,6 +382,14 @@ watch(
   },
 )
 
+watch(
+  () => [...tasks.value],
+  () => {
+    renderTasks()
+    recompileRoutesData()
+  },
+)
+
 watch(isOptimized, () => {
   renderTasks()
   recompileRoutesData()

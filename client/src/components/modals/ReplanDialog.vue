@@ -30,7 +30,7 @@ interface IFormData {
 }
 
 const emit = defineEmits<{
-  close: []
+  close: [applied: boolean]
 }>()
 
 interface IProps {
@@ -302,7 +302,7 @@ const prepareRequestData = (): ReplanRequestData => {
 const replan = async () => {
   if (!validateFormData()) return
   await store.loadReplan(prepareRequestData())
-  emit('close')
+  emit('close', true)
 }
 </script>
 
@@ -322,7 +322,7 @@ const replan = async () => {
           icon="close"
           class="ml-3"
           :loading="loading"
-          @click="emit('close')"
+          @click="emit('close', false)"
           tooltip-text="Закрыть"
         />
       </template>

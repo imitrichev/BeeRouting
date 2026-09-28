@@ -195,7 +195,7 @@ const closeStatusDialog = () => {
       :items="tasks"
       item-value="id"
       density="comfortable"
-      height="300"
+      height="400"
     >
       <template #item.required_skill="{ item }">
         {{ getSkillTranslation(item.required_skill) }}

@@ -57,7 +57,7 @@ const engineerHeaders = [
       item-value="id"
       density="comfortable"
       fixed-header
-      height="300"
+      height="400"
     >
       <template #item.name="{ item }">
         <div class="d-flex align-center justify-start ga-2">

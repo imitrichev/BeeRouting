@@ -68,8 +68,21 @@ const openReplanDialog = () => {
   replanDialogOpened.value = true
 }
 
-const closeReplanDialog = async () => {
+const closeReplanDialog = async (applied: boolean) => {
   replanDialogOpened.value = false
+  if (applied) {
+    replanInfoDialogOpened.value = true
+  }
+}
+
+const replanInfoDialogOpened = ref<boolean>(false)
+
+const openReplanInfoDialog = () => {
+  replanInfoDialogOpened.value = true
+}
+
+const closeReplanInfoDialog = () => {
+  replanInfoDialogOpened.value = false
 }
 </script>
 
@@ -158,5 +171,6 @@ const closeReplanDialog = async () => {
   />
   <optimization-dialog :opened="optimizationDialogOpened" @close="closeOptimizationDialog" />
   <replan-dialog :opened="replanDialogOpened" @close="closeReplanDialog" />
+  <replan-info-dialog :opened="replanInfoDialogOpened" @close="closeReplanInfoDialog" />
 </template>
 <style scoped lang="scss"></style>
