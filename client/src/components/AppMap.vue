@@ -467,7 +467,7 @@ const routesPanelOpen = ref<boolean>(true)
 .map-container {
   width: 100% !important;
   min-height: 292px !important;
-  height: calc(100vh - 500px) !important;
+  height: calc(100vh - 300px) !important;
   max-height: 100vw !important;
 }
 
@@ -479,7 +479,7 @@ const routesPanelOpen = ref<boolean>(true)
 .overflow-list {
   min-height: 192px !important;
   height: auto !important;
-  max-height: min(100vh - 500px - 100px, 100vw - 100px) !important;
+  max-height: min(100vh - 300px - 100px, 100vw - 100px) !important;
 }
 
 .routes-list {

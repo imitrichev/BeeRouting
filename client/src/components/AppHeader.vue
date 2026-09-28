@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useTheme } from 'vuetify'
+import logo from '@/assets/logo.svg'
 
 const theme = useTheme()
 
@@ -14,7 +15,12 @@ const isDark = computed({
 
 <template>
   <v-app-bar flat border>
-    <v-app-bar-title class="pr-3">BeeRouting</v-app-bar-title>
+    <v-app-bar-title class="pr-3">
+      <v-row no-gutters class="justify-start align-center text-no-wrap">
+        <v-img :src="logo" width="40" height="40" max-width="40" max-height="40" class="mr-3" />
+        BeeRouting
+      </v-row>
+    </v-app-bar-title>
     <v-switch
       v-model="isDark"
       hide-details
