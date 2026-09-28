@@ -11,7 +11,6 @@ import {
   getWordDeclension,
 } from '@/utils/translations.ts'
 import type { EngineerRoute, RouteStop, Task } from '@/types/entities.ts'
-import { useDisplay } from 'vuetify/framework'
 
 interface IProps {
   loading: boolean
@@ -20,7 +19,6 @@ interface IProps {
 const props = defineProps<IProps>()
 
 const districtDataStore = useDistrictDataStore()
-const display = useDisplay()
 const tasks = computed(() => districtDataStore.getDistrictTasks)
 const routes = computed(() => districtDataStore.getRoutes)
 const isOptimized = computed(() => districtDataStore.isOptimized)

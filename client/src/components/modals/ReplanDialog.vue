@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useDistrictDataStore } from '@/stores/districtData.ts'
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import BasicCard from '@/templates/BasicCard.vue'
 import IconButton from '@/templates/IconButton.vue'
 import type { ReplanEventType, ReplanRequestData } from '@/types/entities.ts'
 import { VEHICLE_TYPE_MAP } from '@/utils/consts.ts'
 import { isValidTime, timeToMinutes } from '@/utils/time.ts'
+import { Map, Marker, NavigationControl } from 'maplibre-gl'
+import 'maplibre-gl/dist/maplibre-gl.css'
 
 interface IFormData {
   type: ReplanEventType
@@ -40,7 +42,11 @@ const props = defineProps<IProps>()
 const store = useDistrictDataStore()
 const loading = computed(() => store.loadingReplan)
 
-const defaultFormData: IFormData = {
+const DEFAULT_LATITUDE = 55.7528
+const DEFAULT_LONGITUDE = 37.6178
+const DEFAULT_ZOOM = 10
+
+const createDefaultFormData = (): IFormData => ({
   type: 'ENGINEER_UNAVAILABLE',
   consider_equipment: true,
 
@@ -49,17 +55,17 @@ const defaultFormData: IFormData = {
 
   emergency_task: {
     id: '',
-    latitude: null,
-    longitude: null,
+    latitude: DEFAULT_LATITUDE,
+    longitude: DEFAULT_LONGITUDE,
     work_type: '',
-    window_start: '',
-    window_end: '',
+    window_start: '10:00',
+    window_end: '12:00',
     required_vehicle_type: null,
-    required_router_count: 1,
+    required_router_count: 0,
   },
-}
+})
 
-const formData = ref<IFormData>({ ...defaultFormData })
+const formData = ref<IFormData>(createDefaultFormData())
 
 const eventTypeSelectorItems = [
   {
@@ -84,11 +90,131 @@ const errors = ref<Record<string, string | null>>({
   engineer_id: null,
   task_id: null,
   emergency_task_id: null,
-  emergency_task_latitude: null,
-  emergency_task_longitude: null,
   emergency_task_window_start: null,
   emergency_task_window_end: null,
   emergency_task_required_router_count: null,
+})
+
+const resetForm = () => {
+  formData.value = createDefaultFormData()
+  Object.keys(errors.value).forEach((k) => (errors.value[k] = null))
+  resetMarkerToDefault()
+}
+
+/* ----------------------------- Карта ----------------------------- */
+
+const emergencyMapContainer = ref<HTMLElement | null>(null)
+let emergencyMap: Map | null = null
+let emergencyMarker: Marker | null = null
+
+const resetMarkerToDefault = () => {
+  if (!emergencyMap) return
+  setMarker(DEFAULT_LONGITUDE, DEFAULT_LATITUDE)
+  formData.value.emergency_task.latitude = DEFAULT_LATITUDE
+  formData.value.emergency_task.longitude = DEFAULT_LONGITUDE
+}
+
+const setMarker = (lng: number, lat: number) => {
+  if (!emergencyMap) return
+  if (emergencyMarker) {
+    emergencyMarker.remove()
+    emergencyMarker = null
+  }
+  emergencyMarker = new Marker({ color: '#e53935' }).setLngLat([lng, lat]).addTo(emergencyMap)
+}
+
+const initMap = async () => {
+  if (emergencyMap) return
+  if (!emergencyMapContainer.value) return
+
+  emergencyMap = new Map({
+    container: emergencyMapContainer.value,
+    style: {
+      version: 8,
+      sources: {
+        openstreetmap: {
+          type: 'raster',
+          tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+          tileSize: 256,
+          attribution: '© OpenStreetMap contributors',
+        },
+      },
+      layers: [
+        {
+          id: 'openstreetmap',
+          type: 'raster',
+          source: 'openstreetmap',
+        },
+      ],
+    },
+    center: [DEFAULT_LONGITUDE, DEFAULT_LATITUDE],
+    zoom: DEFAULT_ZOOM,
+  })
+
+  emergencyMap.addControl(
+    new NavigationControl({
+      showZoom: true,
+      showCompass: false,
+      visualizePitch: true,
+    }),
+    'top-right',
+  )
+
+  emergencyMap.on('load', () => {
+    emergencyMap?.resize()
+  })
+
+  emergencyMap.on('click', (e) => {
+    const lng = e.lngLat.lng
+    const lat = e.lngLat.lat
+
+    setMarker(lng, lat)
+    formData.value.emergency_task.latitude = lat
+    formData.value.emergency_task.longitude = lng
+  })
+
+  setMarker(DEFAULT_LONGITUDE, DEFAULT_LATITUDE)
+
+  await nextTick()
+  emergencyMap.resize()
+}
+
+const destroyMap = () => {
+  if (emergencyMarker) {
+    emergencyMarker.remove()
+    emergencyMarker = null
+  }
+  if (emergencyMap) {
+    emergencyMap.remove()
+    emergencyMap = null
+  }
+}
+
+watch(
+  () => props.opened,
+  (opened) => {
+    if (opened) {
+      resetForm()
+    } else {
+      destroyMap()
+    }
+  },
+)
+
+watch(
+  () => formData.value.type,
+  async (type) => {
+    if (type === 'EMERGENCY_TASK' && props.opened) {
+      await nextTick()
+      await initMap()
+    } else {
+      destroyMap()
+    }
+  },
+)
+
+onBeforeUnmount(() => {
+  destroyMap()
 })
 
 const validateFormData = (): boolean => {
@@ -111,16 +237,6 @@ const validateFormData = (): boolean => {
 
     if (!t.id) errors.value.emergency_task_id = 'Укажите ID заявки'
 
-    if (t.latitude === null || t.latitude === undefined)
-      errors.value.emergency_task_latitude = 'Укажите широту'
-    else if (t.latitude < -90 || t.latitude > 90)
-      errors.value.emergency_task_latitude = 'Широта должна быть в диапазоне от -90 до 90'
-
-    if (t.longitude === null || t.longitude === undefined)
-      errors.value.emergency_task_longitude = 'Укажите долготу'
-    else if (t.longitude < -180 || t.longitude > 180)
-      errors.value.emergency_task_longitude = 'Долгота должна быть в диапазоне от -180 до 180'
-
     if (!t.window_start) {
       errors.value.emergency_task_window_start = 'Укажите начало окна'
     } else if (!isValidTime(t.window_start)) {
@@ -141,11 +257,7 @@ const validateFormData = (): boolean => {
       errors.value.emergency_task_window_end = 'Конец окна должен быть позже начала'
     }
 
-    if (
-      t.required_router_count === null ||
-      t.required_router_count === undefined ||
-      t.required_router_count <= 0
-    ) {
+    if (t.required_router_count && t.required_router_count < 0) {
       errors.value.emergency_task_required_router_count = 'Укажите количество роутеров больше 0'
     }
   }
@@ -195,7 +307,15 @@ const replan = async () => {
 </script>
 
 <template>
-  <v-dialog :model-value="props.opened" max-width="600">
+  <v-dialog
+    :model-value="props.opened"
+    max-width="600"
+    @after-enter="
+      () => {
+        if (formData.type === 'EMERGENCY_TASK') initMap()
+      }
+    "
+  >
     <basic-card title="Перепланирование заявок" :show-bottom="true">
       <template #toolbarAppend>
         <icon-button
@@ -250,6 +370,16 @@ const replan = async () => {
             Тип "Аварийные работы" и приоритет "срочный" устанавливаются автоматически. Длительность
             берётся из норматива аварии.
           </v-alert>
+          <v-row no-gutters class="w-100">
+            <v-col cols="12">
+              <v-card-title class="px-2 text-body-large">Укажите место:</v-card-title>
+            </v-col>
+            <v-col cols="12">
+              <div class="w-100 mb-3 emergency-map-wrapper">
+                <div ref="emergencyMapContainer" class="emergency-map" />
+              </div>
+            </v-col>
+          </v-row>
 
           <v-text-field
             v-model="formData.emergency_task.id"
@@ -260,31 +390,6 @@ const replan = async () => {
             :error="!!errors.emergency_task_id"
             :error-messages="errors.emergency_task_id ?? ''"
           />
-
-          <v-row no-gutters class="w-100 mt-1">
-            <v-col cols="6" class="pr-2">
-              <v-text-field
-                v-model.number="formData.emergency_task.latitude"
-                variant="outlined"
-                label="Широта"
-                type="number"
-                :readonly="loading"
-                :error="!!errors.emergency_task_latitude"
-                :error-messages="errors.emergency_task_latitude ?? ''"
-              />
-            </v-col>
-            <v-col cols="6" class="pl-2">
-              <v-text-field
-                v-model.number="formData.emergency_task.longitude"
-                variant="outlined"
-                label="Долгота"
-                type="number"
-                :readonly="loading"
-                :error="!!errors.emergency_task_longitude"
-                :error-messages="errors.emergency_task_longitude ?? ''"
-              />
-            </v-col>
-          </v-row>
 
           <v-row no-gutters class="w-100 mt-1">
             <v-col cols="6" class="pr-2">
@@ -354,5 +459,18 @@ const replan = async () => {
 .overflow-list {
   max-height: 80vh !important;
   min-height: unset !important;
+}
+
+.emergency-map-wrapper {
+  width: 100%;
+  height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+}
+
+.emergency-map {
+  width: 100%;
+  height: 300px;
 }
 </style>
