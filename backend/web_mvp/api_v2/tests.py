@@ -61,7 +61,9 @@ class PersistentPlanningTests(TestCase):
         response = self.client.post(self.url('optimize'), {'ignore_task_statuses':True}, format='json')
         self.assertEqual(response.status_code, 200)
         preview = self.client.post(self.url('manual-reassignment/preview'), {
-            'task_id':'yugo_tsentr-J78540', 'engineer_id':'yugo_tsentr-E02',
+            # Проверенная допустимая пара для текущего Югоцентра:
+            # локальная заявка E01 помещается в маршрут E02.
+            'task_id':'yugo_tsentr-J46513', 'engineer_id':'yugo_tsentr-E02',
         }, format='json')
         self.assertEqual(preview.status_code, 200, preview.data)
         confirmed = self.client.post(self.url('manual-reassignment/confirm'), {
@@ -69,7 +71,7 @@ class PersistentPlanningTests(TestCase):
         }, format='json')
         self.assertEqual(confirmed.status_code, 200, confirmed.data)
         route = next(r for r in confirmed.data['result']['routes'] if r['engineer_id']=='yugo_tsentr-E02')
-        self.assertIn('yugo_tsentr-J78540', [s['task_id'] for s in route['stops']])
+        self.assertIn('yugo_tsentr-J46513', [s['task_id'] for s in route['stops']])
         repeated = self.client.post(self.url('manual-reassignment/confirm'), {
             'proposal_id':preview.data['proposal_id'],
         }, format='json')
