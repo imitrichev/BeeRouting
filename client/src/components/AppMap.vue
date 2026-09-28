@@ -249,6 +249,7 @@ const renderTasks = () => {
 
   tasks.value.forEach((task) => {
     if (task.latitude === null || task.longitude === null) return
+    if (task.status === 'CANCELLED') return
 
     const getTaskRoute = (task: Task): EngineerRoute | null => {
       for (const route of routes.value) {

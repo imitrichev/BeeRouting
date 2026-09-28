@@ -12,6 +12,7 @@ export type Engineer = {
   available_from: string
   available_until: string
   available_router_count: number
+  is_active: boolean
 }
 
 export type Task = {

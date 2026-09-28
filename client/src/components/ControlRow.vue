@@ -9,6 +9,7 @@ import ApplyDialog from '@/templates/ApplyDialog.vue'
 import OptimizationDialog from '@/components/modals/OptimizationDialog.vue'
 import ReplanDialog from '@/components/modals/ReplanDialog.vue'
 import { useDisplay } from 'vuetify'
+import ReplanInfoDialog from '@/components/modals/ReplanInfoDialog.vue'
 
 interface IProps {
   loading: boolean
@@ -20,6 +21,8 @@ const selectorsStore = useSelectorsStore()
 const districtDataStore = useDistrictDataStore()
 
 const { mdAndUp } = useDisplay()
+
+const isOptimized = computed(() => districtDataStore.isOptimized)
 
 const territoriesSelectorItems = computed(() => selectorsStore.territories)
 const territoriesSelectorValue = ref<string | null>(null)
@@ -70,17 +73,10 @@ const openReplanDialog = () => {
 
 const closeReplanDialog = async (applied: boolean) => {
   replanDialogOpened.value = false
-  if (applied) {
-    replanInfoDialogOpened.value = true
-  }
+  if (applied) replanInfoDialogOpened.value = true
 }
 
 const replanInfoDialogOpened = ref<boolean>(false)
-
-const openReplanInfoDialog = () => {
-  replanInfoDialogOpened.value = true
-}
-
 const closeReplanInfoDialog = () => {
   replanInfoDialogOpened.value = false
 }
@@ -118,6 +114,7 @@ const closeReplanInfoDialog = () => {
           Сбросить изменения
         </v-btn>
         <v-btn
+          v-if="isOptimized"
           variant="text"
           :loading="loadingDistrictData"
           prepend-icon="autorenew"

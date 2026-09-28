@@ -17,6 +17,7 @@ const engineers = computed<Engineer[]>(() => districtDataStore.getDistrictEngine
 
 const engineerHeaders = [
   { title: 'Название', key: 'name', width: 200, sortable: true, align: 'start' },
+  { title: 'Доступен', key: 'is_active', width: 100, sortable: true, align: 'center' },
   { title: 'Квалификации', key: 'qualifications', width: 260, sortable: false, align: 'center' },
   {
     title: 'Тип транспорта',
@@ -66,6 +67,14 @@ const engineerHeaders = [
         </div>
       </template>
 
+      <template #item.is_active="{ item }">
+        <v-icon
+          :color="item.is_active ? 'success' : 'error'"
+          :icon="item.is_active ? 'check_circle' : 'cancel'"
+          size="small"
+        />
+      </template>
+
       <template #item.qualifications="{ item }">
         <div class="d-flex flex-wrap justify-center ga-1 py-1">
           <v-chip
@@ -90,7 +99,10 @@ const engineerHeaders = [
       </template>
 
       <template #item.availability="{ item }">
-        {{ item.available_from }} - {{ item.available_until }}
+        <template v-if="item.is_active">
+          {{ item.available_from }} - {{ item.available_until }}
+        </template>
+        <span v-else class="text-medium-emphasis">-</span>
       </template>
 
       <template #item.start_address="{ item }">

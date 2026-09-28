@@ -67,23 +67,32 @@ const createDefaultFormData = (): IFormData => ({
 
 const formData = ref<IFormData>(createDefaultFormData())
 
-const eventTypeSelectorItems = [
-  {
-    title: 'Инженер недоступен',
-    value: 'ENGINEER_UNAVAILABLE',
-  },
-  {
-    title: 'Заявка отменена',
-    value: 'TASK_CANCELLED',
-  },
-  {
-    title: 'Аварийная заявка',
-    value: 'EMERGENCY_TASK',
-  },
-]
+const eventTypeSelectorItems = computed(() => {
+  const items: { title: string; value: ReplanEventType }[] = []
+  if (activeEngineersSelectorItems.value.length > 0) {
+    items.push({ title: 'Инженер недоступен', value: 'ENGINEER_UNAVAILABLE' })
+  }
+  if (cancellableTaskSelectorItems.value.length > 0) {
+    items.push({ title: 'Заявка отменена', value: 'TASK_CANCELLED' })
+  }
+  items.push({ title: 'Аварийная заявка', value: 'EMERGENCY_TASK' })
+  return items
+})
+
+const cancellableTaskSelectorItems = computed(() =>
+  store.getDistrictTasks
+    .filter((t) => t.status !== 'CANCELLED')
+    .map((t) => ({ title: t.id, value: t.id })),
+)
 
 const vehicleTypeSelectorItems = computed(() =>
   Object.entries(VEHICLE_TYPE_MAP).map(([value, title]) => ({ value, title })),
+)
+
+const activeEngineersSelectorItems = computed(() =>
+  store.getDistrictEngineers
+    .filter((e) => e.is_active)
+    .map((e) => ({ title: e.name, value: e.id })),
 )
 
 const errors = ref<Record<string, string | null>>({
@@ -100,8 +109,6 @@ const resetForm = () => {
   Object.keys(errors.value).forEach((k) => (errors.value[k] = null))
   resetMarkerToDefault()
 }
-
-/* ----------------------------- Карта ----------------------------- */
 
 const emergencyMapContainer = ref<HTMLElement | null>(null)
 let emergencyMap: Map | null = null
@@ -195,6 +202,11 @@ watch(
   (opened) => {
     if (opened) {
       resetForm()
+
+      const availableTypes = eventTypeSelectorItems.value.map((i) => i.value)
+      if (!availableTypes.includes(formData.value.type)) {
+        formData.value.type = 'EMERGENCY_TASK'
+      }
     } else {
       destroyMap()
     }
@@ -340,7 +352,7 @@ const replan = async () => {
         <template v-if="formData.type === 'ENGINEER_UNAVAILABLE'">
           <v-select
             v-model="formData.engineer_id"
-            :items="store.getDistrictEngineersSelector"
+            :items="activeEngineersSelectorItems"
             variant="outlined"
             label="Инженер"
             class="w-100 mt-3"
@@ -353,9 +365,9 @@ const replan = async () => {
         <template v-if="formData.type === 'TASK_CANCELLED'">
           <v-select
             v-model="formData.task_id"
-            :items="store.getDistrictTasks"
-            item-value="id"
-            item-title="id"
+            :items="cancellableTaskSelectorItems"
+            item-value="value"
+            item-title="title"
             variant="outlined"
             label="Заявка"
             class="w-100 mt-3"
