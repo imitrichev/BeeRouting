@@ -20,8 +20,8 @@
       "name": "Бахарев Андрей",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "09:55",
+      "shift_end": "21:55",
       "skills": [
         "connection_orders",
         "local_works"
@@ -38,8 +38,8 @@
       "name": "Брюзгин Ярослав",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "09:44",
+      "shift_end": "18:44",
       "skills": [
         "connection_orders",
         "local_works"
@@ -48,7 +48,7 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "public_transport",
       "available_router_count": 3
     },
     {
@@ -56,8 +56,8 @@
       "name": "Выговский Сергей",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "13:50",
+      "shift_end": "22:50",
       "skills": [
         "connection_orders",
         "emergency_works",
@@ -76,8 +76,8 @@
       "name": "Данилов Даниил",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "09:30",
+      "shift_end": "14:30",
       "skills": [
         "connection_orders"
       ],
@@ -92,26 +92,8 @@
       "name": "Ионов Геннадий",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
-      "skills": [
-        "connection_orders",
-        "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
-      "vehicle_type": "car",
-      "available_router_count": 2
-    },
-    {
-      "engineer_id": "yugo_tsentr-E06",
-      "name": "Исхаков Денис",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "09:09",
+      "shift_end": "21:09",
       "skills": [
         "connection_orders",
         "local_works"
@@ -121,15 +103,15 @@
         "Локальные работы"
       ],
       "vehicle_type": "foot",
-      "available_router_count": 3
+      "available_router_count": 2
     },
     {
-      "engineer_id": "yugo_tsentr-E07",
-      "name": "Капитанчук Александр",
+      "engineer_id": "yugo_tsentr-E06",
+      "name": "Исхаков Денис",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "09:48",
+      "shift_end": "21:48",
       "skills": [
         "connection_orders",
         "local_works"
@@ -138,7 +120,25 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "bicycle",
+      "vehicle_type": "car",
+      "available_router_count": 3
+    },
+    {
+      "engineer_id": "yugo_tsentr-E07",
+      "name": "Капитанчук Александр",
+      "start_lat": 55.6638404,
+      "start_lon": 37.6138686,
+      "shift_start": "09:24",
+      "shift_end": "18:24",
+      "skills": [
+        "connection_orders",
+        "local_works"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
+      ],
+      "vehicle_type": "public_transport",
       "available_router_count": 2
     },
     {
@@ -146,8 +146,8 @@
       "name": "Переладов Алексей",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:50",
+      "shift_end": "23:50",
       "skills": [
         "connection_orders",
         "local_works"
@@ -164,8 +164,8 @@
       "name": "Прокопенко Вячеслав",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "09:57",
+      "shift_end": "21:57",
       "skills": [
         "connection_orders",
         "local_works"
@@ -182,8 +182,8 @@
       "name": "Рыбалкин Егор",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "09:50",
+      "shift_end": "18:50",
       "skills": [
         "connection_orders",
         "local_works"
@@ -192,7 +192,7 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "car",
       "available_router_count": 2
     },
     {
@@ -200,8 +200,8 @@
       "name": "Сакур Тимофей",
       "start_lat": 55.6638404,
       "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "09:36",
+      "shift_end": "21:36",
       "skills": [
         "connection_orders"
       ],

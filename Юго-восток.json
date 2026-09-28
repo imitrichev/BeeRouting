@@ -18,10 +18,10 @@
     {
       "engineer_id": "yugo_vostok-E01",
       "name": "Бригада Паршин",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_lat": 54.8858274,
+      "start_lon": 38.0821597,
+      "shift_start": "15:00",
+      "shift_end": "24:00",
       "skills": [
         "connection_orders",
         "emergency_works",
@@ -40,8 +40,8 @@
       "name": "Бригада Андреев",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "20:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -50,7 +50,7 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "car",
       "available_router_count": 3
     },
     {
@@ -58,7 +58,7 @@
       "name": "Бригада Белоновский",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
+      "shift_start": "10:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -76,7 +76,7 @@
       "name": "Бригада Рыбин",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
+      "shift_start": "10:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -94,7 +94,7 @@
       "name": "Бригада Горбанев",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
+      "shift_start": "10:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -114,8 +114,8 @@
       "name": "Бригада Бузань",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "20:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -124,7 +124,7 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "bicycle",
       "available_router_count": 3
     },
     {
@@ -132,7 +132,7 @@
       "name": "Бригада Козырь",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
+      "shift_start": "10:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -144,7 +144,7 @@
         "Аварийные работы",
         "Локальные работы"
       ],
-      "vehicle_type": "bicycle",
+      "vehicle_type": "car",
       "available_router_count": 2
     },
     {
@@ -152,8 +152,8 @@
       "name": "Бригада Царьков",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "15:00",
+      "shift_end": "20:00",
       "skills": [
         "connection_orders"
       ],
@@ -166,10 +166,10 @@
     {
       "engineer_id": "yugo_vostok-E09",
       "name": "Бригада Саламатин",
-      "start_lat": 55.5868278,
-      "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_lat": 54.8415134,
+      "start_lon": 38.2407727,
+      "shift_start": "11:10",
+      "shift_end": "23:10",
       "skills": [
         "connection_orders",
         "emergency_works",
@@ -188,8 +188,8 @@
       "name": "Бригада Макаров",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "08:00",
+      "shift_end": "17:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -206,15 +206,15 @@
       "name": "Бригада Каушнян",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "20:00",
       "skills": [
         "connection_orders"
       ],
       "skills_ru": [
         "Работы на подключение и дозаказы"
       ],
-      "vehicle_type": "bicycle",
+      "vehicle_type": "car",
       "available_router_count": 3
     },
     {
@@ -222,8 +222,8 @@
       "name": "Бригада Демин",
       "start_lat": 55.5868278,
       "start_lon": 37.6654561,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "20:00",
       "skills": [
         "local_works"
       ],
@@ -257,8 +257,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Козырь",
-      "reference_sequence": 20,
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 6,
       "gigabit": false
     },
     {
@@ -284,7 +284,7 @@
       "required_router_count": 2,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 8,
+      "reference_sequence": 13,
       "gigabit": false
     },
     {
@@ -310,7 +310,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 7,
+      "reference_sequence": 11,
       "gigabit": false
     },
     {
@@ -336,7 +336,7 @@
       "required_router_count": 1,
       "reference_status": "В пути",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 13,
+      "reference_sequence": 21,
       "gigabit": false
     },
     {
@@ -344,7 +344,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 66944,
-      "control_request_id": 66944,
+      "control_request_id": 75745,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -360,9 +360,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 1,
-      "reference_status": "Отменена",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 70,
+      "reference_status": "Выполнена",
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 2,
       "gigabit": false
     },
     {
@@ -388,7 +388,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 54,
+      "reference_sequence": 78,
       "gigabit": false
     },
     {
@@ -396,7 +396,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 23807,
-      "control_request_id": 23807,
+      "control_request_id": 876,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -412,9 +412,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отменена",
+      "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 43,
+      "reference_sequence": 44,
       "gigabit": false
     },
     {
@@ -440,7 +440,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 62,
+      "reference_sequence": 81,
       "gigabit": false
     },
     {
@@ -466,7 +466,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 66,
+      "reference_sequence": 82,
       "gigabit": false
     },
     {
@@ -492,7 +492,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 55,
+      "reference_sequence": 79,
       "gigabit": false
     },
     {
@@ -518,7 +518,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 59,
+      "reference_sequence": 80,
       "gigabit": false
     },
     {
@@ -544,7 +544,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 9,
+      "reference_sequence": 1,
       "gigabit": false
     },
     {
@@ -570,7 +570,7 @@
       "required_router_count": 2,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 45,
+      "reference_sequence": 27,
       "gigabit": false
     },
     {
@@ -596,7 +596,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Царьков",
-      "reference_sequence": 71,
+      "reference_sequence": 29,
       "gigabit": false
     },
     {
@@ -621,8 +621,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Выполнена",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 57,
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 3,
       "gigabit": false
     },
     {
@@ -647,8 +647,8 @@
       "required_vehicle": null,
       "required_router_count": 1,
       "reference_status": "Выполнена",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 48,
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 5,
       "gigabit": false
     },
     {
@@ -656,7 +656,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 75745,
-      "control_request_id": 75745,
+      "control_request_id": 66944,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -672,9 +672,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 1,
-      "reference_status": "Выполнена",
+      "reference_status": "Отменена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 73,
+      "reference_sequence": 83,
       "gigabit": false
     },
     {
@@ -700,7 +700,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 69,
+      "reference_sequence": 31,
       "gigabit": false
     },
     {
@@ -726,7 +726,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 52,
+      "reference_sequence": 30,
       "gigabit": false
     },
     {
@@ -752,7 +752,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 75,
+      "reference_sequence": 45,
       "gigabit": false
     },
     {
@@ -760,7 +760,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 876,
-      "control_request_id": 876,
+      "control_request_id": 23807,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -776,9 +776,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Выполнена",
+      "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 80,
+      "reference_sequence": 76,
       "gigabit": false
     },
     {
@@ -804,7 +804,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 64,
+      "reference_sequence": 48,
       "gigabit": false
     },
     {
@@ -830,7 +830,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 58,
+      "reference_sequence": 49,
       "gigabit": false
     },
     {
@@ -856,7 +856,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
-      "reference_sequence": 41,
+      "reference_sequence": 60,
       "gigabit": false
     },
     {
@@ -882,7 +882,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
-      "reference_sequence": 39,
+      "reference_sequence": 59,
       "gigabit": false
     },
     {
@@ -890,7 +890,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 78920,
-      "control_request_id": 51603,
+      "control_request_id": 78920,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Подключение",
@@ -906,9 +906,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отправлена",
-      "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 11,
+      "reference_status": "Выполнена",
+      "reference_crew": "Бригада Макаров",
+      "reference_sequence": 26,
       "gigabit": false
     },
     {
@@ -934,7 +934,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 76,
+      "reference_sequence": 62,
       "gigabit": false
     },
     {
@@ -960,7 +960,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 42,
+      "reference_sequence": 63,
       "gigabit": false
     },
     {
@@ -986,7 +986,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 78,
+      "reference_sequence": 14,
       "gigabit": false
     },
     {
@@ -1012,7 +1012,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 61,
+      "reference_sequence": 17,
       "gigabit": false
     },
     {
@@ -1038,7 +1038,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 79,
+      "reference_sequence": 15,
       "gigabit": false
     },
     {
@@ -1064,7 +1064,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 51,
+      "reference_sequence": 7,
       "gigabit": false
     },
     {
@@ -1090,7 +1090,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 82,
+      "reference_sequence": 23,
       "gigabit": false
     },
     {
@@ -1116,7 +1116,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
-      "reference_sequence": 81,
+      "reference_sequence": 4,
       "gigabit": false
     },
     {
@@ -1142,7 +1142,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 26,
+      "reference_sequence": 52,
       "gigabit": false
     },
     {
@@ -1168,7 +1168,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 6,
+      "reference_sequence": 10,
       "gigabit": false
     },
     {
@@ -1194,7 +1194,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 18,
+      "reference_sequence": 46,
       "gigabit": false
     },
     {
@@ -1202,7 +1202,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 51603,
-      "control_request_id": 78920,
+      "control_request_id": 51603,
       "skill_required": "connection_orders",
       "skill_required_ru": "Работы на подключение и дозаказы",
       "request_type_bk": "Дозаказ",
@@ -1218,9 +1218,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 1,
-      "reference_status": "Выполнена",
-      "reference_crew": "Бригада Макаров",
-      "reference_sequence": 77,
+      "reference_status": "Отправлена",
+      "reference_crew": "Бригада Белоновский",
+      "reference_sequence": 61,
       "gigabit": false
     },
     {
@@ -1246,7 +1246,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 31,
+      "reference_sequence": 56,
       "gigabit": false
     },
     {
@@ -1272,7 +1272,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 72,
+      "reference_sequence": 34,
       "gigabit": false
     },
     {
@@ -1297,8 +1297,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Козырь",
-      "reference_sequence": 21,
+      "reference_crew": "Бригада Демин",
+      "reference_sequence": 68,
       "gigabit": false
     },
     {
@@ -1323,8 +1323,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Козырь",
-      "reference_sequence": 22,
+      "reference_crew": "Бригада Демин",
+      "reference_sequence": 69,
       "gigabit": false
     },
     {
@@ -1350,7 +1350,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 12,
+      "reference_sequence": 28,
       "gigabit": false
     },
     {
@@ -1375,8 +1375,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Демин",
-      "reference_sequence": 34,
+      "reference_crew": "Бригада Паршин",
+      "reference_sequence": 72,
       "gigabit": false
     },
     {
@@ -1402,7 +1402,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 14,
+      "reference_sequence": 22,
       "gigabit": false
     },
     {
@@ -1428,7 +1428,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 16,
+      "reference_sequence": 42,
       "gigabit": false
     },
     {
@@ -1454,7 +1454,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 17,
+      "reference_sequence": 47,
       "gigabit": false
     },
     {
@@ -1480,7 +1480,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 5,
+      "reference_sequence": 9,
       "gigabit": false
     },
     {
@@ -1488,7 +1488,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 24482,
-      "control_request_id": 11872,
+      "control_request_id": 24482,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1504,9 +1504,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Выполнена",
+      "reference_status": "Отменена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 35,
+      "reference_sequence": 41,
       "gigabit": false
     },
     {
@@ -1532,7 +1532,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 50,
+      "reference_sequence": 77,
       "gigabit": false
     },
     {
@@ -1557,8 +1557,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "В работе",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 1,
+      "reference_crew": "Бригада Демин",
+      "reference_sequence": 67,
       "gigabit": false
     },
     {
@@ -1584,7 +1584,7 @@
       "required_router_count": 1,
       "reference_status": "В работе",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 15,
+      "reference_sequence": 36,
       "gigabit": false
     },
     {
@@ -1609,8 +1609,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Выполнена",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 65,
+      "reference_crew": "Бригада Демин",
+      "reference_sequence": 66,
       "gigabit": false
     },
     {
@@ -1636,7 +1636,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 74,
+      "reference_sequence": 40,
       "gigabit": false
     },
     {
@@ -1662,7 +1662,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 40,
+      "reference_sequence": 32,
       "gigabit": false
     },
     {
@@ -1670,7 +1670,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 11872,
-      "control_request_id": 24482,
+      "control_request_id": 11872,
       "skill_required": "local_works",
       "skill_required_ru": "Локальные работы",
       "request_type_bk": "Локальная заявка",
@@ -1686,9 +1686,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отменена",
+      "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 44,
+      "reference_sequence": 75,
       "gigabit": false
     },
     {
@@ -1714,7 +1714,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 56,
+      "reference_sequence": 37,
       "gigabit": false
     },
     {
@@ -1740,7 +1740,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 53,
+      "reference_sequence": 39,
       "gigabit": false
     },
     {
@@ -1766,7 +1766,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 36,
+      "reference_sequence": 43,
       "gigabit": false
     },
     {
@@ -1792,7 +1792,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 63,
+      "reference_sequence": 19,
       "gigabit": false
     },
     {
@@ -1818,7 +1818,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 47,
+      "reference_sequence": 18,
       "gigabit": false
     },
     {
@@ -1844,7 +1844,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 67,
+      "reference_sequence": 16,
       "gigabit": false
     },
     {
@@ -1870,7 +1870,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 68,
+      "reference_sequence": 20,
       "gigabit": false
     },
     {
@@ -1896,7 +1896,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 60,
+      "reference_sequence": 8,
       "gigabit": false
     },
     {
@@ -1922,7 +1922,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 49,
+      "reference_sequence": 12,
       "gigabit": false
     },
     {
@@ -1947,8 +1947,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Выполнена",
-      "reference_crew": "Бригада Демин",
-      "reference_sequence": 37,
+      "reference_crew": "Бригада Горбанев",
+      "reference_sequence": 33,
       "gigabit": false
     },
     {
@@ -1974,7 +1974,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 83,
+      "reference_sequence": 24,
       "gigabit": false
     },
     {
@@ -2000,7 +2000,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 19,
+      "reference_sequence": 64,
       "gigabit": false
     },
     {
@@ -2025,8 +2025,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Просрочена",
-      "reference_crew": "Бригада Демин",
-      "reference_sequence": 32,
+      "reference_crew": "Бригада Саламатин",
+      "reference_sequence": 50,
       "gigabit": false
     },
     {
@@ -2051,8 +2051,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Просрочена",
-      "reference_crew": "Бригада Демин",
-      "reference_sequence": 33,
+      "reference_crew": "Бригада Саламатин",
+      "reference_sequence": 51,
       "gigabit": false
     },
     {
@@ -2078,7 +2078,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 10,
+      "reference_sequence": 25,
       "gigabit": false
     },
     {
@@ -2104,7 +2104,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 23,
+      "reference_sequence": 65,
       "gigabit": false
     },
     {
@@ -2130,7 +2130,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 4,
+      "reference_sequence": 74,
       "gigabit": false
     },
     {
@@ -2138,7 +2138,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 98998,
-      "control_request_id": 98998,
+      "control_request_id": 45243,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -2156,7 +2156,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 29,
+      "reference_sequence": 54,
       "gigabit": false
     },
     {
@@ -2182,7 +2182,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 28,
+      "reference_sequence": 57,
       "gigabit": false
     },
     {
@@ -2207,8 +2207,8 @@
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
-      "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 27,
+      "reference_crew": "Бригада Паршин",
+      "reference_sequence": 73,
       "gigabit": false
     },
     {
@@ -2234,7 +2234,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 25,
+      "reference_sequence": 58,
       "gigabit": false
     },
     {
@@ -2242,7 +2242,7 @@
       "territory_code": "yugo_vostok",
       "territory_name": "Юго-восток",
       "request_id": 45243,
-      "control_request_id": 45243,
+      "control_request_id": 98998,
       "skill_required": "emergency_works",
       "skill_required_ru": "Аварийные работы",
       "request_type_bk": "Глобальная проблема",
@@ -2260,7 +2260,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 30,
+      "reference_sequence": 55,
       "gigabit": false
     },
     {
@@ -2286,7 +2286,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 2,
+      "reference_sequence": 70,
       "gigabit": false
     },
     {
@@ -2312,7 +2312,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 3,
+      "reference_sequence": 71,
       "gigabit": false
     },
     {
@@ -2338,7 +2338,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 24,
+      "reference_sequence": 53,
       "gigabit": false
     },
     {
@@ -2390,7 +2390,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 46,
+      "reference_sequence": 35,
       "gigabit": false
     }
   ],
