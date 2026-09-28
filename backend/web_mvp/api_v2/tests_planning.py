@@ -253,6 +253,66 @@ class OptimizationApiTests(TestCase):
         task = next(item for item in response.data["dataset"]["tasks"] if item["id"] == task_id)
         self.assertEqual(task["status"], "OVERDUE")
 
+    def test_assigned_task_can_be_released_without_reoptimization(self) -> None:
+        """NOT_SENT освобождает маршрут и оборудование без запуска solver."""
+        initial = self.client.post(
+            "/api/v2/optimize/",
+            {"ignore_task_statuses": True, "consider_equipment": True},
+            format="json",
+        )
+        self.assertEqual(initial.status_code, 200, initial.data)
+        tasks_by_id = {
+            task["id"]: task for task in initial.data["dataset"]["tasks"]
+        }
+        route = next(
+            route
+            for route in initial.data["result"]["routes"]
+            if any(
+                tasks_by_id[stop["task_id"]]["required_router_count"] > 0
+                for stop in route["stops"]
+            )
+        )
+        task_id = next(
+            stop["task_id"]
+            for stop in route["stops"]
+            if tasks_by_id[stop["task_id"]]["required_router_count"] > 0
+        )
+        assigned_count_before = initial.data["result"]["metrics"][
+            "assigned_task_count"
+        ]
+
+        response = self.client.patch(
+            "/api/v2/jobs/status/",
+            {"task_id": task_id, "status": "NOT_SENT"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        task = next(
+            item
+            for item in response.data["dataset"]["tasks"]
+            if item["id"] == task_id
+        )
+        self.assertEqual(task["status"], "NOT_SENT")
+        self.assertIsNone(task["current_engineer_id"])
+        self.assertFalse(
+            any(
+                stop["task_id"] == task_id
+                for result_route in response.data["result"]["routes"]
+                for stop in result_route["stops"]
+            )
+        )
+        reason = next(
+            item
+            for item in response.data["result"]["unassigned"]
+            if item["task_id"] == task_id
+        )
+        self.assertEqual(reason["reason_code"], "manually_unassigned")
+        self.assertEqual(
+            response.data["result"]["metrics"]["assigned_task_count"],
+            assigned_count_before - 1,
+        )
+
     def test_unassigned_status_can_only_be_cancelled(self) -> None:
         """Неназначенную заявку нельзя вручную перевести в рабочий статус."""
         task_id = self.client.get("/api/v2/dataset/").data["dataset"]["tasks"][0]["id"]
@@ -821,7 +881,9 @@ class OptimizationApiTests(TestCase):
         initial = self.client.post(
             "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
         )
-        task_id = "yugo_tsentr-J78540"
+        # Фиксированная допустимая пара текущего набора: заявка из маршрута
+        # E01 сохраняет окно и смену после переноса к E02.
+        task_id = "yugo_tsentr-J46513"
         old_engineer_id = next(
             route["engineer_id"]
             for route in initial.data["result"]["routes"]

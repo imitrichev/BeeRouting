@@ -329,10 +329,13 @@ class PlanningService:
         """Меняет статус заявки в текущем плане без запуска solver.
 
         Для заявки, которая уже назначена маршруту или имеет текущего
-        исполнителя, разрешены рабочие и закрывающие статусы. У заявки без
-        исполнителя единственное допустимое ручное действие — отмена.
-        Такой метод намеренно не перестраивает маршрут: диспетчер фиксирует
-        факт, а отдельное действие перепланирования запускается явно.
+        исполнителя, разрешены рабочие и закрывающие статусы. Переход в
+        NOT_SENT снимает назначение, удаляет остановку из маршрута и
+        освобождает зарезервированное заявкой оборудование. Оставшиеся
+        остановки сохраняют исходное расписание: освободившееся время
+        становится перерывом инженера, solver при этом не запускается.
+        У заявки без исполнителя единственное допустимое ручное действие —
+        отмена.
         """
         if self._scenario is None:
             raise ValueError("Сначала загрузите dataset")
@@ -376,11 +379,19 @@ class PlanningService:
                 if assigned
                 else {TaskStatus.CANCELLED}
             )
+            # Снятие с назначения допустимо только до фактического начала
+            # работ. Это соответствует frontend-переходам ASSIGNED/OVERDUE →
+            # NOT_SENT; EN_ROUTE и IN_PROGRESS остаются закреплёнными.
+            if assigned and task.status in {
+                TaskStatus.ASSIGNED,
+                TaskStatus.OVERDUE,
+            }:
+                allowed_statuses.add(TaskStatus.NOT_SENT)
             if status not in allowed_statuses:
                 raise ValueError(
                     (
                         f"Для назначенной заявки {task_id} допустимы статусы: "
-                        "ASSIGNED, EN_ROUTE, IN_PROGRESS, OVERDUE, COMPLETED, CANCELLED."
+                        f"{', '.join(sorted(item.value for item in allowed_statuses))}."
                     )
                     if assigned
                     else f"Неназначенную заявку {task_id} можно только отменить."
@@ -395,6 +406,8 @@ class PlanningService:
                     ),
                     None,
                 )
+            if status == TaskStatus.NOT_SENT:
+                current_engineer_id = None
             tasks[index] = replace(
                 task,
                 status=status,
@@ -407,8 +420,43 @@ class PlanningService:
             self._manual_status_update = True
             if self._problem is not None:
                 self._problem = replace(self._problem, tasks=tuple(tasks))
+            if status == TaskStatus.NOT_SENT and self._result is not None:
+                self._release_task_from_result(task_id)
             return self._scenario
         raise ValueError(f"Заявка {task_id!r} не найдена")
+
+    def _release_task_from_result(self, task_id: str) -> None:
+        """Снимает заявку с маршрута и обновляет результат без solver.
+
+        Оборудование не хранится отдельной бронью: его расход определяется
+        заявками маршрута. Поэтому удаление остановки сразу возвращает её
+        роутеры и прочее оборудование в доступный остаток инженера.
+        """
+        assert self._result is not None
+        if self._problem is None:
+            raise ValueError("Невозможно скорректировать маршрут без задачи планирования")
+
+        unassigned_task_ids = tuple(
+            dict.fromkeys((*self._result.unassigned_task_ids, task_id))
+        )
+        unassigned_reasons = dict(self._result.unassigned_reasons)
+        unassigned_reasons[task_id] = UnassignedReason(
+            code=UnassignedReasonCode.MANUALLY_UNASSIGNED,
+            message="Заявка вручную снята с назначения и ожидает распределения",
+        )
+        self._result = replace(
+            self._result,
+            unassigned_task_ids=unassigned_task_ids,
+            unassigned_reasons=unassigned_reasons,
+            unassigned_task_count=len(unassigned_task_ids),
+        )
+        keep_task_ids = {
+            stop.task_id
+            for route in self._result.routes.values()
+            for stop in route.stops
+            if stop.task_id != task_id
+        }
+        self._result = self._filter_result_tasks(keep_task_ids)
 
     def _filter_result_tasks(self, keep_task_ids: set[str]) -> OptimizationResult:
         """Удаляет из сохранённого результата заявки вне текущего плана."""

@@ -239,7 +239,9 @@ const evaluatedTaskIds = computed(() => {
   result.value?.unassigned.forEach((item) => {
     // Служебная причина означает, что solver эту заявку ещё не рассматривал.
     // Она должна отображаться в очереди, но не блокировать кнопки расчёта.
-    if (item.reason_code !== 'not_distribution_attempted') ids.add(item.task_id)
+    if (!['not_distribution_attempted', 'manually_unassigned'].includes(item.reason_code)) {
+      ids.add(item.task_id)
+    }
   })
   return ids
 })
@@ -322,7 +324,12 @@ function isTaskAssigned(task: Task): boolean {
 
 function taskStatusOptions(task: Task) {
   return isTaskAssigned(task)
-    ? ASSIGNED_STATUS_OPTIONS
+    ? [
+        ...(['ASSIGNED', 'OVERDUE'].includes(task.status)
+          ? [{ title: 'Не отправлена', value: 'NOT_SENT' }]
+          : []),
+        ...ASSIGNED_STATUS_OPTIONS,
+      ]
     : [
         ...(task.status !== 'CANCELLED'
           ? [{ title: STATUS_LABELS[task.status] ?? task.status, value: task.status }]
