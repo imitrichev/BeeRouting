@@ -1,10 +1,22 @@
 <script setup lang="ts">
+/**
+ * Шапка приложения.
+ *
+ * Содержит логотип и название «BeeRouting», а также переключатель
+ * светлой/тёмной темы Vuetify. Состояние темы хранится глобально
+ * и не сохраняется между сессиями.
+ */
+
 import { computed } from 'vue'
 import { useTheme } from 'vuetify'
 import logo from '@/assets/logo.svg'
 
 const theme = useTheme()
 
+/**
+ * Двусторонняя привязка для переключателя темы:
+ * чтение — текущее значение тёмной темы, запись — переключение темы Vuetify.
+ */
 const isDark = computed({
   get: () => theme.global.current.value.dark,
   set: (value: boolean) => {
@@ -21,6 +33,8 @@ const isDark = computed({
         BeeRouting
       </v-row>
     </v-app-bar-title>
+
+    <!-- Переключатель светлой/тёмной темы -->
     <v-switch
       v-model="isDark"
       hide-details
@@ -34,6 +48,7 @@ const isDark = computed({
 </template>
 
 <style scoped lang="scss">
+/** Скрывает текстовую метку переключателя темы (остаётся только сам свитч). */
 :deep(.v-switch .v-label) {
   display: none;
 }

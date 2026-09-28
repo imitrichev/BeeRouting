@@ -1,20 +1,39 @@
 <script setup lang="ts">
+/**
+ * Диалог запуска оптимизации распределения заявок.
+ *
+ * Позволяет выбрать алгоритм (`ortools` или `baseline`) и опцию
+ * «учитывать оборудование». Остальные параметры запроса
+ * (`ignore_task_statuses`, `planning_time`) зафиксированы дефолтами.
+ *
+ * При подтверждении вызывает `store.optimizeDataset(...)` и закрывает диалог.
+ */
+
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import { computed, ref, watch } from 'vue'
 import BasicCard from '@/templates/BasicCard.vue'
 import IconButton from '@/templates/IconButton.vue'
 import type { OptimizationRequestData } from '@/types/entities.ts'
 
+/**
+ * События компонента.
+ */
 const emit = defineEmits<{
+  /** Закрытие диалога. */
   close: []
 }>()
 
+/**
+ * Пропсы компонента.
+ */
 interface IProps {
+  /** Флаг открытия диалога. */
   opened: boolean
 }
 
 const props = defineProps<IProps>()
 
+/** Значения формы по умолчанию. */
 const defaultFormData: OptimizationRequestData = {
   consider_equipment: true,
   ignore_task_statuses: true,
@@ -22,11 +41,15 @@ const defaultFormData: OptimizationRequestData = {
   solver: 'ortools',
 }
 
+/** Данные формы оптимизации. */
 const formData = ref<OptimizationRequestData>({ ...defaultFormData })
 
 const store = useDistrictDataStore()
+
+/** Флаг загрузки запроса оптимизации. */
 const loading = computed(() => store.loadingOptimization)
 
+/** Элементы селектора алгоритмов. */
 const solverSelectorItems = [
   {
     title: 'OR-Tools',
@@ -38,6 +61,7 @@ const solverSelectorItems = [
   },
 ]
 
+/** При открытии диалога сбрасывает форму к значениям по умолчанию. */
 watch(
   () => props.opened,
   (nVal) => {
@@ -46,6 +70,9 @@ watch(
   },
 )
 
+/**
+ * Запускает оптимизацию с текущими параметрами формы и закрывает диалог.
+ */
 const optimize = async () => {
   await store.optimizeDataset(formData.value)
   emit('close')
@@ -64,7 +91,9 @@ const optimize = async () => {
           tooltip-text="Закрыть"
         />
       </template>
+
       <v-row no-gutters class="overflow-list default-scrollbar px-4 py-4">
+        <!-- Выбор алгоритма -->
         <v-select
           v-model="formData.solver"
           :items="solverSelectorItems"
@@ -75,6 +104,8 @@ const optimize = async () => {
           :readonly="loading"
           :clearable="false"
         />
+
+        <!-- Опция: учитывать оборудование -->
         <v-checkbox
           v-model="formData.consider_equipment"
           label="Учитывать оборудование"
@@ -83,6 +114,7 @@ const optimize = async () => {
           :readonly="loading"
         />
       </v-row>
+
       <template #bottom>
         <v-row no-gutters class="justify-end pb-2">
           <v-btn
@@ -101,6 +133,10 @@ const optimize = async () => {
 </template>
 
 <style scoped lang="scss">
+/**
+ * Ограничивает высоту контента диалога 80% высоты вьюпорта
+ * с вертикальной прокруткой при переполнении.
+ */
 .overflow-list {
   max-height: 80vh !important;
   min-height: unset !important;

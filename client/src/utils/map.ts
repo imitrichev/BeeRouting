@@ -1,9 +1,31 @@
+/**
+ * Утилиты для работы с картой: детерминированный выбор цвета по инженеру
+ * и проверка валидности координат.
+ *
+ * Модуль не имеет побочных эффектов и не зависит от состояния приложения.
+ */
+
 import type { Engineer } from '@/types/entities.ts'
 
+/**
+ * Возвращает цвет для инженера на основе его позиции в переданном списке.
+ *
+ * Цвет выбирается детерминированно: индекс инженера в массиве `engineers`
+ * берётся по модулю длины палитры. Если инженер не найден — возвращается
+ * нейтральный серый цвет.
+ *
+ * @param engineerId Идентификатор инженера.
+ * @param engineers  Список инженеров, относительно которого определяется индекс.
+ * @returns CSS-цвет в формате `hsl(...)` либо `'#CCC'`, если инженер не найден.
+ */
 export const getEngineerColor = (engineerId: string, engineers: Engineer[]): string => {
   const index = engineers.findIndex((e) => e.id === engineerId)
   if (index === -1) return '#CCC'
-  // 30 разнообразных цветов, перемешаны в новом порядке
+
+  /**
+   * Палитра из 30 разнообразных цветов в формате HSL.
+   * Порядок подобран так, чтобы соседние инженеры в списке визуально различались.
+   */
   const palette: string[] = [
     'hsl(280, 55%, 70%)', // лавандовый
     'hsl(0, 85%, 45%)', // насыщенный красный
@@ -38,6 +60,17 @@ export const getEngineerColor = (engineerId: string, engineers: Engineer[]): str
 
   return String(palette[index % palette.length])
 }
+
+/**
+ * Проверяет, что обе координаты заданы и являются конечными числами.
+ *
+ * Используется как type guard: при `true` тип `latitude` сужается до `number`.
+ * Обратите внимание: сужение касается только `latitude`, но проверяются обе оси.
+ *
+ * @param latitude  Широта (может быть `null`/`undefined`).
+ * @param longitude Долгота (может быть `null`/`undefined`).
+ * @returns `true`, если обе координаты — конечные числа.
+ */
 export const hasFiniteCoordinates = (
   latitude: number | null | undefined,
   longitude: number | null | undefined,

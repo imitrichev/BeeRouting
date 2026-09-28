@@ -1,4 +1,15 @@
 <script setup lang="ts">
+/**
+ * Таблица инженеров района.
+ *
+ * Отображает список инженеров с колонками: имя (с цветовым маркером),
+ * активность, квалификации, тип транспорта, доступное число роутеров,
+ * рабочий день и стартовая локация.
+ *
+ * Цвет маркера имени совпадает с цветом маршрута инженера на карте
+ * (`getEngineerColor`), что позволяет визуально связать таблицу и карту.
+ */
+
 import BasicCard from '@/templates/BasicCard.vue'
 import type { Engineer } from '@/types/entities.ts'
 import { computed } from 'vue'
@@ -6,15 +17,22 @@ import { getEngineerColor } from '@/utils/map.ts'
 import { getSkillTranslation, getVehicleTypeTranslation } from '@/utils/translations.ts'
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 
+/**
+ * Пропсы компонента.
+ */
 interface IProps {
+  /** Флаг загрузки: переключает карточку в состояние скелетона. */
   loading: boolean
 }
 
 const props = defineProps<IProps>()
 
 const districtDataStore = useDistrictDataStore()
+
+/** Список инженеров района. */
 const engineers = computed<Engineer[]>(() => districtDataStore.getDistrictEngineers)
 
+/** Колонки таблицы инженеров. */
 const engineerHeaders = [
   { title: 'Название', key: 'name', width: 200, sortable: true, align: 'start' },
   { title: 'Доступен', key: 'is_active', width: 100, sortable: true, align: 'center' },
@@ -60,6 +78,7 @@ const engineerHeaders = [
       fixed-header
       height="400"
     >
+      <!-- Имя с цветовым маркером -->
       <template #item.name="{ item }">
         <div class="d-flex align-center justify-start ga-2">
           <v-avatar size="20" :color="getEngineerColor(item.id, engineers)" />
@@ -67,6 +86,7 @@ const engineerHeaders = [
         </div>
       </template>
 
+      <!-- Активность: иконка-галочка/крестик -->
       <template #item.is_active="{ item }">
         <v-icon
           :color="item.is_active ? 'success' : 'error'"
@@ -75,6 +95,7 @@ const engineerHeaders = [
         />
       </template>
 
+      <!-- Квалификации: чипы или прочерк -->
       <template #item.qualifications="{ item }">
         <div class="d-flex flex-wrap justify-center ga-1 py-1">
           <v-chip
@@ -98,6 +119,7 @@ const engineerHeaders = [
         {{ item.available_router_count }}
       </template>
 
+      <!-- Рабочий день: интервал, если инженер активен -->
       <template #item.availability="{ item }">
         <template v-if="item.is_active">
           {{ item.available_from }} - {{ item.available_until }}
@@ -113,6 +135,10 @@ const engineerHeaders = [
 </template>
 
 <style scoped lang="scss">
+/**
+ * Таблица инженеров: предотвращает переполнение по горизонтали
+ * и включает горизонтальную прокрутку для широкого контента.
+ */
 .engineers-table :deep(.v-table__wrapper),
 .engineers-table :deep(.v-table__wrapper > table) {
   min-width: 0;

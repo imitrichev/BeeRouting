@@ -1,4 +1,16 @@
 <script setup lang="ts">
+/**
+ * Диалог создания задачи.
+ *
+ * Содержит форму с полями: ID, тип работ, временное окно (`HH:mm`),
+ * требуемый транспорт и количество роутеров. Также встроена карта MapLibre,
+ * на которой пользователь выбирает точку задачи кликом; координаты
+ * подставляются в форму.
+ *
+ * При открытии форма сбрасывается и карта инициализируется; при закрытии —
+ * карта уничтожается.
+ */
+
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import BasicCard from '@/templates/BasicCard.vue'
@@ -9,36 +21,63 @@ import { isValidTime, timeToMinutes } from '@/utils/time.ts'
 import { Map, Marker, NavigationControl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
+/**
+ * Данные формы создания задачи.
+ */
 interface IFormData {
+  /** Идентификатор задачи. */
   id: string
+  /** Адрес (текстовое описание). */
   address: string
+  /** Широта выбранной точки. */
   latitude: number | null
+  /** Долгота выбранной точки. */
   longitude: number | null
+  /** Код типа работ. */
   work_type: string | null
+  /** Начало временного окна в формате `HH:mm`. */
   window_start: string
+  /** Конец временного окна в формате `HH:mm`. */
   window_end: string
+  /** Код требуемого типа транспорта (или `null`). */
   required_vehicle_type: string | null
+  /** Требуемое количество роутеров. */
   required_router_count: number
 }
 
+/**
+ * События компонента.
+ */
 const emit = defineEmits<{
+  /** Закрытие диалога. */
   close: []
 }>()
 
+/**
+ * Пропсы компонента.
+ */
 interface IProps {
+  /** Флаг открытия диалога. */
   opened: boolean
 }
 
 const props = defineProps<IProps>()
 
 const store = useDistrictDataStore()
+
+/** Флаг загрузки запроса создания задачи. */
 const loading = computed(() => store.loadingCreateTask)
 
-/** Дефолтные координаты — те же, что в AppMap */
+/** Координаты и зум карты по умолчанию (совпадают с AppMap). */
 const DEFAULT_LATITUDE = 55.7528
 const DEFAULT_LONGITUDE = 37.6178
 const DEFAULT_ZOOM = 10
 
+/**
+ * Возвращает форму с дефолтными значениями.
+ *
+ * @returns Новая форма.
+ */
 const createDefaultFormData = (): IFormData => ({
   id: '',
   address: '',
@@ -51,15 +90,20 @@ const createDefaultFormData = (): IFormData => ({
   required_router_count: 0,
 })
 
+/** Данные формы. */
 const formData = ref<IFormData>(createDefaultFormData())
 
+/** Элементы селектора типов работ. */
 const workTypeSelectorItems = computed(() =>
   Object.entries(WORK_TYPE_MAP).map(([value, title]) => ({ value, title })),
 )
+
+/** Элементы селектора типов транспорта. */
 const vehicleTypeSelectorItems = computed(() =>
   Object.entries(VEHICLE_TYPE_MAP).map(([value, title]) => ({ value, title })),
 )
 
+/** Ошибки валидации по полям формы. */
 const errors = ref<Record<string, string | null>>({
   id: null,
   work_type: null,
@@ -68,18 +112,23 @@ const errors = ref<Record<string, string | null>>({
   required_router_count: null,
 })
 
+/** Сбрасывает форму, ошибки и маркер на карте в значения по умолчанию. */
 const resetForm = () => {
   formData.value = createDefaultFormData()
   Object.keys(errors.value).forEach((k) => (errors.value[k] = null))
   resetMarkerToDefault()
 }
 
-/* ----------------------------- Карта ----------------------------- */
+// --- Карта ------------------------------------------------------------------
 
+/** DOM-контейнер карты. */
 const createMapContainer = ref<HTMLElement | null>(null)
+/** Инстанс карты. */
 let createMap: Map | null = null
+/** Маркер выбранной точки. */
 let createMarker: Marker | null = null
 
+/** Возвращает маркер и координаты формы в значения по умолчанию. */
 const resetMarkerToDefault = () => {
   if (!createMap) return
   setMarker(DEFAULT_LONGITUDE, DEFAULT_LATITUDE)
@@ -87,6 +136,12 @@ const resetMarkerToDefault = () => {
   formData.value.longitude = DEFAULT_LONGITUDE
 }
 
+/**
+ * Устанавливает маркер в указанных координатах.
+ *
+ * @param lng Долгота.
+ * @param lat Широта.
+ */
 const setMarker = (lng: number, lat: number) => {
   if (!createMap) return
   if (createMarker) {
@@ -96,6 +151,7 @@ const setMarker = (lng: number, lat: number) => {
   createMarker = new Marker({ color: '#1976d2' }).setLngLat([lng, lat]).addTo(createMap)
 }
 
+/** Инициализирует карту и навешивает обработчики (один раз). */
 const initMap = async () => {
   if (createMap) return
   if (!createMapContainer.value) return
@@ -137,6 +193,7 @@ const initMap = async () => {
     createMap?.resize()
   })
 
+  // Клик по карте — выбор координат задачи
   createMap.on('click', (e) => {
     const lng = e.lngLat.lng
     const lat = e.lngLat.lat
@@ -152,6 +209,7 @@ const initMap = async () => {
   createMap.resize()
 }
 
+/** Уничтожает маркер и карту. */
 const destroyMap = () => {
   if (createMarker) {
     createMarker.remove()
@@ -163,8 +221,12 @@ const destroyMap = () => {
   }
 }
 
-/* --------------------------- Жизненный цикл --------------------------- */
+// --- Жизненный цикл ---------------------------------------------------------
 
+/**
+ * Реакция на открытие/закрытие диалога:
+ * при открытии — сброс формы; при закрытии — уничтожение карты.
+ */
 watch(
   () => props.opened,
   (opened) => {
@@ -176,12 +238,18 @@ watch(
   },
 )
 
+/** Уничтожает карту перед размонтированием компонента. */
 onBeforeUnmount(() => {
   destroyMap()
 })
 
-/* ----------------------------- Валидация ----------------------------- */
+// --- Валидация и создание ---------------------------------------------------
 
+/**
+ * Валидирует форму и заполняет `errors`.
+ *
+ * @returns `true`, если форма валидна.
+ */
 const validateFormData = (): boolean => {
   Object.keys(errors.value).forEach((k) => (errors.value[k] = null))
 
@@ -202,6 +270,7 @@ const validateFormData = (): boolean => {
     errors.value.window_end = 'Формат времени: ЧЧ:ММ'
   }
 
+  // Конец окна должен быть строго позже начала
   if (
     isValidTime(f.window_start) &&
     isValidTime(f.window_end) &&
@@ -221,6 +290,12 @@ const validateFormData = (): boolean => {
   return !Object.values(errors.value).some((e) => e !== null)
 }
 
+/**
+ * Формирует тело запроса для создания задачи.
+ * Предполагается, что форма уже прошла валидацию.
+ *
+ * @returns Данные запроса.
+ */
 const prepareRequestData = (): TaskCreateRequestData => {
   const f = formData.value
   return {
@@ -236,6 +311,9 @@ const prepareRequestData = (): TaskCreateRequestData => {
   }
 }
 
+/**
+ * Валидирует форму, отправляет запрос на создание задачи и закрывает диалог.
+ */
 const createTask = async () => {
   if (!validateFormData()) return
   await store.loadCreateTask(prepareRequestData())
@@ -255,7 +333,9 @@ const createTask = async () => {
           tooltip-text="Закрыть"
         />
       </template>
+
       <v-row no-gutters class="overflow-list default-scrollbar px-4 py-4">
+        <!-- Карта выбора точки -->
         <v-row no-gutters class="w-100">
           <v-col cols="12">
             <v-card-title class="px-2 pt-0 text-body-large">Укажите место:</v-card-title>
@@ -266,6 +346,7 @@ const createTask = async () => {
             </div>
           </v-col>
         </v-row>
+
         <v-text-field
           v-model="formData.id"
           variant="outlined"
@@ -288,6 +369,7 @@ const createTask = async () => {
           :error-messages="errors.work_type ?? ''"
         />
 
+        <!-- Временное окно: начало и конец -->
         <v-row no-gutters class="w-100">
           <v-col cols="6" class="pr-2">
             <v-text-field
@@ -334,6 +416,7 @@ const createTask = async () => {
           :error-messages="errors.required_router_count ?? ''"
         />
       </v-row>
+
       <template #bottom>
         <v-row no-gutters class="justify-end pb-2">
           <v-btn
@@ -352,11 +435,16 @@ const createTask = async () => {
 </template>
 
 <style scoped lang="scss">
+/**
+ * Ограничивает высоту контента диалога 80% высоты вьюпорта
+ * с вертикальной прокруткой при переполнении.
+ */
 .overflow-list {
   max-height: 80vh !important;
   min-height: unset !important;
 }
 
+/** Обёртка карты выбора точки задачи. */
 .task-create-map-wrapper {
   width: 100%;
   height: 300px;

@@ -1,4 +1,16 @@
 <script setup lang="ts">
+/**
+ * Корневой компонент приложения.
+ *
+ * Отвечает за компоновку страницы: шапка, строка управления, метрики
+ * оптимизации, карта, задачи, неназначенные задачи, таблица маршрутов
+ * и список инженеров.
+ *
+ * При монтировании инициирует загрузку всех справочников через `selectorsStore`.
+ * Блоки `optimization-metrics`, `unassigned-tasks` и `routes-table` рендерятся
+ * только при наличии результата оптимизации (`districtDataStore.isOptimized`).
+ */
+
 import AppHeader from '@/components/AppHeader.vue'
 import ControlRow from '@/components/ControlRow.vue'
 import AppTasks from '@/components/AppTasks.vue'
@@ -14,6 +26,9 @@ import UnassignedTasks from '@/components/UnassignedTasks.vue'
 const selectorsStore = useSelectorsStore()
 const districtDataStore = useDistrictDataStore()
 
+/**
+ * Предзагружает все справочники, необходимые для работы фильтров и форм.
+ */
 onMounted(() => {
   selectorsStore.loadTerritories()
   selectorsStore.loadDistricts()
@@ -37,6 +52,7 @@ onMounted(() => {
               </v-col>
             </v-row>
             <v-row no-gutters>
+              <!-- Метрики оптимизации: показываются только после расчёта -->
               <v-col cols="12" v-if="districtDataStore.isOptimized" class="mb-3">
                 <optimization-metrics
                   :loading="
@@ -46,6 +62,8 @@ onMounted(() => {
                   "
                 />
               </v-col>
+
+              <!-- Карта маршрутов -->
               <v-col cols="12" class="mb-3">
                 <app-map
                   :loading="
@@ -53,6 +71,8 @@ onMounted(() => {
                   "
                 />
               </v-col>
+
+              <!-- Список задач -->
               <v-col cols="12" class="mb-3 fill-height">
                 <app-tasks
                   :loading="
@@ -60,6 +80,8 @@ onMounted(() => {
                   "
                 />
               </v-col>
+
+              <!-- Блоки, доступные только после оптимизации -->
               <template v-if="districtDataStore.isOptimized">
                 <v-col cols="12" class="mb-3">
                   <unassigned-tasks
@@ -80,6 +102,8 @@ onMounted(() => {
                   />
                 </v-col>
               </template>
+
+              <!-- Список инженеров -->
               <v-col cols="12" class="mb-3 fill-height">
                 <app-engineers
                   :loading="
@@ -96,6 +120,11 @@ onMounted(() => {
 </template>
 
 <style lang="scss">
+/**
+ * Основной контейнер страницы.
+ * Занимает всю высоту вьюпорта за вычетом высоты шапки (66px),
+ * скроллится по вертикали и горизонтали с тонким кастомным скроллбаром.
+ */
 .main-container {
   margin-top: 66px !important;
   padding-top: 12px !important;
@@ -106,6 +135,7 @@ onMounted(() => {
   overflow-x: auto;
   overflow-y: auto !important;
 
+  // Firefox
   scrollbar-width: thin;
   scrollbar-color: rgba(var(--v-theme-on-surface), 0.2) transparent;
 
@@ -143,6 +173,10 @@ onMounted(() => {
   }
 }
 
+/**
+ * Разрешает внутренним Vuetify-элементам сжиматься внутри flex-контейнера,
+ * предотвращая переполнение по горизонтали.
+ */
 .main-container :deep(.v-row),
 .main-container :deep(.v-col),
 .main-container :deep(.v-card),
@@ -150,6 +184,9 @@ onMounted(() => {
   min-width: 0;
 }
 
+/**
+ * Ограничивает ширину основного ряда контента для широких экранов.
+ */
 .row-container {
   max-width: 1920px !important;
   width: 100%;

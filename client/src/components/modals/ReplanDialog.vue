@@ -1,4 +1,17 @@
 <script setup lang="ts">
+/**
+ * Диалог перепланирования заявок по событию.
+ *
+ * Поддерживает три типа событий:
+ * - `ENGINEER_UNAVAILABLE` — инженер стал недоступен (выбор инженера);
+ * - `TASK_CANCELLED` — отмена заявки (выбор заявки);
+ * - `EMERGENCY_TASK` — аварийная заявка (форма с картой для выбора точки,
+ *   ID, временным окном, транспортом и числом роутеров).
+ *
+ * После подтверждения отправляет запрос через `districtDataStore.loadReplan`
+ * и эмитит `close` с `applied = true`.
+ */
+
 import { useDistrictDataStore } from '@/stores/districtData.ts'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import BasicCard from '@/templates/BasicCard.vue'
@@ -9,43 +22,72 @@ import { isValidTime, timeToMinutes } from '@/utils/time.ts'
 import { Map, Marker, NavigationControl } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
+/**
+ * Данные формы перепланирования.
+ */
 interface IFormData {
+  /** Тип события. */
   type: ReplanEventType
-
+  /** Учитывать требуемое оборудование. */
   consider_equipment: boolean
-
+  /** Идентификатор инженера (для `ENGINEER_UNAVAILABLE`). */
   engineer_id: string | null
+  /** Идентификатор задачи (для `TASK_CANCELLED`). */
   task_id: string | null
-
+  /** Данные аварийной задачи (для `EMERGENCY_TASK`). */
   emergency_task: {
+    /** Идентификатор задачи. */
     id: string
+    /** Широта точки. */
     latitude: number | null
+    /** Долгота точки. */
     longitude: number | null
+    /** Тип работ. */
     work_type: string
+    /** Начало окна в формате `HH:mm`. */
     window_start: string
+    /** Конец окна в формате `HH:mm`. */
     window_end: string
+    /** Требуемый тип транспорта (или `null`). */
     required_vehicle_type: string | null
+    /** Требуемое число роутеров. */
     required_router_count: number
   }
 }
 
+/**
+ * События компонента.
+ */
 const emit = defineEmits<{
+  /** Закрытие диалога; `applied` — применено ли перепланирование. */
   close: [applied: boolean]
 }>()
 
+/**
+ * Пропсы компонента.
+ */
 interface IProps {
+  /** Флаг открытия диалога. */
   opened: boolean
 }
 
 const props = defineProps<IProps>()
 
 const store = useDistrictDataStore()
+
+/** Флаг загрузки запроса перепланирования. */
 const loading = computed(() => store.loadingReplan)
 
+/** Координаты и зум карты по умолчанию (совпадают с AppMap). */
 const DEFAULT_LATITUDE = 55.7528
 const DEFAULT_LONGITUDE = 37.6178
 const DEFAULT_ZOOM = 10
 
+/**
+ * Возвращает форму с дефолтными значениями.
+ *
+ * @returns Новая форма.
+ */
 const createDefaultFormData = (): IFormData => ({
   type: 'ENGINEER_UNAVAILABLE',
   consider_equipment: true,
@@ -65,8 +107,10 @@ const createDefaultFormData = (): IFormData => ({
   },
 })
 
+/** Данные формы. */
 const formData = ref<IFormData>(createDefaultFormData())
 
+/** Элементы селектора доступных типов событий. */
 const eventTypeSelectorItems = computed(() => {
   const items: { title: string; value: ReplanEventType }[] = []
   if (activeEngineersSelectorItems.value.length > 0) {
@@ -79,22 +123,26 @@ const eventTypeSelectorItems = computed(() => {
   return items
 })
 
+/** Элементы селектора отменяемых задач (все, кроме отменённых). */
 const cancellableTaskSelectorItems = computed(() =>
   store.getDistrictTasks
     .filter((t) => t.status !== 'CANCELLED')
     .map((t) => ({ title: t.id, value: t.id })),
 )
 
+/** Элементы селектора типов транспорта. */
 const vehicleTypeSelectorItems = computed(() =>
   Object.entries(VEHICLE_TYPE_MAP).map(([value, title]) => ({ value, title })),
 )
 
+/** Элементы селектора активных инженеров. */
 const activeEngineersSelectorItems = computed(() =>
   store.getDistrictEngineers
     .filter((e) => e.is_active)
     .map((e) => ({ title: e.name, value: e.id })),
 )
 
+/** Ошибки валидации по полям формы. */
 const errors = ref<Record<string, string | null>>({
   engineer_id: null,
   task_id: null,
@@ -104,16 +152,23 @@ const errors = ref<Record<string, string | null>>({
   emergency_task_required_router_count: null,
 })
 
+/** Сбрасывает форму, ошибки и маркер карты в значения по умолчанию. */
 const resetForm = () => {
   formData.value = createDefaultFormData()
   Object.keys(errors.value).forEach((k) => (errors.value[k] = null))
   resetMarkerToDefault()
 }
 
+// --- Карта аварийной задачи -------------------------------------------------
+
+/** DOM-контейнер карты. */
 const emergencyMapContainer = ref<HTMLElement | null>(null)
+/** Инстанс карты. */
 let emergencyMap: Map | null = null
+/** Маркер выбранной точки. */
 let emergencyMarker: Marker | null = null
 
+/** Возвращает маркер и координаты формы в значения по умолчанию. */
 const resetMarkerToDefault = () => {
   if (!emergencyMap) return
   setMarker(DEFAULT_LONGITUDE, DEFAULT_LATITUDE)
@@ -121,6 +176,12 @@ const resetMarkerToDefault = () => {
   formData.value.emergency_task.longitude = DEFAULT_LONGITUDE
 }
 
+/**
+ * Устанавливает маркер в указанных координатах.
+ *
+ * @param lng Долгота.
+ * @param lat Широта.
+ */
 const setMarker = (lng: number, lat: number) => {
   if (!emergencyMap) return
   if (emergencyMarker) {
@@ -130,6 +191,7 @@ const setMarker = (lng: number, lat: number) => {
   emergencyMarker = new Marker({ color: '#e53935' }).setLngLat([lng, lat]).addTo(emergencyMap)
 }
 
+/** Инициализирует карту аварийной задачи и навешивает обработчики. */
 const initMap = async () => {
   if (emergencyMap) return
   if (!emergencyMapContainer.value) return
@@ -171,6 +233,7 @@ const initMap = async () => {
     emergencyMap?.resize()
   })
 
+  // Клик по карте — выбор координат аварийной задачи
   emergencyMap.on('click', (e) => {
     const lng = e.lngLat.lng
     const lat = e.lngLat.lat
@@ -186,6 +249,7 @@ const initMap = async () => {
   emergencyMap.resize()
 }
 
+/** Уничтожает маркер и карту. */
 const destroyMap = () => {
   if (emergencyMarker) {
     emergencyMarker.remove()
@@ -197,6 +261,13 @@ const destroyMap = () => {
   }
 }
 
+// --- Жизненный цикл ---------------------------------------------------------
+
+/**
+ * Реакция на открытие/закрытие диалога:
+ * при открытии — сброс формы и валидация доступности выбранного типа события;
+ * при закрытии — уничтожение карты.
+ */
 watch(
   () => props.opened,
   (opened) => {
@@ -213,6 +284,10 @@ watch(
   },
 )
 
+/**
+ * Реакция на смену типа события:
+ * для `EMERGENCY_TASK` — инициализация карты, иначе — уничтожение.
+ */
 watch(
   () => formData.value.type,
   async (type) => {
@@ -225,10 +300,18 @@ watch(
   },
 )
 
+/** Уничтожает карту перед размонтированием компонента. */
 onBeforeUnmount(() => {
   destroyMap()
 })
 
+// --- Валидация и отправка ---------------------------------------------------
+
+/**
+ * Валидирует форму в зависимости от выбранного типа события.
+ *
+ * @returns `true`, если форма валидна.
+ */
 const validateFormData = (): boolean => {
   Object.keys(errors.value).forEach((k) => (errors.value[k] = null))
 
@@ -261,6 +344,7 @@ const validateFormData = (): boolean => {
       errors.value.emergency_task_window_end = 'Формат времени: ЧЧ:ММ'
     }
 
+    // Конец окна должен быть строго позже начала
     if (
       isValidTime(t.window_start) &&
       isValidTime(t.window_end) &&
@@ -277,6 +361,12 @@ const validateFormData = (): boolean => {
   return !Object.values(errors.value).some((e) => e !== null)
 }
 
+/**
+ * Формирует тело запроса для перепланирования.
+ * Предполагается, что форма уже прошла валидацию.
+ *
+ * @returns Данные запроса.
+ */
 const prepareRequestData = (): ReplanRequestData => {
   if (formData.value.type === 'ENGINEER_UNAVAILABLE') {
     return {
@@ -311,6 +401,10 @@ const prepareRequestData = (): ReplanRequestData => {
   }
 }
 
+/**
+ * Валидирует форму, отправляет запрос на перепланирование и закрывает диалог.
+ * При успехе эмитит `close` с `applied = true`.
+ */
 const replan = async () => {
   if (!validateFormData()) return
   await store.loadReplan(prepareRequestData())
@@ -339,7 +433,9 @@ const replan = async () => {
           tooltip-text="Закрыть"
         />
       </template>
+
       <v-row no-gutters class="overflow-list default-scrollbar px-4 py-4">
+        <!-- Тип события -->
         <v-select
           v-model="formData.type"
           :items="eventTypeSelectorItems"
@@ -350,6 +446,8 @@ const replan = async () => {
           :readonly="loading"
           :clearable="false"
         />
+
+        <!-- Инженер недоступен -->
         <template v-if="formData.type === 'ENGINEER_UNAVAILABLE'">
           <v-select
             v-model="formData.engineer_id"
@@ -363,6 +461,8 @@ const replan = async () => {
             :error-messages="errors.engineer_id ?? ''"
           />
         </template>
+
+        <!-- Заявка отменена -->
         <template v-if="formData.type === 'TASK_CANCELLED'">
           <v-select
             v-model="formData.task_id"
@@ -378,11 +478,14 @@ const replan = async () => {
             :error-messages="errors.task_id ?? ''"
           />
         </template>
+
+        <!-- Аварийная заявка -->
         <template v-if="formData.type === 'EMERGENCY_TASK'">
           <v-alert type="info" variant="flat" class="w-100 my-3">
             Тип "Аварийные работы" и приоритет "срочный" устанавливаются автоматически. Длительность
             берётся из норматива аварии.
           </v-alert>
+
           <v-row no-gutters class="w-100">
             <v-col cols="12">
               <v-card-title class="px-2 text-body-large">Укажите место:</v-card-title>
@@ -404,6 +507,7 @@ const replan = async () => {
             :error-messages="errors.emergency_task_id ?? ''"
           />
 
+          <!-- Временное окно аварийной задачи -->
           <v-row no-gutters class="w-100 mt-1">
             <v-col cols="6" class="pr-2">
               <v-text-field
@@ -451,6 +555,7 @@ const replan = async () => {
           />
         </template>
       </v-row>
+
       <template #bottom>
         <v-row no-gutters class="justify-end pb-2">
           <v-btn
@@ -469,11 +574,16 @@ const replan = async () => {
 </template>
 
 <style scoped lang="scss">
+/**
+ * Ограничивает высоту контента диалога 80% высоты вьюпорта
+ * с вертикальной прокруткой при переполнении.
+ */
 .overflow-list {
   max-height: 80vh !important;
   min-height: unset !important;
 }
 
+/** Обёртка карты выбора точки аварийной задачи. */
 .emergency-map-wrapper {
   width: 100%;
   height: 300px;

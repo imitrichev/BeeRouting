@@ -1,6 +1,5 @@
-// TSConfig for modules that run in Node.js environment via either transpilation or type-stripping.
+// TSConfig for modules that run in Node.js environment.
 {
-  "extends": "@tsconfig/node24/tsconfig.json",
   "include": [
     "vite.config.*",
     "vitest.config.*",
@@ -9,20 +8,21 @@
     "eslint.config.*"
   ],
   "compilerOptions": {
-    // Most tools use transpilation instead of Node.js's native type-stripping.
-    // Bundler mode provides a smoother developer experience.
+    "target": "ES2023",
+    "lib": ["ES2023"],
     "module": "preserve",
     "moduleResolution": "bundler",
 
-    // Include Node.js types and avoid accidentally including other `@types/*` packages.
     "types": ["node"],
 
-    // Disable emitting output during `vue-tsc --build`, which is used for type-checking only.
-    "noEmit": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
 
-    // `vue-tsc --build` produces a .tsbuildinfo file for incremental type-checking.
-    // Specified here to keep it out of the root directory.
+    "noEmit": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   }
 }
-

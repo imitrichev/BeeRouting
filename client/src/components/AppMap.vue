@@ -1,4 +1,21 @@
 <script setup lang="ts">
+/**
+ * Карта района на базе MapLibre GL.
+ *
+ * Отображает:
+ * - маркеры задач (с попапами: тип, окно, приоритет, а после оптимизации —
+ *   назначенный инженер, времена прибытия/работ, дистанция от предыдущей точки);
+ * - маркер депо (офиса) с адресом;
+ * - линии маршрутов выбранных инженеров (GeoJSON-слой);
+ * - плавающую панель со списком маршрутов и чекбоксами выбора для отображения.
+ *
+ * Цвет маркера задачи совпадает с цветом инженера, если задача назначена
+ * и его маршрут выбран; иначе используется нейтральный серый.
+ *
+ * При `loading === true` карта очищается от маркеров и линий; после первой
+ * успешной загрузки инстанс карты создаётся один раз и переиспользуется.
+ */
+
 import BasicCard from '@/templates/BasicCard.vue'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { Map, Popup, Marker, NavigationControl, GeoJSONSource, LngLatBounds } from 'maplibre-gl'
@@ -12,27 +29,52 @@ import {
 } from '@/utils/translations.ts'
 import type { Engineer, EngineerRoute, RouteStop, Task } from '@/types/entities.ts'
 
+/**
+ * Пропсы компонента.
+ */
 interface IProps {
+  /** Флаг загрузки: при `true` карта очищается и показывается скелетон. */
   loading: boolean
 }
 
 const props = defineProps<IProps>()
 
 const districtDataStore = useDistrictDataStore()
-const tasks = computed(() => districtDataStore.getDistrictTasks)
-const routes = computed(() => districtDataStore.getRoutes)
-const isOptimized = computed(() => districtDataStore.isOptimized)
-const selectedRoutes = computed(() => districtDataStore.selectedRoutes)
-const districtData = computed(() => districtDataStore.getDistrictData)
-const firstLoadingComplete = ref<boolean>(false)
 
+/** Список задач района. */
+const tasks = computed(() => districtDataStore.getDistrictTasks)
+/** Список маршрутов инженеров. */
+const routes = computed(() => districtDataStore.getRoutes)
+/** `true`, если для текущего района есть результат оптимизации. */
+const isOptimized = computed(() => districtDataStore.isOptimized)
+/** Идентификаторы маршрутов, выбранных для отображения на карте. */
+const selectedRoutes = computed(() => districtDataStore.selectedRoutes)
+/** Текущие данные района. */
+const districtData = computed(() => districtDataStore.getDistrictData)
+/** Список инженеров района (для выбора цвета маршрута). */
+const engineers = computed<Engineer[]>(() => districtDataStore.getDistrictEngineers)
+
+/** `true` после первой успешной загрузки — до этого рендерится скелетон. */
+const firstLoadingComplete = ref<boolean>(false)
+/** Флаг открытия панели со списком маршрутов. */
+const routesPanelOpen = ref<boolean>(true)
+
+/** Инстанс карты MapLibre (создаётся лениво). */
 let map: Map | null = null
+/** Список активных маркеров для последующей очистки. */
 let markers: Marker[] = []
+/** DOM-контейнер карты. */
 const container = ref<HTMLElement | null>(null)
 
+/** Идентификатор GeoJSON-источника линий маршрутов. */
 const ROUTE_SOURCE_ID = 'routes-source'
+/** Идентификатор слоя линий маршрутов. */
 const ROUTE_LAYER_ID = 'routes-layer'
 
+/**
+ * Создаёт инстанс карты (один раз), добавляет источник и слой маршрутов,
+ * а затем отрисовывает задачи и линии.
+ */
 const renderMap = () => {
   if (map) return
   if (!container.value) return
@@ -92,6 +134,11 @@ const renderMap = () => {
   })
 }
 
+/**
+ * Создаёт DOM-элемент маркера депо (офиса).
+ *
+ * @returns HTML-элемент маркера.
+ */
 const createDepotMarkerElement = (): HTMLElement => {
   const element = document.createElement('div')
   element.className = 'depot-marker'
@@ -107,6 +154,13 @@ const createDepotMarkerElement = (): HTMLElement => {
   return element
 }
 
+/**
+ * Создаёт DOM-элемент маркера задачи.
+ *
+ * @param stopIndex Порядковый номер остановки в маршруте (если задача назначена).
+ * @param color     Цвет маркера.
+ * @returns HTML-элемент маркера.
+ */
 const createTaskMarkerElement = (stopIndex: number | undefined, color: string): HTMLElement => {
   const element = document.createElement('div')
   element.className = 'task-marker'
@@ -123,15 +177,37 @@ const createTaskMarkerElement = (stopIndex: number | undefined, color: string): 
   return element
 }
 
-/** Хелпер: строка "ключ — значение" в попапе */
+/**
+ * Формирует HTML-строку «label — value» для попапа.
+ * Пустые значения (`null`, `undefined`, `''`) не отображаются.
+ *
+ * @param label Подпись.
+ * @param value Значение.
+ * @returns HTML-строка или пустая строка.
+ */
 const popupRow = (label: string, value: string | number | null | undefined): string => {
   if (value === null || value === undefined || value === '') return ''
   return `<div class="map-popup__row"><span class="map-popup__label">${label}</span><span class="map-popup__value">${value}</span></div>`
 }
 
-/** Хелпер: заголовок попапа */
+/**
+ * Формирует HTML-заголовок попапа.
+ *
+ * @param text Текст заголовка.
+ * @returns HTML-строка.
+ */
 const popupTitle = (text: string): string => `<div class="map-popup__title">${text}</div>`
 
+/**
+ * Создаёт маркер с попапом.
+ *
+ * @param popupContent HTML-содержимое попапа.
+ * @param longitude    Долгота.
+ * @param latitude     Широта.
+ * @param color        Цвет маркера.
+ * @param stopIndex    Порядковый номер остановки (опционально).
+ * @returns Готовый маркер, добавленный на карту.
+ */
 const getTaskMarkerWithPopup = (
   popupContent: string,
   longitude: number,
@@ -152,6 +228,11 @@ const getTaskMarkerWithPopup = (
     .addTo(map!)
 }
 
+/**
+ * Создаёт маркер задачи без назначения (до оптимизации или без маршрута).
+ *
+ * @returns Готовый маркер.
+ */
 const getNotOptimizedMarker = (
   color: string,
   taskId: string,
@@ -174,6 +255,11 @@ const getNotOptimizedMarker = (
   return getTaskMarkerWithPopup(content, taskLongitude, taskLatitude, color)
 }
 
+/**
+ * Создаёт маркер задачи, назначенной в маршрут (после оптимизации).
+ *
+ * @returns Готовый маркер.
+ */
 const getOptimizedMarker = (
   color: string,
   taskId: string,
@@ -199,13 +285,16 @@ const getOptimizedMarker = (
   return getTaskMarkerWithPopup(content, taskLongitude, taskLatitude, color, stopIndex)
 }
 
+/** Удаляет все активные маркеры с карты. */
 const clearMarkers = () => {
   markers.forEach((marker) => marker.remove())
   markers = []
 }
 
-const engineers = computed<Engineer[]>(() => districtDataStore.getDistrictEngineers)
-
+/**
+ * Пересобирает GeoJSON-данные линий маршрутов для выбранных инженеров
+ * и обновляет источник `routes-source`.
+ */
 const recompileRoutesData = () => {
   if (!map) return
 
@@ -242,6 +331,10 @@ const recompileRoutesData = () => {
   source.setData({ type: 'FeatureCollection', features })
 }
 
+/**
+ * Полностью перерисовывает маркеры задач и депо, а также подгоняет
+ * видимую область карты под отображаемые точки.
+ */
 const renderTasks = () => {
   if (!map) return
 
@@ -253,6 +346,12 @@ const renderTasks = () => {
     if (task.latitude === null || task.longitude === null) return
     if (task.status === 'CANCELLED') return
 
+    /**
+     * Находит маршрут, содержащий задачу.
+     *
+     * @param task Задача.
+     * @returns Маршрут или `null`.
+     */
     const getTaskRoute = (task: Task): EngineerRoute | null => {
       for (const route of routes.value) {
         if (route.stops.map((item) => item.task_id).includes(task.id)) {
@@ -262,11 +361,25 @@ const renderTasks = () => {
       return null
     }
 
+    /**
+     * Находит остановку маршрута, соответствующую задаче.
+     *
+     * @param task  Задача.
+     * @param route Маршрут.
+     * @returns Остановка или `null`.
+     */
     const getRouteTaskStop = (task: Task, route: EngineerRoute): RouteStop | null => {
       const stops = route.stops.filter((r) => r.task_id === task.id)
       return stops[0] ? stops[0] : null
     }
 
+    /**
+     * Возвращает индекс остановки в маршруте.
+     *
+     * @param route Маршрут.
+     * @param stop  Остановка.
+     * @returns Индекс (0-based) или 0, если не найдено.
+     */
     const getRouteTaskStopIndex = (route: EngineerRoute, stop: RouteStop): number => {
       for (let i = 0; i < route.stops.length; i++) {
         const routeStopTaskId = route.stops[i]?.task_id
@@ -275,6 +388,13 @@ const renderTasks = () => {
       return 0
     }
 
+    /**
+     * Определяет цвет маркера задачи:
+     * цвет инженера, если маршрут выбран; иначе — серый.
+     *
+     * @param task Задача.
+     * @returns CSS-цвет.
+     */
     const getTaskColor = (task: Task): string => {
       if (routes.value.length === 0) return '#888888'
       for (const route of routes.value) {
@@ -329,6 +449,7 @@ const renderTasks = () => {
     }
   })
 
+  // Маркер депо (офиса)
   const dataset = districtData.value?.dataset
   if (dataset && hasFiniteCoordinates(dataset.office_latitude, dataset.office_longitude)) {
     const depotMarker = new Marker({
@@ -360,6 +481,10 @@ const renderTasks = () => {
   recompileRoutesData()
 }
 
+/**
+ * Реакция на изменение флага загрузки: при `true` карта очищается,
+ * при `false` — инициализируется (один раз) и перерисовывается.
+ */
 watch(
   () => props.loading,
   async (nVal) => {
@@ -377,6 +502,7 @@ watch(
   },
 )
 
+/** Реакция на смену выбранных маршрутов: перерисовать маркеры и линии. */
 watch(
   () => [...selectedRoutes.value],
   () => {
@@ -385,6 +511,7 @@ watch(
   },
 )
 
+/** Реакция на смену списка задач: перерисовать маркеры и линии. */
 watch(
   () => [...tasks.value],
   () => {
@@ -393,26 +520,37 @@ watch(
   },
 )
 
+/** Реакция на изменение статуса оптимизации: перерисовать маркеры и линии. */
 watch(isOptimized, () => {
   renderTasks()
   recompileRoutesData()
 })
 
+/** Очистка ресурсов перед размонтированием компонента. */
 onBeforeUnmount(() => {
   clearMarkers()
   map?.remove()
   map = null
 })
 
+/**
+ * Переключает выделение маршрута инженера.
+ *
+ * @param item Маршрут.
+ */
 const toggleSelect = (item: EngineerRoute) => {
   districtDataStore.toggleRouteSelection(item.engineer_id)
 }
 
+/**
+ * Проверяет, выделен ли маршрут инженера.
+ *
+ * @param item Маршрут.
+ * @returns `true`, если маршрут выделен.
+ */
 const isSelected = (item: EngineerRoute) => {
   return districtDataStore.isRouteSelected(item.engineer_id)
 }
-
-const routesPanelOpen = ref<boolean>(true)
 </script>
 
 <template>
@@ -422,7 +560,10 @@ const routesPanelOpen = ref<boolean>(true)
     </template>
 
     <div class="map-wrapper">
+      <!-- Контейнер карты -->
       <div v-if="firstLoadingComplete" ref="container" class="map-container map-container--full" />
+
+      <!-- Плавающая панель со списком маршрутов -->
       <div v-if="isOptimized" class="routes-overlay">
         <div v-if="routesPanelOpen" class="routes-overlay__panel">
           <div class="routes-overlay__header">
@@ -473,6 +614,10 @@ const routesPanelOpen = ref<boolean>(true)
 </template>
 
 <style scoped lang="scss">
+/**
+ * Контейнер карты: занимает почти всю высоту вьюпорта с учётом шапки
+ * и элементов управления над картой.
+ */
 .map-container {
   width: 100% !important;
   min-height: 292px !important;
@@ -485,6 +630,7 @@ const routesPanelOpen = ref<boolean>(true)
   width: 100%;
 }
 
+/** Ограничение высоты для списка маршрутов в плавающей панели. */
 .overflow-list {
   min-height: 192px !important;
   height: auto !important;
@@ -495,6 +641,7 @@ const routesPanelOpen = ref<boolean>(true)
   background: transparent !important;
 }
 
+/* --- Плавающая панель маршрутов --- */
 .routes-overlay {
   position: absolute;
   top: 12px;
@@ -535,16 +682,6 @@ const routesPanelOpen = ref<boolean>(true)
 
 .v-theme--dark .routes-overlay__panel {
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-}
-
-/* Плавное появление/скрытие */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.15s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 
 /* --- Попапы MapLibre --- */
@@ -624,7 +761,7 @@ const routesPanelOpen = ref<boolean>(true)
   text-align: right;
 }
 
-/* --- Тёмная тема --- */
+/* --- Тёмная тема для попапов --- */
 .v-theme--dark {
   --map-popup-bg: #1f2228;
   --map-popup-fg: #eceff4;

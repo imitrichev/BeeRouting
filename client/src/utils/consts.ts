@@ -1,7 +1,20 @@
+/**
+ * Общие константы приложения: базовый URL API, HTTP-методы и справочники
+ * предметной области (типы транспорта, навыки, приоритеты, типы работ,
+ * статусы задач и допустимые переходы между ними).
+ *
+ * Справочники объявлены через `as const`, что позволяет выводить из них
+ * union-типы (`keyof typeof MAP`) в `@/types/utils.ts`.
+ */
+
 import type { TaskStatus } from '@/types/utils.ts'
 
+/** Базовый URL API, берётся из переменной окружения `VITE_API_URL`. */
 export const API_URL = String(import.meta.env.VITE_API_URL)
 
+/**
+ * Поддерживаемые HTTP-методы.
+ */
 export enum HTTP_METHODS {
   GET = 'GET',
   POST = 'POST',
@@ -12,6 +25,9 @@ export enum HTTP_METHODS {
   HEAD = 'HEAD',
 }
 
+/**
+ * Справочник типов транспортных средств: код → подпись.
+ */
 export const VEHICLE_TYPE_MAP = {
   CAR: 'Автомобиль',
   PUBLIC_TRANSPORT: 'Общ. транспорт',
@@ -19,17 +35,26 @@ export const VEHICLE_TYPE_MAP = {
   BICYCLE: 'Велосипед',
 } as const
 
+/**
+ * Справочник навыков (квалификаций) инженеров: код → подпись.
+ */
 export const SKILL_TYPE_MAP = {
   LOCAL_WORKS: 'Локальные работы',
   EMERGENCY_WORKS: 'Аварийные работы',
   CONNECTION_AND_UPSELL: 'Подключение и дозаказы',
 } as const
 
+/**
+ * Справочник приоритетов задач: код → подпись.
+ */
 export const PRIORITY_TYPE_MAP = {
   URGENT: 'Срочный',
   NORMAL: 'Обычный',
 } as const
 
+/**
+ * Справочник типов работ: код → подпись.
+ */
 export const WORK_TYPE_MAP = {
   CONNECTION: 'Подключение клиентов',
   EMERGENCY: 'Авария',
@@ -37,6 +62,9 @@ export const WORK_TYPE_MAP = {
   LOCAL: 'Локальная заявка / ремонт',
 } as const
 
+/**
+ * Справочник статусов задач: код → подпись.
+ */
 export const TASK_STATUS_MAP = {
   NOT_SENT: 'не назначена',
   ASSIGNED: 'назначена',
@@ -47,6 +75,12 @@ export const TASK_STATUS_MAP = {
   OVERDUE: 'просрочена',
 } as const
 
+/**
+ * Допустимые переходы между статусами задачи.
+ *
+ * Ключ — текущий статус, значение — массив статусов, в которые разрешён переход.
+ * Пустой массив означает терминальный статус. Используется утилитами из `@/utils/task.ts`.
+ */
 export const TASK_STATUS_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
   NOT_SENT: [],
   ASSIGNED: ['EN_ROUTE', 'CANCELLED', 'NOT_SENT'],
