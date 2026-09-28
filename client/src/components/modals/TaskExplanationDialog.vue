@@ -4,6 +4,12 @@ import { computed, watch } from 'vue'
 import BasicCard from '@/templates/BasicCard.vue'
 import IconButton from '@/templates/IconButton.vue'
 import type { EngineerRoute, RouteStop } from '@/types/entities.ts'
+import {
+  replacePriorityTypes,
+  replaceSkillTypes,
+  replaceVehicleTypes,
+  replaceWorkTypes,
+} from '@/utils/translations.ts'
 
 const emit = defineEmits<{
   close: []
@@ -56,7 +62,11 @@ const loadTaskExplanation = (taskId: string) => {
         v-if="!loading && explanation"
         class="overflow-list default-scrollbar px-4 py-4"
       >
-        {{ explanation.explanation }}
+        {{
+          replaceWorkTypes(
+            replaceSkillTypes(replacePriorityTypes(replaceVehicleTypes(explanation.explanation))),
+          )
+        }}
       </v-row>
     </basic-card>
   </v-dialog>
