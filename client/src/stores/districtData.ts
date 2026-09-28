@@ -14,6 +14,7 @@ import type {
   RouteStopExplanationObject,
   Task,
   TaskCreateRequestData,
+  TaskStatusUpdateRequestData,
   UnassignedTask,
 } from '@/types/entities.ts'
 
@@ -256,6 +257,23 @@ export const useDistrictDataStore = defineStore('districtData', () => {
     loadingCreateTask.value = false
   }
 
+  const loadingUpdateTaskStatus = ref<boolean>(false)
+
+  const loadUpdateTaskStatus = async (data: TaskStatusUpdateRequestData) => {
+    loadingUpdateTaskStatus.value = true
+    const response = await sendRequest<DistrictData>(
+      baseUrls.TASKS.UPDATE_STATUS,
+      data,
+      {},
+      { territory: String(districtCode.value) },
+    )
+    if (response.isSuccess) {
+      districtData.value = response.data
+      clearRouteSelection()
+    }
+    loadingUpdateTaskStatus.value = false
+  }
+
   return {
     selectDistrict,
     loadDistrictData,
@@ -301,5 +319,8 @@ export const useDistrictDataStore = defineStore('districtData', () => {
 
     loadingCreateTask,
     loadCreateTask,
+
+    loadingUpdateTaskStatus,
+    loadUpdateTaskStatus,
   }
 })

@@ -5,14 +5,22 @@ import { computed, ref } from 'vue'
 import type { EngineerRoute, RouteStop } from '@/types/entities.ts'
 import { getVehicleTypeTranslation } from '@/utils/translations.ts'
 import { getEngineerColor } from '@/utils/map.ts'
+import { getTaskStatusColor, getTaskStatusLabel, isTerminalStatus } from '@/utils/task.ts'
 import IconButton from '@/templates/IconButton.vue'
 import TaskExplanationDialog from '@/components/modals/TaskExplanationDialog.vue'
 import ReasignmentDialog from '@/components/modals/ReasignmentDialog.vue'
+import TaskStatusDialog from '@/components/modals/TaskStatusDialog.vue'
+import type { TaskStatus } from '@/types/utils.ts'
+import { useTheme } from 'vuetify'
+
 interface IProps {
   loading: boolean
 }
 
 const props = defineProps<IProps>()
+
+const theme = useTheme()
+const chipVariant = computed(() => (theme.global.current.value.dark ? 'flat' : 'tonal'))
 
 const districtDataStore = useDistrictDataStore()
 const routes = computed<EngineerRoute[]>(() => districtDataStore.getRoutes)
@@ -25,8 +33,26 @@ const taskAddressById = computed<Record<string, string>>(() => {
   return map
 })
 
+const taskStatusById = computed<Record<string, string>>(() => {
+  const map: Record<string, string> = {}
+  for (const task of districtDataStore.getDistrictTasks) {
+    map[task.id] = task.status
+  }
+  return map
+})
+
 const getStopAddress = (stop: RouteStop): string => {
   return taskAddressById.value[stop.task_id] ?? '-'
+}
+
+const getStopStatus = (stop: RouteStop): string | null => {
+  return taskStatusById.value[stop.task_id] ?? null
+}
+
+const canChangeStatus = (stop: RouteStop): boolean => {
+  const status = getStopStatus(stop)
+  if (!status) return false
+  return !isTerminalStatus(status as TaskStatus)
 }
 
 const selected = computed({
@@ -65,7 +91,8 @@ const stopHeaders = [
   { title: 'Время работы', key: 'service_time', width: 220, sortable: false, align: 'center' },
   { title: 'От предыдущего', key: 'from_previous', width: 200, sortable: false, align: 'center' },
   { title: 'Адрес', key: 'address', width: 240, sortable: false, align: 'start' },
-  { title: 'Действия', key: 'actions', width: 100, sortable: false, align: 'center' },
+  { title: 'Статус', key: 'status', width: 140, sortable: false, align: 'center' },
+  { title: 'Действия', key: 'actions', width: 140, sortable: false, align: 'center' },
 ] as const
 
 const formatKm = (v: number) => `${v.toFixed(2)} км`
@@ -73,8 +100,11 @@ const formatMin = (v: number) => `${v.toFixed(0)} мин`
 
 const explanationDialogOpened = ref<boolean>(false)
 const reassignmentDialogOpened = ref<boolean>(false)
+const statusDialogOpened = ref<boolean>(false)
+
 const selectedStop = ref<RouteStop | null>(null)
 const selectedRoute = ref<EngineerRoute | null>(null)
+const selectedStatusTaskId = ref<string | null>(null)
 
 const openExplanationDialog = (stop: RouteStop, route: EngineerRoute) => {
   selectedStop.value = stop
@@ -98,6 +128,16 @@ const closeReassignmentDialog = () => {
   reassignmentDialogOpened.value = false
   selectedStop.value = null
   selectedRoute.value = null
+}
+
+const openStatusDialog = (stop: RouteStop) => {
+  selectedStatusTaskId.value = stop.task_id
+  statusDialogOpened.value = true
+}
+
+const closeStatusDialog = () => {
+  statusDialogOpened.value = false
+  selectedStatusTaskId.value = null
 }
 </script>
 
@@ -151,7 +191,7 @@ const closeReassignmentDialog = () => {
                 :items="item.stops"
                 density="compact"
                 item-value="task_id"
-                style="min-width: 1000px !important"
+                style="min-width: 1140px !important"
               >
                 <template #item.index="{ index }">
                   {{ index + 1 }}
@@ -171,6 +211,16 @@ const closeReassignmentDialog = () => {
                   {{ getStopAddress(item) }}
                 </template>
 
+                <template #item.status="{ item }">
+                  <v-chip
+                    size="small"
+                    :variant="chipVariant"
+                    :color="getTaskStatusColor(getStopStatus(item))"
+                  >
+                    {{ getTaskStatusLabel(getStopStatus(item)) }}
+                  </v-chip>
+                </template>
+
                 <template #item.actions="props">
                   <v-row no-gutters class="text-no-wrap justify-center">
                     <icon-button
@@ -185,6 +235,13 @@ const closeReassignmentDialog = () => {
                       tooltip-text="Переназначить исполнителя"
                       @click="openReassignmentDialog(props.item, item)"
                     />
+                    <icon-button
+                      v-if="canChangeStatus(props.item)"
+                      icon="published_with_changes"
+                      color="primary"
+                      tooltip-text="Изменить статус"
+                      @click="openStatusDialog(props.item)"
+                    />
                   </v-row>
                 </template>
               </v-data-table-virtual>
@@ -193,6 +250,7 @@ const closeReassignmentDialog = () => {
         </tr>
       </template>
     </v-data-table-virtual>
+
     <task-explanation-dialog
       :opened="explanationDialogOpened"
       :stop="selectedStop"
@@ -203,6 +261,11 @@ const closeReassignmentDialog = () => {
       :opened="reassignmentDialogOpened"
       :task-id="selectedStop ? selectedStop.task_id : null"
       @close="closeReassignmentDialog"
+    />
+    <task-status-dialog
+      :opened="statusDialogOpened"
+      :task-id="selectedStatusTaskId"
+      @close="closeStatusDialog"
     />
   </basic-card>
 </template>

@@ -32,6 +32,10 @@ const baseUrls = {
     method: HTTP_METHODS.POST,
   },
   TASKS: {
+    UPDATE_STATUS: {
+      path: '/api/v2/jobs/status/',
+      method: HTTP_METHODS.PATCH,
+    },
     CREATE: {
       path: '/api/v2/tasks/',
       method: HTTP_METHODS.POST,

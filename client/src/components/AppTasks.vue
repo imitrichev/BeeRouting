@@ -9,6 +9,10 @@ import TaskExplanationDialog from '@/components/modals/TaskExplanationDialog.vue
 import ReasignmentDialog from '@/components/modals/ReasignmentDialog.vue'
 import { useTheme } from 'vuetify'
 import TaskCreateDialog from '@/components/modals/TaskCreateDialog.vue'
+import type { TaskStatus } from '@/types/utils.ts'
+import TaskStatusDialog from '@/components/modals/TaskStatusDialog.vue'
+import { isTerminalStatus } from '@/utils/task.ts'
+import { getTaskStatusLabel } from '@/utils/task.ts'
 
 interface IProps {
   loading: boolean
@@ -59,7 +63,7 @@ const taskHeaders = computed(() => {
   if (!isOptimized.value) return baseHeaders
   return [
     ...baseHeaders,
-    { title: 'Действия', key: 'actions', width: 120, sortable: false, align: 'center' },
+    { title: 'Действия', key: 'actions', width: 200, sortable: false, align: 'center' },
   ]
 })
 
@@ -67,27 +71,17 @@ const getPriorityColor = (priority: string): string => {
   return priority === 'URGENT' ? 'error' : 'default'
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  NOT_SENT: 'не отправлена',
-  ASSIGNED: 'назначена',
-  EN_ROUTE: 'в пути',
-  IN_PROGRESS: 'в работе',
-  COMPLETED: 'выполнена',
-  CANCELLED: 'отменена',
-  OVERDUE: 'просрочена',
-}
-
 function taskStatusLabel(task: Task): string {
   if (result.value && task.is_plannable) {
     if (['COMPLETED', 'CANCELLED', 'EN_ROUTE', 'IN_PROGRESS', 'OVERDUE'].includes(task.status)) {
-      return String(STATUS_LABELS[task.status])
+      return getTaskStatusLabel(task.status)
     }
     if (assignedTaskIds.value.has(task.id)) {
       return 'назначена в плане'
     }
     return 'не назначена'
   }
-  return STATUS_LABELS[task.status] ?? task.status
+  return getTaskStatusLabel(task.status)
 }
 
 function taskStatusColor(task: Task): string {
@@ -170,6 +164,19 @@ const openCreateTaskDialog = () => {
 const closeCreateTaskDialog = () => {
   createTaskDialogOpened.value = false
 }
+
+const statusDialogOpened = ref(false)
+const selectedStatusTaskId = ref<string | null>(null)
+
+const openStatusDialog = (task: Task) => {
+  selectedStatusTaskId.value = task.id
+  statusDialogOpened.value = true
+}
+
+const closeStatusDialog = () => {
+  statusDialogOpened.value = false
+  selectedStatusTaskId.value = null
+}
 </script>
 
 <template>
@@ -239,6 +246,13 @@ const closeCreateTaskDialog = () => {
             tooltip-text="Переназначить исполнителя"
             @click="openReassignmentDialog(item)"
           />
+          <icon-button
+            v-if="!isTerminalStatus(item.status as TaskStatus)"
+            icon="published_with_changes"
+            color="primary"
+            tooltip-text="Изменить статус"
+            @click="openStatusDialog(item)"
+          />
         </v-row>
         <span v-else>-</span>
       </template>
@@ -256,6 +270,11 @@ const closeCreateTaskDialog = () => {
       @close="closeReassignmentDialog"
     />
     <task-create-dialog :opened="createTaskDialogOpened" @close="closeCreateTaskDialog" />
+    <task-status-dialog
+      :opened="statusDialogOpened"
+      :task-id="selectedStatusTaskId"
+      @close="closeStatusDialog"
+    />
   </basic-card>
 </template>
 

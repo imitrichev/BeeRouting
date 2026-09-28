@@ -1,4 +1,4 @@
-import type { PriorityType, SkillType, VehicleType, WorkType } from '@/types/utils.ts'
+import type { PriorityType, SkillType, TaskStatus, VehicleType, WorkType } from '@/types/utils.ts'
 
 export type Engineer = {
   id: string
@@ -202,4 +202,9 @@ export type TaskCreateRequestData = {
   window_end: string
   required_vehicle_type: string | null
   required_router_count: number
+}
+
+export type TaskStatusUpdateRequestData = {
+  task_id: string
+  status: TaskStatus
 }
