@@ -383,6 +383,32 @@ def test_nominatim_tries_next_variant_after_result_without_house_number(tmp_path
     assert len(calls) >= 2
 
 
+def test_nominatim_caches_and_returns_resolved_display_address(tmp_path: Path) -> None:
+    """В JSON можно записать найденный Nominatim адрес вместо сырого CSV."""
+    cache_path = tmp_path / "nominatim.json"
+    geocoder = NominatimGeocoder(
+        cache_path=cache_path,
+        endpoint="http://127.0.0.1:8080/search",
+    )
+    geocoder._request = lambda _query, _original: [{  # type: ignore[method-assign]
+        "lat": "55.737",
+        "lon": "37.674",
+        "addresstype": "building",
+        "display_name": "24 к1, проспект Маршала Жукова, Москва, Россия",
+        "address": {"house_number": "24 к1"},
+    }]
+
+    resolved = geocoder.resolve("г.Город Москва, пр-кт.Маршала Жукова,д.24кор1")
+
+    assert resolved == (
+        55.737,
+        37.674,
+        "24 к1, проспект Маршала Жукова, Москва, Россия",
+    )
+    cached = json.loads(cache_path.read_text(encoding="utf-8"))
+    assert next(iter(cached.values()))["display_name"] == resolved[2]
+
+
 def test_nominatim_delay_depends_on_endpoint(tmp_path: Path) -> None:
     """Локальный сервер работает без паузы, публичный — с паузой 1,1 с."""
     local = NominatimGeocoder(

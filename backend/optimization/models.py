@@ -635,6 +635,7 @@ class EngineerRoute:
 class UnassignedReasonCode(str, Enum):
     """Коды причин, по которым заявка не попала в маршруты."""
 
+    NOT_DISTRIBUTION_ATTEMPTED = "not_distribution_attempted"  # После создания solver ещё не запускался.
     MISSING_QUALIFICATION = "missing_qualification"  # Нет подходящего навыка.
     MISSING_EQUIPMENT = "missing_equipment"  # Не хватает хотя бы одного устройства.
     MISSING_VEHICLE_TYPE = "missing_vehicle_type"  # Нет подходящего типа транспорта.

@@ -255,6 +255,7 @@ class NominatimGeocoder:
                 else {}
             )
             self._cache: dict[str, tuple[float, float]] = {}
+            self._resolved_addresses: dict[str, str] = {}
             self._validated_cache_keys: set[str] = set()
             for key, value in loaded.items():
                 normalized_key = _normalise_address(str(key))
@@ -264,6 +265,9 @@ class NominatimGeocoder:
                     )
                     if value.get("address_verified", False):
                         self._validated_cache_keys.add(normalized_key)
+                    display_name = value.get("display_name")
+                    if isinstance(display_name, str) and display_name.strip():
+                        self._resolved_addresses[normalized_key] = display_name.strip()
                 else:
                     # Старый кэш содержал только координаты и не доказывал,
                     # что результат имел номер дома. Он будет проверен заново.
@@ -272,6 +276,7 @@ class NominatimGeocoder:
                     )
         except (OSError, ValueError, TypeError, KeyError, IndexError):
             self._cache = {}
+            self._resolved_addresses = {}
             self._validated_cache_keys = set()
 
     @staticmethod
@@ -306,10 +311,28 @@ class NominatimGeocoder:
         Москвы первым. Поэтому для заявок запрашиваются два результата, а
         среди точных домов выбирается ближайший к офису обслуживаемого района.
         """
+        latitude, longitude, _ = self.resolve(
+            address,
+            reference_coordinates=reference_coordinates,
+        )
+        return latitude, longitude
+
+    def resolve(
+        self,
+        address: str,
+        *,
+        reference_coordinates: tuple[float, float] | None = None,
+    ) -> tuple[float, float, str]:
+        """Возвращает координаты и нормализованный адрес из Nominatim."""
         key = _normalise_address(address)
         cache_key = self._cache_key(key, reference_coordinates)
-        if cache_key in self._cache and cache_key in self._validated_cache_keys:
-            return self._cache[cache_key]
+        if (
+            cache_key in self._cache
+            and cache_key in self._validated_cache_keys
+            and cache_key in self._resolved_addresses
+        ):
+            latitude, longitude = self._cache[cache_key]
+            return latitude, longitude, self._resolved_addresses[cache_key]
         fallback_address = _replace_building_marker(address)
         fallback_key = _normalise_address(fallback_address)
         original_query_addresses = list(self._query_variants(address))
@@ -330,9 +353,16 @@ class NominatimGeocoder:
                 and self._cache_key(fallback_key, reference_coordinates)
                 in self._validated_cache_keys
             ):
-                return self._cache[
-                    self._cache_key(fallback_key, reference_coordinates)
-                ]
+                fallback_cache_key = self._cache_key(
+                    fallback_key, reference_coordinates
+                )
+                if fallback_cache_key in self._resolved_addresses:
+                    latitude, longitude = self._cache[fallback_cache_key]
+                    return (
+                        latitude,
+                        longitude,
+                        self._resolved_addresses[fallback_cache_key],
+                    )
             results = self._request(query_address, address)
             if not results:
                 continue
@@ -342,9 +372,12 @@ class NominatimGeocoder:
             selected = self._nearest_result(precise_results, reference_coordinates)
             coordinates = (float(selected["lat"]), float(selected["lon"]))
             self._cache[cache_key] = coordinates
+            self._resolved_addresses[cache_key] = str(
+                selected.get("display_name") or query_address
+            ).strip()
             self._validated_cache_keys.add(cache_key)
             self._save_cache()
-            return coordinates
+            return (*coordinates, self._resolved_addresses[cache_key])
         # Последняя осмысленная попытка — найти улицу без номера дома. Это
         # даёт приблизительную точку, но лучше координат произвольного района.
         for street_query in (
@@ -356,12 +389,15 @@ class NominatimGeocoder:
             selected = self._nearest_result(results, reference_coordinates)
             coordinates = (float(selected["lat"]), float(selected["lon"]))
             self._cache[cache_key] = coordinates
+            self._resolved_addresses[cache_key] = str(
+                selected.get("display_name") or street_query
+            ).strip()
             self._validated_cache_keys.discard(cache_key)
             self._save_cache()
             self.warnings.append(
                 f"Точный дом не найден: {address!r}; использованы координаты улицы по запросу {street_query!r}."
             )
-            return coordinates
+            return (*coordinates, self._resolved_addresses[cache_key])
         raise ValueError(f"Nominatim не нашёл адрес дома: {address!r}")
 
     @staticmethod
@@ -435,6 +471,11 @@ class NominatimGeocoder:
                 "lat": value[0],
                 "lon": value[1],
                 "address_verified": key in self._validated_cache_keys,
+                **(
+                    {"display_name": self._resolved_addresses[key]}
+                    if key in self._resolved_addresses
+                    else {}
+                ),
             }
             for key, value in self._cache.items()
         }
@@ -726,7 +767,36 @@ def _resolve_coordinates(
         warnings = getattr(geocoder, "warnings", None)
         if isinstance(warnings, list):
             warnings.append(message)
-        return DEFAULT_MOSCOW_COORDINATES
+    return DEFAULT_MOSCOW_COORDINATES
+
+
+def _resolve_location(
+    address: str,
+    geocoder: Callable[[str], tuple[float, float]],
+    subject: str,
+    reference_coordinates: tuple[float, float] | None = None,
+) -> tuple[float, float, str]:
+    """Возвращает координаты и адрес, нормализованный геокодером.
+
+    Простые тестовые геокодеры возвращают только координаты, поэтому для них
+    адрес остаётся исходным. Production-геокодер возвращает ``display_name``
+    выбранного результата Nominatim.
+    """
+    if isinstance(geocoder, NominatimGeocoder):
+        try:
+            return geocoder.resolve(
+                address,
+                reference_coordinates=reference_coordinates,
+            )
+        except ValueError:
+            latitude, longitude = _resolve_coordinates(
+                address, geocoder, subject, reference_coordinates
+            )
+            return latitude, longitude, address
+    latitude, longitude = _resolve_coordinates(
+        address, geocoder, subject, reference_coordinates
+    )
+    return latitude, longitude, address
 
 
 def _office_address(rows: Iterable[Mapping[str, str]]) -> str:
@@ -789,17 +859,12 @@ def _engineers_from_csv(
             raise ValueError(
                 f"Для инженера {name!r} в {path} не задан start_address"
             )
-        raw_start_lat = _first_value(row, "start_lat", "Широта старта")
-        raw_start_lon = _first_value(row, "start_lon", "Долгота старта")
-        if raw_start_lat and raw_start_lon:
-            start_lat, start_lon = float(raw_start_lat), float(raw_start_lon)
-        else:
-            start_lat, start_lon = _resolve_coordinates(
-                start_address,
-                geocoder,
-                f"офис/точка старта инженера {name}",
-                office_coordinates,
-            )
+        start_lat, start_lon, resolved_start_address = _resolve_location(
+            start_address,
+            geocoder,
+            f"офис/точка старта инженера {name}",
+            office_coordinates,
+        )
         raw_skills = re.split(r"[,|;/]+", _first_value(row, "skills", "Навыки", "Квалификации"))
         raw_vehicle = _first_value(row, "vehicle_type", "Транспорт", "Тип транспорта").lower()
         skills = [skill.strip() for skill in raw_skills if skill.strip()]
@@ -807,6 +872,7 @@ def _engineers_from_csv(
             {
                 "engineer_id": _first_value(row, "engineer_id", "ID", "Идентификатор", "Табельный номер") or f"engineer-{index}",
                 "name": name,
+                "start_address": resolved_start_address,
                 "start_lat": start_lat,
                 "start_lon": start_lon,
                 "shift_start": _first_value(row, "shift_start", "Начало смены") or "09:00",
@@ -863,10 +929,14 @@ def generate_dataset(
 
     geocode = geocoder or NominatimGeocoder()
     office = office_address or _office_address(all_synthetic_rows)
-    office_lat, office_lon = _resolve_coordinates(
+    office_lat, office_lon, resolved_office = _resolve_location(
         office, geocode, f"офис района {synthetic_path.stem}"
     )
-    office_point = {"lat": office_lat, "lon": office_lon, "address": office}
+    office_point = {
+        "lat": office_lat,
+        "lon": office_lon,
+        "address": resolved_office,
+    }
     territory_code, territory_name, scenario_name = _territory_metadata(synthetic_path)
     office_coordinates = (office_lat, office_lon)
     engineers = _engineers_from_csv(
@@ -882,7 +952,7 @@ def generate_dataset(
         norm = TIME_NORMS[kind]
         skill, skill_ru = _skill_for_kind(kind)
         address = synthetic["Адрес"].strip()
-        latitude, longitude = _resolve_coordinates(
+        latitude, longitude, resolved_address = _resolve_location(
             address,
             geocode,
             f"заявка {request_id}",
@@ -900,7 +970,7 @@ def generate_dataset(
                 "request_type_bk": synthetic["Тип заявки BK"],
                 "request_type_hd": synthetic["Тип заявки HD"],
                 "district": synthetic["Район"],
-                "address": address,
+                "address": resolved_address,
                 "lat": latitude,
                 "lon": longitude,
                 "window_start": _time(synthetic["Начало"]),
@@ -977,6 +1047,11 @@ def main() -> None:
     parser.add_argument("--nominatim-cache", type=Path, default=Path("nominatim_cache.json"))
     parser.add_argument("--nominatim-email", default=None)
     parser.add_argument(
+        "--nominatim-endpoint",
+        default=None,
+        help="Явный endpoint Nominatim, например http://127.0.0.1:8080/search.",
+    )
+    parser.add_argument(
         "--refresh-geocoding",
         action="store_true",
         help="Не читать прежний кэш и заново получить координаты всех адресов.",
@@ -988,6 +1063,7 @@ def main() -> None:
     print(f"Источник инженеров: {args.engineers}")
     geocoder = NominatimGeocoder(
         cache_path=args.nominatim_cache,
+        endpoint=args.nominatim_endpoint,
         email=args.nominatim_email,
         refresh_cache=args.refresh_geocoding,
     )

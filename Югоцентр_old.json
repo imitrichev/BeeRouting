@@ -12,16 +12,17 @@
   "office_start_point": {
     "lat": 55.6647568,
     "lon": 37.6158385,
-    "address": "г.Москва проезд Симферопольский, д.7"
+    "address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия"
   },
   "engineers": [
     {
       "engineer_id": "yugo_tsentr-E01",
       "name": "Бахарев Андрей",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "09:55",
+      "shift_end": "21:55",
       "skills": [
         "connection_orders",
         "local_works"
@@ -36,10 +37,11 @@
     {
       "engineer_id": "yugo_tsentr-E02",
       "name": "Брюзгин Ярослав",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "09:44",
+      "shift_end": "18:44",
       "skills": [
         "connection_orders",
         "local_works"
@@ -48,16 +50,17 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "public_transport",
       "available_router_count": 3
     },
     {
       "engineer_id": "yugo_tsentr-E03",
       "name": "Выговский Сергей",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "13:50",
+      "shift_end": "22:50",
       "skills": [
         "connection_orders",
         "emergency_works",
@@ -74,10 +77,11 @@
     {
       "engineer_id": "yugo_tsentr-E04",
       "name": "Данилов Даниил",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "09:30",
+      "shift_end": "14:30",
       "skills": [
         "connection_orders"
       ],
@@ -90,28 +94,11 @@
     {
       "engineer_id": "yugo_tsentr-E05",
       "name": "Ионов Геннадий",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
-      "skills": [
-        "connection_orders",
-        "local_works"
-      ],
-      "skills_ru": [
-        "Работы на подключение и дозаказы",
-        "Локальные работы"
-      ],
-      "vehicle_type": "car",
-      "available_router_count": 2
-    },
-    {
-      "engineer_id": "yugo_tsentr-E06",
-      "name": "Исхаков Денис",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "09:09",
+      "shift_end": "21:09",
       "skills": [
         "connection_orders",
         "local_works"
@@ -121,15 +108,16 @@
         "Локальные работы"
       ],
       "vehicle_type": "foot",
-      "available_router_count": 3
+      "available_router_count": 2
     },
     {
-      "engineer_id": "yugo_tsentr-E07",
-      "name": "Капитанчук Александр",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "engineer_id": "yugo_tsentr-E06",
+      "name": "Исхаков Денис",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "09:48",
+      "shift_end": "21:48",
       "skills": [
         "connection_orders",
         "local_works"
@@ -138,16 +126,36 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "bicycle",
+      "vehicle_type": "car",
+      "available_router_count": 3
+    },
+    {
+      "engineer_id": "yugo_tsentr-E07",
+      "name": "Капитанчук Александр",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "09:24",
+      "shift_end": "18:24",
+      "skills": [
+        "connection_orders",
+        "local_works"
+      ],
+      "skills_ru": [
+        "Работы на подключение и дозаказы",
+        "Локальные работы"
+      ],
+      "vehicle_type": "public_transport",
       "available_router_count": 2
     },
     {
       "engineer_id": "yugo_tsentr-E08",
       "name": "Переладов Алексей",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "11:50",
+      "shift_end": "23:50",
       "skills": [
         "connection_orders",
         "local_works"
@@ -162,10 +170,11 @@
     {
       "engineer_id": "yugo_tsentr-E09",
       "name": "Прокопенко Вячеслав",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "09:57",
+      "shift_end": "21:57",
       "skills": [
         "connection_orders",
         "local_works"
@@ -180,10 +189,11 @@
     {
       "engineer_id": "yugo_tsentr-E10",
       "name": "Рыбалкин Егор",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "09:50",
+      "shift_end": "18:50",
       "skills": [
         "connection_orders",
         "local_works"
@@ -192,16 +202,17 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "car",
       "available_router_count": 2
     },
     {
       "engineer_id": "yugo_tsentr-E11",
       "name": "Сакур Тимофей",
-      "start_lat": 55.6638404,
-      "start_lon": 37.6138686,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "start_address": "7, Симферопольский проезд, Нагорный район, Москва, 117638, Россия",
+      "start_lat": 55.6647568,
+      "start_lon": 37.6158385,
+      "shift_start": "09:36",
+      "shift_end": "21:36",
       "skills": [
         "connection_orders"
       ],
@@ -224,7 +235,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Даниловский",
-      "address": "Город Москва, проезд.3-й Павелецкий, д. 9",
+      "address": "9, 3-й Павелецкий проезд, Даниловский район, Москва, 115114, Россия",
       "lat": 55.7107376,
       "lon": 37.6405504,
       "window_start": "18:00",
@@ -236,6 +247,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Капитанчук Александр",
+      "reference_sequence": 1,
       "gigabit": false
     },
     {
@@ -249,7 +261,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Даниловский",
-      "address": "Город Москва, ул.Восточная, д. 2 к 2",
+      "address": "2 к2, Восточная улица, Даниловский район, Москва, 115280, Россия",
       "lat": 55.7169675,
       "lon": 37.6604783,
       "window_start": "18:00",
@@ -261,6 +273,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Капитанчук Александр",
+      "reference_sequence": 2,
       "gigabit": false
     },
     {
@@ -274,7 +287,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "GPON Даниловский",
-      "address": "Город Москва, ул.Дубининская, д. 59 к 2",
+      "address": "59, Дубининская улица, Даниловский район, Москва, 111111, Россия",
       "lat": 55.7191142,
       "lon": 37.6348001,
       "window_start": "18:00",
@@ -286,6 +299,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 3,
       "gigabit": false
     },
     {
@@ -299,7 +313,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
-      "address": "Город Москва, ул.Шверника, д. 18 к 2",
+      "address": "18 к2, улица Шверника, Академический район, Москва, 117447, Россия",
       "lat": 55.6890678,
       "lon": 37.5927091,
       "window_start": "20:00",
@@ -311,6 +325,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 4,
       "gigabit": false
     },
     {
@@ -324,7 +339,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Котловка",
-      "address": "Город Москва, ул.Нагорная, д. 44 к 2",
+      "address": "44 к2, Нагорная улица, район Котловка, Москва, 117186, Россия",
       "lat": 55.6702038,
       "lon": 37.5892003,
       "window_start": "20:00",
@@ -336,6 +351,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 5,
       "gigabit": false
     },
     {
@@ -349,7 +365,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
-      "address": "Город Москва, ул.Херсонская, д. 18",
+      "address": "18, Херсонская улица, район Зюзино, Москва, 117420, Россия",
       "lat": 55.6520916,
       "lon": 37.5678576,
       "window_start": "12:00",
@@ -361,6 +377,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Прокопенко Вячеслав",
+      "reference_sequence": 6,
       "gigabit": false
     },
     {
@@ -374,7 +391,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
-      "address": "Город Москва, пр-кт.60-летия Октября, д. 18 к 2",
+      "address": "18 к2, проспект 60-летия Октября, Академический район, Москва, 117036, Россия",
       "lat": 55.6894338,
       "lon": 37.573364,
       "window_start": "16:00",
@@ -386,6 +403,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Выговский Сергей",
+      "reference_sequence": 7,
       "gigabit": false
     },
     {
@@ -399,7 +417,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
-      "address": "Город Москва, ул.Дмитрия Ульянова, д. 27",
+      "address": "27, улица Дмитрия Ульянова, Академический район, Москва, 117218, Россия",
       "lat": 55.6858472,
       "lon": 37.5809496,
       "window_start": "14:00",
@@ -411,6 +429,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 8,
       "gigabit": false
     },
     {
@@ -424,7 +443,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Хамовники",
-      "address": "Город Москва, ул.Усачёва, д. 29 к 1",
+      "address": "29 к1, Усачёва улица, квартал 532, район Хамовники, Москва, 119048, Россия",
       "lat": 55.7242516,
       "lon": 37.5634155,
       "window_start": "16:00",
@@ -436,6 +455,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Данилов Даниил",
+      "reference_sequence": 9,
       "gigabit": false
     },
     {
@@ -449,7 +469,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
-      "address": "Город Москва, ул.Винокурова, д. 12 к 4",
+      "address": "12 к4, улица Винокурова, Академический район, Москва, 117447, Россия",
       "lat": 55.6854662,
       "lon": 37.5883596,
       "window_start": "16:00",
@@ -461,6 +481,7 @@
       "required_router_count": 2,
       "reference_status": "В работе",
       "reference_crew": "Выговский Сергей",
+      "reference_sequence": 10,
       "gigabit": false
     },
     {
@@ -474,7 +495,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
-      "address": "Город Москва, пр-кт.Балаклавский, д. 20 к 4",
+      "address": "20 к4, Балаклавский проспект, район Зюзино, Москва, 117452, Россия",
       "lat": 55.6423446,
       "lon": 37.5959185,
       "window_start": "18:00",
@@ -486,6 +507,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 11,
       "gigabit": false
     },
     {
@@ -499,7 +521,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Нагатино - Садовники",
-      "address": "Город Москва, ул.Садовники, д. 10 к 1",
+      "address": "10 к1, улица Садовники, район Нагатино-Садовники, Москва, 115487, Россия",
       "lat": 55.6710631,
       "lon": 37.6527567,
       "window_start": "16:00",
@@ -511,6 +533,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Сакур Тимофей",
+      "reference_sequence": 12,
       "gigabit": false
     },
     {
@@ -524,7 +547,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
-      "address": "Город Москва, ул.Каховка, д. 7 к 1",
+      "address": "7 к1, улица Каховка, район Зюзино, Москва, 117303, Россия",
       "lat": 55.6510015,
       "lon": 37.5899929,
       "window_start": "12:00",
@@ -536,6 +559,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Прокопенко Вячеслав",
+      "reference_sequence": 13,
       "gigabit": false
     },
     {
@@ -549,7 +573,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Замоскворечье",
-      "address": "Город Москва, ул.Большая Пионерская, д. 33 к 2",
+      "address": "33 к2, Большая Пионерская улица, район Замоскворечье, Москва, 115054, Россия",
       "lat": 55.7261963,
       "lon": 37.6351637,
       "window_start": "16:00",
@@ -561,6 +585,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
+      "reference_sequence": 14,
       "gigabit": false
     },
     {
@@ -574,7 +599,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Хамовники",
-      "address": "Город Москва, ул.Плющиха, д. 42",
+      "address": "42, улица Плющиха, Плющиха, 540, район Хамовники, Москва, 119121, Россия",
       "lat": 55.7411713,
       "lon": 37.5763858,
       "window_start": "10:00",
@@ -586,6 +611,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
+      "reference_sequence": 15,
       "gigabit": false
     },
     {
@@ -599,7 +625,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Нагатинский Затон",
-      "address": "Город Москва, ул.Судостроительная, д. 31 к 3",
+      "address": "31 к3, Судостроительная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, 127238, Россия",
       "lat": 55.6848526,
       "lon": 37.6804749,
       "window_start": "10:00",
@@ -611,6 +637,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
+      "reference_sequence": 16,
       "gigabit": false
     },
     {
@@ -624,7 +651,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Нагатинский Затон",
-      "address": "Город Москва, ул.Судостроительная, д. 36",
+      "address": "36, Судостроительная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, 115407, Россия",
       "lat": 55.6841931,
       "lon": 37.6875838,
       "window_start": "12:00",
@@ -636,6 +663,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
+      "reference_sequence": 17,
       "gigabit": false
     },
     {
@@ -649,7 +677,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Нагатинский Затон",
-      "address": "Город Москва, ул.Затонная, д. 11 к 3",
+      "address": "11 к3, Затонная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, 115407, Россия",
       "lat": 55.6790858,
       "lon": 37.6884067,
       "window_start": "10:00",
@@ -661,6 +689,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
+      "reference_sequence": 18,
       "gigabit": false
     },
     {
@@ -674,7 +703,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Даниловский",
-      "address": "Город Москва, ул.Автозаводская, д. 11",
+      "address": "11, Автозаводская улица, Даниловский район, Москва, 115068, Россия",
       "lat": 55.7062821,
       "lon": 37.6575023,
       "window_start": "18:00",
@@ -686,6 +715,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 19,
       "gigabit": false
     },
     {
@@ -699,7 +729,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
-      "address": "Город Москва, ул.Шверника, д. 12/2 к 3",
+      "address": "12/2 к3, улица Шверника, Академический район, Москва, 117447, Россия",
       "lat": 55.6913492,
       "lon": 37.5866891,
       "window_start": "10:00",
@@ -711,6 +741,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 20,
       "gigabit": false
     },
     {
@@ -724,7 +755,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заявка на подключение",
       "district": "Нагатинский Затон",
-      "address": "Город Москва, ул.Судостроительная, д. 27 к 2",
+      "address": "27 к2, Судостроительная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, 127238, Россия",
       "lat": 55.683529,
       "lon": 37.6793639,
       "window_start": "20:00",
@@ -736,6 +767,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 21,
       "gigabit": false
     },
     {
@@ -749,7 +781,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
-      "address": "Город Москва, ул.Шверника, д. 3",
+      "address": "19 к3, улица Шверника, Академический район, Москва, 117447, Россия",
       "lat": 55.6902087,
       "lon": 37.5953508,
       "window_start": "16:00",
@@ -761,6 +793,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 22,
       "gigabit": false
     },
     {
@@ -774,7 +807,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
-      "address": "Город Москва, б-р.Черноморский, д. 19 к 2",
+      "address": "19 к2, Черноморский бульвар, район Зюзино, Москва, 117452, Россия",
       "lat": 55.6448239,
       "lon": 37.5978906,
       "window_start": "12:00",
@@ -786,6 +819,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 23,
       "gigabit": false
     },
     {
@@ -799,7 +833,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Зюзино",
-      "address": "Город Москва, ул.Керченская, д. 6 к 2",
+      "address": "6 к2, Керченская улица, район Зюзино, Москва, 117209, Россия",
       "lat": 55.6572931,
       "lon": 37.583089,
       "window_start": "12:00",
@@ -811,6 +845,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 24,
       "gigabit": false
     },
     {
@@ -824,7 +859,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заявка на подключение",
       "district": "Нагатинский Затон",
-      "address": "Город Москва, б-р.Кленовый, д. 10 к 1",
+      "address": "10 к1, Кленовый бульвар, Нагатино, Коломенка, район Нагатинский Затон, Москва, 127238, Россия",
       "lat": 55.6827402,
       "lon": 37.6732411,
       "window_start": "10:00",
@@ -836,6 +871,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Сакур Тимофей",
+      "reference_sequence": 25,
       "gigabit": false
     },
     {
@@ -849,7 +885,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Нагатинский Затон",
-      "address": "Город Москва, ул.Коломенская, д. 5",
+      "address": "5, Коломенская улица, район Нагатинский Затон, Москва, 115142, Россия",
       "lat": 55.6821727,
       "lon": 37.704796,
       "window_start": "12:00",
@@ -861,6 +897,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Сакур Тимофей",
+      "reference_sequence": 26,
       "gigabit": false
     },
     {
@@ -874,7 +911,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Хамовники",
-      "address": "Город Москва, б-р.Смоленский, д. 17 стр. 1",
+      "address": "17 с1, Смоленский бульвар (дублёр), Плющиха, 540, район Хамовники, Москва, 119121, Россия",
       "lat": 55.742465,
       "lon": 37.5835089,
       "window_start": "12:00",
@@ -886,6 +923,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Данилов Даниил",
+      "reference_sequence": 27,
       "gigabit": false
     },
     {
@@ -899,7 +937,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Хамовники",
-      "address": "Город Москва, ул.Усачёва, д. 25",
+      "address": "25, Усачёва улица, квартал 533, район Хамовники, Москва, 119048, Россия",
       "lat": 55.7249586,
       "lon": 37.5651309,
       "window_start": "10:00",
@@ -911,6 +949,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Данилов Даниил",
+      "reference_sequence": 28,
       "gigabit": false
     },
     {
@@ -924,7 +963,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Конвергенция абонента",
       "district": "Академический",
-      "address": "Город Москва, пр-кт.60-летия Октября, д. 17",
+      "address": "17, проспект 60-летия Октября, Академический район, Москва, 117312, Россия",
       "lat": 55.6953306,
       "lon": 37.5798241,
       "window_start": "20:00",
@@ -936,6 +975,7 @@
       "required_router_count": 2,
       "reference_status": "Отправлена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 29,
       "gigabit": false
     },
     {
@@ -949,7 +989,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Котловка",
-      "address": "Город Москва, ул.Ремизова, д. 15 к 2",
+      "address": "15 к2, улица Ремизова, район Котловка, Москва, 117186, Россия",
       "lat": 55.6757919,
       "lon": 37.6040072,
       "window_start": "20:00",
@@ -961,6 +1001,7 @@
       "required_router_count": 2,
       "reference_status": "Отменена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 30,
       "gigabit": false
     },
     {
@@ -974,7 +1015,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Академический",
-      "address": "Город Москва, ул.Шверника, д. 5 к 2",
+      "address": "5 к2, улица Шверника, Академический район, Москва, 117312, Россия",
       "lat": 55.6945964,
       "lon": 37.5827805,
       "window_start": "18:00",
@@ -986,6 +1027,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Выговский Сергей",
+      "reference_sequence": 31,
       "gigabit": false
     },
     {
@@ -999,7 +1041,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Нагатино - Садовники",
-      "address": "Город Москва, ул.Академика Миллионщикова, д. 13 к 1",
+      "address": "13 к1, улица Академика Миллионщикова, район Нагатино-Садовники, Москва, 109652, Россия",
       "lat": 55.6700206,
       "lon": 37.6498005,
       "window_start": "20:00",
@@ -1011,6 +1053,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Рыбалкин Егор",
+      "reference_sequence": 32,
       "gigabit": false
     },
     {
@@ -1024,7 +1067,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "TVE/ENT. Другие ошибки",
       "district": "Академический",
-      "address": "Город Москва, ул.Винокурова, д. 5/6 к 2",
+      "address": "5/6 к2, улица Винокурова, Академический район, Москва, 117036, Россия",
       "lat": 55.6898618,
       "lon": 37.5850112,
       "window_start": "18:00",
@@ -1036,6 +1079,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 33,
       "gigabit": false
     },
     {
@@ -1049,7 +1093,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Зюзино",
-      "address": "Город Москва, пр-кт.Балаклавский, д. 50",
+      "address": "50, Балаклавский проспект, район Зюзино, Москва, 117461, Россия",
       "lat": 55.6494293,
       "lon": 37.5705283,
       "window_start": "20:00",
@@ -1061,6 +1105,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 34,
       "gigabit": false
     },
     {
@@ -1074,7 +1119,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Нагорный",
-      "address": "Город Москва, б-р.Симферопольский, д. 27",
+      "address": "27, Симферопольский бульвар, Нагорный район, Москва, 117452, Россия",
       "lat": 55.6486775,
       "lon": 37.6062192,
       "window_start": "18:00",
@@ -1086,6 +1131,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Прокопенко Вячеслав",
+      "reference_sequence": 35,
       "gigabit": false
     },
     {
@@ -1099,7 +1145,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Нагорный",
-      "address": "Город Москва, ул.Болотниковская, д. 9 к 2",
+      "address": "9 к2, Болотниковская улица, Нагорный район, Москва, 117556, Россия",
       "lat": 55.655272,
       "lon": 37.6095951,
       "window_start": "10:00",
@@ -1111,6 +1157,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Прокопенко Вячеслав",
+      "reference_sequence": 36,
       "gigabit": false
     },
     {
@@ -1124,7 +1171,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Даниловский",
-      "address": "Город Москва, ул.Трофимова, д. 4А",
+      "address": "4А, улица Трофимова, Даниловский район, Москва, 115432, Россия",
       "lat": 55.7011084,
       "lon": 37.6614474,
       "window_start": "12:00",
@@ -1136,6 +1183,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
+      "reference_sequence": 37,
       "gigabit": false
     },
     {
@@ -1149,7 +1197,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Разрывы",
       "district": "Нагатинский Затон",
-      "address": "Город Москва, ул.Коломенская, д. 21",
+      "address": "21, Коломенская улица, Коломенка, район Нагатинский Затон, Москва, 115142, Россия",
       "lat": 55.6777277,
       "lon": 37.6943031,
       "window_start": "16:00",
@@ -1161,6 +1209,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
+      "reference_sequence": 38,
       "gigabit": false
     },
     {
@@ -1174,7 +1223,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Нагатинский Затон",
-      "address": "Город Москва, наб.Нагатинская, д. 60 к 2",
+      "address": "60 к2, Нагатинская набережная, Коломенка, район Нагатинский Затон, Москва, 115407, Россия",
       "lat": 55.687915,
       "lon": 37.6872923,
       "window_start": "12:00",
@@ -1186,6 +1235,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
+      "reference_sequence": 39,
       "gigabit": false
     },
     {
@@ -1199,7 +1249,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Нагатино - Садовники",
-      "address": "Город Москва, проезд.Коломенский, д. 27 к 3",
+      "address": "27 к3, Коломенский проезд, район Нагатино-Садовники, Москва, 109652, Россия",
       "lat": 55.6688423,
       "lon": 37.658283,
       "window_start": "10:00",
@@ -1211,6 +1261,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
+      "reference_sequence": 40,
       "gigabit": false
     },
     {
@@ -1224,7 +1275,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Нагатинский Затон",
-      "address": "Город Москва, ул.Затонная, д. 12 к 1",
+      "address": "12 к1, Затонная улица, Нагатино, Коломенка, район Нагатинский Затон, Москва, 115407, Россия",
       "lat": 55.6771232,
       "lon": 37.6857562,
       "window_start": "20:00",
@@ -1236,6 +1287,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
+      "reference_sequence": 41,
       "gigabit": false
     },
     {
@@ -1249,7 +1301,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Даниловский",
-      "address": "Город Москва, ул.Городская, д. 9",
+      "address": "9, Городская улица, Даниловский район, Москва, 115162, Россия",
       "lat": 55.7150778,
       "lon": 37.6180122,
       "window_start": "14:00",
@@ -1261,6 +1313,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 42,
       "gigabit": false
     },
     {
@@ -1274,7 +1327,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "IP-адрес 169...",
       "district": "Донской",
-      "address": "Город Москва, пр-кт.Севастопольский, д. 9 к 1",
+      "address": "9 к1, Севастопольский проспект, Канатчиково, Донской район, Москва, 117152, Россия",
       "lat": 55.6911832,
       "lon": 37.6075362,
       "window_start": "18:00",
@@ -1286,6 +1339,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 43,
       "gigabit": false
     },
     {
@@ -1299,7 +1353,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Роутер. Замена техническим специалистом",
       "district": "Даниловский",
-      "address": "Город Москва, проезд.3-й Павелецкий, д. 7 к 2",
+      "address": "7 к2, 3-й Павелецкий проезд, Даниловский район, Москва, 115114, Россия",
       "lat": 55.710645,
       "lon": 37.6418372,
       "window_start": "12:00",
@@ -1311,6 +1365,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 44,
       "gigabit": false
     },
     {
@@ -1324,7 +1379,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "IP-адрес 169...",
       "district": "Замоскворечье",
-      "address": "Город Москва, ул.Большая Серпуховская, д. 31 к 6",
+      "address": "31 к6, Большая Серпуховская улица, район Замоскворечье, Москва, 115093, Россия",
       "lat": 55.7233901,
       "lon": 37.6286049,
       "window_start": "10:00",
@@ -1336,6 +1391,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 45,
       "gigabit": false
     },
     {
@@ -1349,7 +1405,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Разрывы",
       "district": "Даниловский",
-      "address": "Город Москва, ул.2-я Рощинская, д. 11",
+      "address": "11, 2-я Рощинская улица, Даниловский район, Москва, 115191, Россия",
       "lat": 55.7092888,
       "lon": 37.6125848,
       "window_start": "16:00",
@@ -1361,6 +1417,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 46,
       "gigabit": false
     },
     {
@@ -1374,7 +1431,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "ТВ. Замена приставки техником",
       "district": "Даниловский",
-      "address": "Город Москва, пер.Ослябинский, д. 3",
+      "address": "3, Ослябинский переулок, Даниловский район, Москва, 115280, Россия",
       "lat": 55.7131672,
       "lon": 37.6603865,
       "window_start": "16:00",
@@ -1386,6 +1443,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
+      "reference_sequence": 47,
       "gigabit": false
     },
     {
@@ -1399,7 +1457,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Рост ошибок на порту",
       "district": "Академический",
-      "address": "Город Москва, ул.Шверника, д. 14/1 к 2",
+      "address": "14/1 к2, улица Шверника, Академический район, Москва, 117447, Россия",
       "lat": 55.6899877,
       "lon": 37.5902587,
       "window_start": "10:00",
@@ -1411,6 +1469,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 48,
       "gigabit": false
     },
     {
@@ -1424,7 +1483,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Работа с кабелем",
       "district": "Академический",
-      "address": "Город Москва, ул.Профсоюзная, д. 8 к 2",
+      "address": "8 к2, Профсоюзная улица, Академический район, Москва, 117292, Россия",
       "lat": 55.6864404,
       "lon": 37.5694046,
       "window_start": "16:00",
@@ -1436,6 +1495,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 49,
       "gigabit": false
     },
     {
@@ -1449,7 +1509,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "ТВ. Замена приставки техником",
       "district": "Академический",
-      "address": "Город Москва, пр-кт.Нахимовский, д. 50",
+      "address": "50, Нахимовский проспект, Академический район, Москва, 117292, Россия",
       "lat": 55.6804339,
       "lon": 37.5597424,
       "window_start": "14:00",
@@ -1461,6 +1521,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
+      "reference_sequence": 50,
       "gigabit": false
     },
     {
@@ -1474,7 +1535,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Переключение на Гбит/с",
       "district": "Зюзино",
-      "address": "Город Москва, б-р.Чонгарский, д. 22 к 2",
+      "address": "22 к2, Чонгарский бульвар, район Зюзино, Москва, 117149, Россия",
       "lat": 55.6543202,
       "lon": 37.6036892,
       "window_start": "18:00",
@@ -1486,6 +1547,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 51,
       "gigabit": false
     },
     {
@@ -1499,7 +1561,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Переключение на Гбит/с",
       "district": "Замоскворечье",
-      "address": "Город Москва, ул.Люсиновская, д. 4",
+      "address": "4, Люсиновская улица, район Замоскворечье, Москва, 115054, Россия",
       "lat": 55.7273725,
       "lon": 37.6224055,
       "window_start": "14:00",
@@ -1511,6 +1573,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 52,
       "gigabit": false
     },
     {
@@ -1524,7 +1587,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Переключение на Гбит/с",
       "district": "Котловка",
-      "address": "Город Москва, ул.Ремизова, д. 15 к 2",
+      "address": "15 к2, улица Ремизова, район Котловка, Москва, 117186, Россия",
       "lat": 55.6757919,
       "lon": 37.6040072,
       "window_start": "10:00",
@@ -1536,6 +1599,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 53,
       "gigabit": false
     },
     {
@@ -1549,7 +1613,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Работа с кабелем",
       "district": "Нагорный",
-      "address": "Город Москва, б-р.Чонгарский, д. 1 к 4",
+      "address": "1 к4, Чонгарский бульвар, Нагорный район, Москва, 117556, Россия",
       "lat": 55.6520362,
       "lon": 37.6157017,
       "window_start": "16:00",
@@ -1561,6 +1625,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
+      "reference_sequence": 54,
       "gigabit": false
     },
     {
@@ -1574,7 +1639,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "IP-адрес 169...",
       "district": "Зюзино",
-      "address": "Город Москва, ул.Керченская, д. 10 к 2",
+      "address": "10 к2, Керченская улица, район Зюзино, Москва, 117209, Россия",
       "lat": 55.6556242,
       "lon": 37.5816709,
       "window_start": "14:00",
@@ -1586,6 +1651,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
+      "reference_sequence": 55,
       "gigabit": false
     },
     {
@@ -1599,7 +1665,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Информация",
       "district": "Гагаринский",
-      "address": "г.Город Москва, пр-кт.Ленинский, д. 70/11",
+      "address": "70\\11, Ленинский проспект (дублёр), Гагаринский район, Москва, 119261, Россия",
       "lat": 55.6869517,
       "lon": 37.5426604,
       "window_start": "14:00",
@@ -1611,6 +1677,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Выговский Сергей",
+      "reference_sequence": 56,
       "gigabit": false
     }
   ],

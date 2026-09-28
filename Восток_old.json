@@ -12,15 +12,16 @@
   "office_start_point": {
     "lat": 55.7022013,
     "lon": 37.7739593,
-    "address": "г. Москва, ул Юных Ленинцев, д 83 к 4"
+    "address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия"
   },
   "engineers": [
     {
       "engineer_id": "vostok-E01",
       "name": "Бригада Соколов",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
+      "shift_start": "13:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -38,10 +39,11 @@
     {
       "engineer_id": "vostok-E02",
       "name": "Бригада Мельников",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "16:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -56,10 +58,11 @@
     {
       "engineer_id": "vostok-E03",
       "name": "Бригада Матвеев",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "23:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -74,10 +77,11 @@
     {
       "engineer_id": "vostok-E04",
       "name": "Бригада Попов",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "23:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -86,16 +90,17 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "public_transport",
+      "vehicle_type": "car",
       "available_router_count": 3
     },
     {
       "engineer_id": "vostok-E05",
       "name": "Бригада Арташкин",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "23:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -110,10 +115,11 @@
     {
       "engineer_id": "vostok-E06",
       "name": "Бригада Комарь",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "16:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -122,16 +128,17 @@
         "Работы на подключение и дозаказы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "public_transport",
       "available_router_count": 3
     },
     {
       "engineer_id": "vostok-E07",
       "name": "Бригада Каушнян",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "23:00",
       "skills": [
         "connection_orders",
         "emergency_works"
@@ -140,16 +147,17 @@
         "Работы на подключение и дозаказы",
         "Аварийные работы"
       ],
-      "vehicle_type": "bicycle",
+      "vehicle_type": "car",
       "available_router_count": 3
     },
     {
       "engineer_id": "vostok-E08",
       "name": "Бригада Зверев",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "16:00",
       "skills": [
         "connection_orders",
         "local_works"
@@ -164,9 +172,10 @@
     {
       "engineer_id": "vostok-E09",
       "name": "Бригада Перов",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
+      "shift_start": "10:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -182,10 +191,11 @@
     {
       "engineer_id": "vostok-E10",
       "name": "Бригада Белузин",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:50",
+      "shift_end": "20:50",
       "skills": [
         "connection_orders",
         "emergency_works",
@@ -196,15 +206,16 @@
         "Аварийные работы",
         "Локальные работы"
       ],
-      "vehicle_type": "foot",
+      "vehicle_type": "car",
       "available_router_count": 2
     },
     {
       "engineer_id": "vostok-E11",
       "name": "Бригада Гусаковский",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
+      "shift_start": "13:00",
       "shift_end": "22:00",
       "skills": [
         "connection_orders",
@@ -220,10 +231,11 @@
     {
       "engineer_id": "vostok-E12",
       "name": "Бригада Свеженцев",
+      "start_address": "83 к4, улица Юных Ленинцев, район Кузьминки, Москва, 109443, Россия",
       "start_lat": 55.7022013,
       "start_lon": 37.7739593,
-      "shift_start": "09:00",
-      "shift_end": "22:00",
+      "shift_start": "11:00",
+      "shift_end": "23:00",
       "skills": [
         "emergency_works",
         "local_works"
@@ -248,7 +260,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кузьминки",
-      "address": "Город Москва, пр-кт.Волгоградский, д. 128 к 5",
+      "address": "128 к5, Волгоградский проспект (дублёр), район Кузьминки, Москва, 109439, Россия",
       "lat": 55.700846,
       "lon": 37.7822191,
       "window_start": "20:00",
@@ -260,6 +272,7 @@
       "required_router_count": 1,
       "reference_status": "Не отправлена",
       "reference_crew": "",
+      "reference_sequence": 1,
       "gigabit": false
     },
     {
@@ -273,7 +286,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Таганский",
-      "address": "Город Москва, пер.Маяковского, д. 2",
+      "address": "2, переулок Маяковского, Таганский район, Москва, 109147, Россия",
       "lat": 55.7397743,
       "lon": 37.6599082,
       "window_start": "18:00",
@@ -285,6 +298,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 2,
       "gigabit": false
     },
     {
@@ -298,7 +312,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заявка на подключение",
       "district": "Текстильщики",
-      "address": "Город Москва, ул.Грайвороновская, д. 10 к 2",
+      "address": "10 к2, Грайвороновская улица, район Текстильщики, Москва, 109518, Россия",
       "lat": 55.7183547,
       "lon": 37.7319259,
       "window_start": "18:00",
@@ -310,6 +324,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 3,
       "gigabit": true
     },
     {
@@ -323,7 +338,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Рязанский",
-      "address": "Город Москва, ул.Михайлова, д. 14",
+      "address": "14, улица Михайлова, Рязанский район, Москва, 109428, Россия",
       "lat": 55.7270299,
       "lon": 37.7659603,
       "window_start": "20:00",
@@ -335,6 +350,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 4,
       "gigabit": false
     },
     {
@@ -348,7 +364,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Рязанский",
-      "address": "Город Москва, ул.3-я Институтская, д. 5 к 2",
+      "address": "5 к2, 3-я Институтская улица, Рязанский район, Москва, 109456, Россия",
       "lat": 55.7219922,
       "lon": 37.7821899,
       "window_start": "18:00",
@@ -360,6 +376,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 5,
       "gigabit": false
     },
     {
@@ -373,7 +390,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Рязанский",
-      "address": "Город Москва, ул.1-я Новокузьминская, д. 16 к 1",
+      "address": "16 к1, 1-я Новокузьминская улица, Рязанский район, Москва, 109377, Россия",
       "lat": 55.714359,
       "lon": 37.7897959,
       "window_start": "18:00",
@@ -385,6 +402,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 6,
       "gigabit": false
     },
     {
@@ -398,7 +416,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кузьминки",
-      "address": "Город Москва, ул.Окская, д. 32",
+      "address": "32, Окская улица, район Кузьминки, Москва, 109457, Россия",
       "lat": 55.7144711,
       "lon": 37.7695221,
       "window_start": "20:00",
@@ -410,6 +428,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 7,
       "gigabit": false
     },
     {
@@ -423,7 +442,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кузьминки",
-      "address": "Город Москва, ул.Юных Ленинцев, д. 84",
+      "address": "84, улица Юных Ленинцев, район Кузьминки, Москва, 109439, Россия",
       "lat": 55.6981178,
       "lon": 37.7786035,
       "window_start": "16:00",
@@ -435,6 +454,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Арташкин",
+      "reference_sequence": 8,
       "gigabit": false
     },
     {
@@ -448,7 +468,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Таганский",
-      "address": "Город Москва, ул.Международная, д. 28 стр. 1",
+      "address": "28 с1, Международная улица, Таганский район, Москва, 109544, Россия",
       "lat": 55.7431752,
       "lon": 37.6878434,
       "window_start": "10:00",
@@ -460,6 +480,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 9,
       "gigabit": false
     },
     {
@@ -473,7 +494,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Таганский",
-      "address": "Город Москва, ул.Новорогожская, д. 8",
+      "address": "8, Новорогожская улица, Таганский район, Москва, 109544, Россия",
       "lat": 55.740895,
       "lon": 37.6845796,
       "window_start": "12:00",
@@ -485,6 +506,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 10,
       "gigabit": false
     },
     {
@@ -498,7 +520,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Текстильщики",
-      "address": "Город Москва, ул.Чистова, д. 12",
+      "address": "12, улица Чистова, район Текстильщики, Москва, 109263, Россия",
       "lat": 55.696506,
       "lon": 37.741942,
       "window_start": "16:00",
@@ -510,6 +532,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 11,
       "gigabit": false
     },
     {
@@ -523,7 +546,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Рязанский",
-      "address": "Город Москва, ул.Паперника, д. 19",
+      "address": "19, улица Паперника, Рязанский район, Москва, 109456, Россия",
       "lat": 55.7217574,
       "lon": 37.7907198,
       "window_start": "12:00",
@@ -535,6 +558,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Комарь",
+      "reference_sequence": 12,
       "gigabit": false
     },
     {
@@ -548,7 +572,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Рязанский",
-      "address": "Город Москва, ул.Окская, д. 48/2",
+      "address": "48/2, Окская улица, Рязанский район, Москва, 109457, Россия",
       "lat": 55.7176399,
       "lon": 37.7794008,
       "window_start": "14:00",
@@ -560,6 +584,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 13,
       "gigabit": false
     },
     {
@@ -573,7 +598,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Южнопортовый",
-      "address": "Город Москва, ул.Трофимова, д. 24 к 2",
+      "address": "24 к2, улица Трофимова, Кожухово, Южнопортовый район, Москва, 115432, Россия",
       "lat": 55.7020048,
       "lon": 37.6768493,
       "window_start": "16:00",
@@ -585,6 +610,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 14,
       "gigabit": false
     },
     {
@@ -598,7 +624,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Южнопортовый",
-      "address": "Город Москва, ул.1-я Дубровская, д. 6",
+      "address": "6, 1-я Дубровская улица, Южнопортовый район, Москва, 121357, Россия",
       "lat": 55.7267393,
       "lon": 37.6695609,
       "window_start": "14:00",
@@ -610,6 +636,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 15,
       "gigabit": false
     },
     {
@@ -623,7 +650,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Таганский",
-      "address": "Город Москва, ул.Рогожский Вал, д. 2/50",
+      "address": "2/50, улица Рогожский Вал, Таганский район, Москва, 105120, Россия",
       "lat": 55.7456189,
       "lon": 37.6777676,
       "window_start": "12:00",
@@ -635,6 +662,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 16,
       "gigabit": false
     },
     {
@@ -648,7 +676,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Таганский",
-      "address": "Город Москва, ул.Талалихина, д. 2/1 к 4",
+      "address": "2/1 к4, улица Талалихина, Таганский район, Москва, 109316, Россия",
       "lat": 55.7369925,
       "lon": 37.6733454,
       "window_start": "10:00",
@@ -660,6 +688,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Зверев",
+      "reference_sequence": 17,
       "gigabit": false
     },
     {
@@ -673,7 +702,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Текстильщики",
-      "address": "Город Москва, ул.Артюхиной, д. 20А",
+      "address": "20А, улица Артюхиной, район Текстильщики, Москва, 109390, Россия",
       "lat": 55.6972845,
       "lon": 37.7365767,
       "window_start": "14:00",
@@ -685,6 +714,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Зверев",
+      "reference_sequence": 18,
       "gigabit": false
     },
     {
@@ -698,7 +728,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Текстильщики",
-      "address": "Город Москва, ул.Малышева, д. 13",
+      "address": "13, улица Малышева, район Текстильщики, Москва, 109263, Россия",
       "lat": 55.6980379,
       "lon": 37.7438382,
       "window_start": "10:00",
@@ -710,6 +740,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 19,
       "gigabit": false
     },
     {
@@ -723,7 +754,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заявка на подключение",
       "district": "Нижегородский",
-      "address": "Город Москва, ул.Бронницкая, д. 12",
+      "address": "12, Бронницкая улица, Карачарово, Нижегородский район, Москва, 109202, Россия",
       "lat": 55.7314152,
       "lon": 37.759554,
       "window_start": "12:00",
@@ -735,6 +766,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 20,
       "gigabit": false
     },
     {
@@ -748,7 +780,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Лефортово",
-      "address": "Город Москва, ул.Авиамоторная, д. 14",
+      "address": "14, Авиамоторная улица, Дангауэровка, район Лефортово, Москва, 192102, Россия",
       "lat": 55.7520688,
       "lon": 37.7165232,
       "window_start": "12:00",
@@ -760,6 +792,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Перов",
+      "reference_sequence": 21,
       "gigabit": false
     },
     {
@@ -773,7 +806,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кузьминки",
-      "address": "Город Москва, ул.Фёдора Полетаева, д. 2 к 6",
+      "address": "2 к6, улица Фёдора Полетаева, район Кузьминки, Москва, 109457, Россия",
       "lat": 55.7136559,
       "lon": 37.7719481,
       "window_start": "12:00",
@@ -785,6 +818,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Арташкин",
+      "reference_sequence": 22,
       "gigabit": false
     },
     {
@@ -798,7 +832,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Рязанский",
-      "address": "Город Москва, ул.Зарайская, д. 51 к 2",
+      "address": "51 к2, Зарайская улица, Рязанский район, Москва, 109428, Россия",
       "lat": 55.7279678,
       "lon": 37.7772242,
       "window_start": "10:00",
@@ -810,6 +844,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Комарь",
+      "reference_sequence": 23,
       "gigabit": false
     },
     {
@@ -823,7 +858,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Текстильщики",
-      "address": "Город Москва, ул.Саратовская, д. 14/1",
+      "address": "14/1, Саратовская улица, район Текстильщики, Москва, 109125, Россия",
       "lat": 55.7145577,
       "lon": 37.7378743,
       "window_start": "14:00",
@@ -835,6 +870,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Комарь",
+      "reference_sequence": 24,
       "gigabit": false
     },
     {
@@ -848,7 +884,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заявка на подключение",
       "district": "Нижегородский",
-      "address": "Город Москва, ул.Нижегородская, д. 63",
+      "address": "63, Нижегородская улица, Нижегородский район, Москва, 109052, Россия",
       "lat": 55.7324552,
       "lon": 37.7186987,
       "window_start": "10:00",
@@ -860,6 +896,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 25,
       "gigabit": false
     },
     {
@@ -873,7 +910,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Нижегородский",
-      "address": "Город Москва, ул.Смирновская, д. 6",
+      "address": "6, Смирновская улица, Нижегородский район, Москва, 109052, Россия",
       "lat": 55.7367411,
       "lon": 37.7085631,
       "window_start": "12:00",
@@ -885,6 +922,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 26,
       "gigabit": false
     },
     {
@@ -898,7 +936,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Нижегородский",
-      "address": "Город Москва, ул.Нижегородская, д. 61",
+      "address": "61, Нижегородская улица, Нижегородский район, Москва, 109052, Россия",
       "lat": 55.732503,
       "lon": 37.7178025,
       "window_start": "12:00",
@@ -910,6 +948,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 27,
       "gigabit": false
     },
     {
@@ -923,7 +962,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Кузьминки",
-      "address": "Город Москва, ул.Зеленодольская, д. 28Б",
+      "address": "28Б, Зеленодольская улица, район Кузьминки, Москва, 109457, Россия",
       "lat": 55.7118436,
       "lon": 37.7708367,
       "window_start": "10:00",
@@ -935,6 +974,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 28,
       "gigabit": false
     },
     {
@@ -948,7 +988,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Текстильщики",
-      "address": "Город Москва, ул.Артюхиной, д. 16",
+      "address": "16, улица Артюхиной, район Текстильщики, Москва, 109390, Россия",
       "lat": 55.6984967,
       "lon": 37.7377998,
       "window_start": "12:00",
@@ -960,6 +1000,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 29,
       "gigabit": false
     },
     {
@@ -973,7 +1014,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Нижегородский",
-      "address": "Город Москва, ул.3-я Карачаровская, д. 4 к 1",
+      "address": "4 к1, 3-я Карачаровская улица, Карачарово, Нижегородский район, Москва, 109202, Россия",
       "lat": 55.7337571,
       "lon": 37.7445677,
       "window_start": "14:00",
@@ -985,6 +1026,7 @@
       "required_router_count": 1,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 30,
       "gigabit": false
     },
     {
@@ -998,7 +1040,7 @@
       "request_type_bk": "Подключение",
       "request_type_hd": "Конвергенция абонента",
       "district": "Рязанский",
-      "address": "Город Москва, пр-кт.Рязанский, д. 73",
+      "address": "73, Рязанский проспект, Рязанский район, Москва, 109456, Россия",
       "lat": 55.7184554,
       "lon": 37.7902547,
       "window_start": "12:00",
@@ -1010,6 +1052,7 @@
       "required_router_count": 1,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 31,
       "gigabit": false
     },
     {
@@ -1023,7 +1066,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Дозаказ оборудования",
       "district": "Выхино",
-      "address": "Город Москва, ул.Ферганская, д. 28/7",
+      "address": "28/7, Ферганская улица, район Выхино-Жулебино, Москва, 109507, Россия",
       "lat": 55.7010782,
       "lon": 37.8250104,
       "window_start": "18:00",
@@ -1035,6 +1078,7 @@
       "required_router_count": 1,
       "reference_status": "Не отправлена",
       "reference_crew": "",
+      "reference_sequence": 32,
       "gigabit": false
     },
     {
@@ -1048,7 +1092,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Дозаказ оборудования",
       "district": "Выхино",
-      "address": "Город Москва, б-р.Самаркандский Квартал 137а, д. к5",
+      "address": "к5, квартал Самаркандский Бульвар 137А, квартал 137А, район Выхино-Жулебино, Москва, 109507, Россия",
       "lat": 55.7000662,
       "lon": 37.8193568,
       "window_start": "20:00",
@@ -1060,6 +1104,7 @@
       "required_router_count": 2,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 33,
       "gigabit": false
     },
     {
@@ -1073,7 +1118,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Заказ подключения/Дозаказ оборудования",
       "district": "Лефортово",
-      "address": "Город Москва, ул.Боровая, д. 14",
+      "address": "14, Боровая улица, район Лефортово, Москва, 111020, Россия",
       "lat": 55.7693914,
       "lon": 37.7156999,
       "window_start": "10:00",
@@ -1085,6 +1130,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Перов",
+      "reference_sequence": 34,
       "gigabit": true
     },
     {
@@ -1098,7 +1144,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Дозаказ оборудования",
       "district": "Таганский",
-      "address": "Город Москва, ул.Стройковская, д. 8",
+      "address": "8, Стройковская улица, Таганский район, Москва, 109316, Россия",
       "lat": 55.7347571,
       "lon": 37.6737801,
       "window_start": "14:00",
@@ -1110,6 +1156,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 35,
       "gigabit": false
     },
     {
@@ -1123,7 +1170,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Дозаказ оборудования",
       "district": "Лефортово",
-      "address": "Город Москва, ул.2-я Синичкина, д. 9 к 1",
+      "address": "9 к1, 2-я улица Синичкина, район Лефортово, Москва, 111020, Россия",
       "lat": 55.76264,
       "lon": 37.7130584,
       "window_start": "18:00",
@@ -1135,6 +1182,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 36,
       "gigabit": false
     },
     {
@@ -1148,7 +1196,7 @@
       "request_type_bk": "Дозаказ",
       "request_type_hd": "Дозаказ оборудования",
       "district": "Нижегородский",
-      "address": "Москва, проезд Орехово-Зуевский, д. 18/8",
+      "address": "18/8, Орехово-Зуевский проезд, Карачарово, Нижегородский район, Москва, 130203, Россия",
       "lat": 55.7311522,
       "lon": 37.7534715,
       "window_start": "10:00",
@@ -1160,6 +1208,7 @@
       "required_router_count": 1,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 37,
       "gigabit": false
     },
     {
@@ -1173,7 +1222,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Таганский",
-      "address": "Город Москва, пер.Большой Рогожский, д. 10 к 2",
+      "address": "10 к2, Большой Рогожский переулок, Таганский район, Москва, 109147, Россия",
       "lat": 55.7420001,
       "lon": 37.6676447,
       "window_start": "18:00",
@@ -1185,6 +1234,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 38,
       "gigabit": false
     },
     {
@@ -1198,7 +1248,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Басманный",
-      "address": "Город Москва, ул.Машкова, д. 13 стр. 1",
+      "address": "13 с1, улица Машкова, Бауманка, Басманный район, Москва, 105062, Россия",
       "lat": 55.764253,
       "lon": 37.6518889,
       "window_start": "20:00",
@@ -1210,6 +1260,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Свеженцев",
+      "reference_sequence": 39,
       "gigabit": false
     },
     {
@@ -1223,7 +1274,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Переключение на Гбит/с",
       "district": "Текстильщики",
-      "address": "Город Москва, ул.11-я Текстильщиков, д. 10",
+      "address": "10, 11-я улица Текстильщиков, район Текстильщики, Москва, 109129, Россия",
       "lat": 55.706885,
       "lon": 37.7431987,
       "window_start": "18:00",
@@ -1235,6 +1286,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Комарь",
+      "reference_sequence": 40,
       "gigabit": false
     },
     {
@@ -1248,7 +1300,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Рязанский",
-      "address": "Город Москва, ул.Паперника, д. 18",
+      "address": "18, улица Паперника, Рязанский район, Москва, 109456, Россия",
       "lat": 55.7213231,
       "lon": 37.7935117,
       "window_start": "18:00",
@@ -1260,6 +1312,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 41,
       "gigabit": false
     },
     {
@@ -1273,7 +1326,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Таганский",
-      "address": "Город Москва, ул.Большая Калитниковская, д. 38",
+      "address": "38, Большая Калитниковская улица, Таганский район, Москва, 109029, Россия",
       "lat": 55.7361675,
       "lon": 37.6862063,
       "window_start": "18:00",
@@ -1285,6 +1338,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 42,
       "gigabit": false
     },
     {
@@ -1298,7 +1352,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Переключение на Гбит/с",
       "district": "Выхино",
-      "address": "Город Москва, б-р.Самаркандский Квартал 137а, д. к5",
+      "address": "к5, квартал Самаркандский Бульвар 137А, квартал 137А, район Выхино-Жулебино, Москва, 109507, Россия",
       "lat": 55.7000662,
       "lon": 37.8193568,
       "window_start": "20:00",
@@ -1310,6 +1364,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 43,
       "gigabit": false
     },
     {
@@ -1323,7 +1378,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Мониторинг",
       "district": "Кузьминки",
-      "address": "Город Москва, ул.Маршала Чуйкова, д. 9 к 2",
+      "address": "9 к2, улица Маршала Чуйкова, район Кузьминки, Москва, 109462, Россия",
       "lat": 55.6971444,
       "lon": 37.7620114,
       "window_start": "18:00",
@@ -1335,6 +1390,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Попов",
+      "reference_sequence": 44,
       "gigabit": false
     },
     {
@@ -1348,7 +1404,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Таганский",
-      "address": "Город Москва, ул.Талалихина, д. 16",
+      "address": "16, улица Талалихина, Таганский район, Москва, 109316, Россия",
       "lat": 55.7355002,
       "lon": 37.676817,
       "window_start": "12:00",
@@ -1360,6 +1416,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Зверев",
+      "reference_sequence": 45,
       "gigabit": false
     },
     {
@@ -1373,7 +1430,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Текстильщики",
-      "address": "Город Москва, б-р.Волжский, д. 50 к 2",
+      "address": "50 к2, Волжский бульвар, район Текстильщики, Москва, 109462, Россия",
       "lat": 55.6965373,
       "lon": 37.7522297,
       "window_start": "12:00",
@@ -1385,6 +1442,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 46,
       "gigabit": false
     },
     {
@@ -1398,7 +1456,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Разрывы",
       "district": "Текстильщики",
-      "address": "Город Москва, ул.Артюхиной, д. 3",
+      "address": "3, улица Артюхиной, район Текстильщики, Москва, 109390, Россия",
       "lat": 55.7029289,
       "lon": 37.7378149,
       "window_start": "14:00",
@@ -1410,6 +1468,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Мельников",
+      "reference_sequence": 47,
       "gigabit": false
     },
     {
@@ -1423,7 +1482,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Выхино",
-      "address": "Город Москва, проезд.Ферганский, д. 7 к 5",
+      "address": "7 к5, Ферганский проезд, район Выхино-Жулебино, Москва, 109507, Россия",
       "lat": 55.6940635,
       "lon": 37.8248567,
       "window_start": "12:00",
@@ -1435,6 +1494,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 48,
       "gigabit": false
     },
     {
@@ -1448,7 +1508,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Басманный",
-      "address": "Город Москва, ул.Земляной Вал, д. 24/30 стр. 1",
+      "address": "24/30 с1, улица Земляной Вал, Бауманка, Басманный район, Москва, 105064, Россия",
       "lat": 55.7584181,
       "lon": 37.6571865,
       "window_start": "12:00",
@@ -1460,6 +1520,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Свеженцев",
+      "reference_sequence": 49,
       "gigabit": false
     },
     {
@@ -1473,7 +1534,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Разрывы",
       "district": "Нижегородский",
-      "address": "Город Москва, ул.3-я Карачаровская, д. 8 к 2",
+      "address": "8 к2, 3-я Карачаровская улица, Карачарово, Нижегородский район, Москва, 109202, Россия",
       "lat": 55.7333702,
       "lon": 37.7471726,
       "window_start": "10:00",
@@ -1485,6 +1546,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 50,
       "gigabit": false
     },
     {
@@ -1498,7 +1560,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Нижегородский",
-      "address": "Город Москва, ул.Чистопольская, д. 2 к 2",
+      "address": "2 к2, Чистопольская улица, Нижегородский район, Москва, 109202, Россия",
       "lat": 55.7306095,
       "lon": 37.758355,
       "window_start": "10:00",
@@ -1510,6 +1572,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Матвеев",
+      "reference_sequence": 51,
       "gigabit": false
     },
     {
@@ -1523,7 +1586,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Работа с кабелем",
       "district": "Лефортово",
-      "address": "Город Москва, ул.Боровая, д. 12",
+      "address": "12, Боровая улица, район Лефортово, Москва, 111020, Россия",
       "lat": 55.770292,
       "lon": 37.7147651,
       "window_start": "10:00",
@@ -1535,6 +1598,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Перов",
+      "reference_sequence": 52,
       "gigabit": false
     },
     {
@@ -1548,7 +1612,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Роутер. Замена техническим специалистом",
       "district": "Лефортово",
-      "address": "Город Москва, ул.Красноказарменная, д. 9Б стр. 1",
+      "address": "9, Красноказарменная улица, район Лефортово, Москва, 111250, Россия",
       "lat": 55.7582809,
       "lon": 37.6971787,
       "window_start": "14:00",
@@ -1560,6 +1624,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Перов",
+      "reference_sequence": 53,
       "gigabit": false
     },
     {
@@ -1573,7 +1638,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "TVE/ENT. Другие ошибки",
       "district": "Лефортово",
-      "address": "Город Москва, ул.Сторожевая, д. 31",
+      "address": "31, Сторожевая улица, район Лефортово, Москва, 111020, Россия",
       "lat": 55.7647986,
       "lon": 37.7168314,
       "window_start": "16:00",
@@ -1585,6 +1650,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 54,
       "gigabit": false
     },
     {
@@ -1598,7 +1664,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Роутер. Замена техническим специалистом",
       "district": "Таганский",
-      "address": "Город Москва, ул.Новорогожская, д. 10",
+      "address": "10, Новорогожская улица, Таганский район, Москва, 109544, Россия",
       "lat": 55.740048,
       "lon": 37.6832489,
       "window_start": "12:00",
@@ -1610,6 +1676,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 55,
       "gigabit": false
     },
     {
@@ -1623,7 +1690,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "TVE/ENT. Замена приставки техником",
       "district": "Таганский",
-      "address": "Город Москва, ул.Нижегородская, д. 25",
+      "address": "25, Нижегородская улица, Таганский район, Москва, 109029, Россия",
       "lat": 55.7374783,
       "lon": 37.6944616,
       "window_start": "18:00",
@@ -1635,6 +1702,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Гусаковский",
+      "reference_sequence": 56,
       "gigabit": false
     },
     {
@@ -1648,7 +1716,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Работа с кабелем",
       "district": "Кузьминки",
-      "address": "Город Москва, ул.Окская, д. 6 к 1",
+      "address": "6 к1, Окская улица, район Кузьминки, Москва, 109117, Россия",
       "lat": 55.710308,
       "lon": 37.7514109,
       "window_start": "10:00",
@@ -1660,6 +1728,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Арташкин",
+      "reference_sequence": 57,
       "gigabit": false
     },
     {
@@ -1673,7 +1742,7 @@
       "request_type_bk": "Локальная заявка",
       "request_type_hd": "Нет линка",
       "district": "Кузьминки",
-      "address": "Город Москва, пр-кт.Волгоградский, д. 97 к 1",
+      "address": "97 к1, Волгоградский проспект (дублёр), район Кузьминки, Москва, 109117, Россия",
       "lat": 55.7078213,
       "lon": 37.7518635,
       "window_start": "14:00",
@@ -1685,6 +1754,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Арташкин",
+      "reference_sequence": 58,
       "gigabit": false
     },
     {
@@ -1698,7 +1768,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Информация",
       "district": "Выхино",
-      "address": "г.Город Москва, б-р.Самаркандский, д. 32к1",
+      "address": "32 к1, Самаркандский бульвар, район Выхино-Жулебино, Москва, 109507, Россия",
       "lat": 55.6977027,
       "lon": 37.8126854,
       "window_start": "16:00",
@@ -1710,6 +1780,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 59,
       "gigabit": false
     },
     {
@@ -1723,7 +1794,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Информация",
       "district": "Выхино",
-      "address": "г.Город Москва, б-р.Самаркандский, д. 10к2",
+      "address": "10 к2, Самаркандский бульвар, район Выхино-Жулебино, Москва, 109507, Россия",
       "lat": 55.7064866,
       "lon": 37.8263129,
       "window_start": "16:00",
@@ -1735,6 +1806,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 60,
       "gigabit": false
     },
     {
@@ -1748,7 +1820,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Информация",
       "district": "Таганский",
-      "address": "г.Город Москва, ул.Новорогожская, д. 20",
+      "address": "20, Новорогожская улица, Таганский район, Москва, 109544, Россия",
       "lat": 55.73903,
       "lon": 37.6880379,
       "window_start": "14:00",
@@ -1760,6 +1832,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Соколов",
+      "reference_sequence": 61,
       "gigabit": false
     },
     {
@@ -1773,7 +1846,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Информация",
       "district": "Выхино",
-      "address": "г.Город Москва, ул.Ташкентская, д. 16к2",
+      "address": "16 к2, Ташкентская улица, Выхино, район Выхино-Жулебино, Москва, 109444, Россия",
       "lat": 55.703974,
       "lon": 37.8130634,
       "window_start": "10:00",
@@ -1785,6 +1858,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белузин",
+      "reference_sequence": 62,
       "gigabit": false
     },
     {
@@ -1798,7 +1872,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Текстильщики",
-      "address": "г.Город Москва, ул.Саратовская, д. 16",
+      "address": "16, Саратовская улица, район Текстильщики, Москва, 109125, Россия",
       "lat": 55.7150007,
       "lon": 37.7401969,
       "window_start": "20:00",
@@ -1810,6 +1884,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Свеженцев",
+      "reference_sequence": 63,
       "gigabit": false
     },
     {
@@ -1823,7 +1898,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Басманный",
-      "address": "г.Город Москва, наб.Семеновская, д. 3/1к2",
+      "address": "3/1 к2, Семёновская набережная, Бауманка, Басманный район, Москва, 105094, Россия",
       "lat": 55.7785658,
       "lon": 37.7082611,
       "window_start": "10:00",
@@ -1835,6 +1910,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Свеженцев",
+      "reference_sequence": 64,
       "gigabit": false
     },
     {
@@ -1848,7 +1924,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Информация",
       "district": "Басманный",
-      "address": "г.Город Москва, наб.Семеновская, д. 2/1",
+      "address": "2/1, Семёновская набережная, Бауманка, Басманный район, Москва, 105094, Россия",
       "lat": 55.7768615,
       "lon": 37.7046831,
       "window_start": "16:00",
@@ -1860,6 +1936,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Свеженцев",
+      "reference_sequence": 65,
       "gigabit": false
     },
     {
@@ -1873,7 +1950,7 @@
       "request_type_bk": "Глобальная проблема",
       "request_type_hd": "Авария",
       "district": "Кузьминки",
-      "address": "г.Город Москва, пр-кт.Волгоградский, д. 128к1",
+      "address": "128 к1, Волгоградский проспект (дублёр), район Кузьминки, Москва, 109439, Россия",
       "lat": 55.7023381,
       "lon": 37.7828754,
       "window_start": "20:00",
@@ -1885,6 +1962,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 66,
       "gigabit": false
     }
   ],
