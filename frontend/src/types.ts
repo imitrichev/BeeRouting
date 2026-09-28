@@ -1,6 +1,7 @@
 export interface Engineer {
   id: string
   name: string
+  is_active: boolean
   qualifications: string[]
   vehicle_type: string
   start_location_id: string

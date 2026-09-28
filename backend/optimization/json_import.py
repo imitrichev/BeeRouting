@@ -266,6 +266,10 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
             # этом остаётся доступен для просмотра; построение problem выдаст
             # отдельную ошибку только если неизвестного инженера требуется
             # зафиксировать для EN_ROUTE/IN_PROGRESS.
+        work_type = _work_type(job)
+        source_priority = _mapped_value(
+            _string(job, "priority"), _PRIORITY_CODES, "priority"
+        )
         tasks.append(
             Task(
                 id=task_id,
@@ -282,9 +286,13 @@ def load_json_scenario_data(payload: Mapping[str, Any]) -> JsonScenario:
                 duration_minutes=_integer(job, "duration_min"),
                 window_start=_string(job, "window_start"),
                 window_end=_string(job, "window_end"),
-                work_type=_work_type(job),
-                priority=_mapped_value(
-                    _string(job, "priority"), _PRIORITY_CODES, "priority"
+                work_type=work_type,
+                # Аварийная работа является срочной независимо от качества
+                # или версии входного JSON.
+                priority=(
+                    Priority.URGENT
+                    if work_type == WorkType.EMERGENCY
+                    else source_priority
                 ),
                 status=_mapped_value(
                     _string(job, "reference_status").lower(),

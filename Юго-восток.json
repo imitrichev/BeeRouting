@@ -21,8 +21,8 @@
       "start_address": "37, улица Андропова, Центральный микрорайон, Ступино, городской округ Ступино, 142803, Россия",
       "start_lat": 54.8858274,
       "start_lon": 38.0821597,
-      "shift_start": "15:00",
-      "shift_end": "24:00",
+      "shift_start": "14:00",
+      "shift_end": "23:00",
       "skills": [
         "connection_orders",
         "emergency_works",
@@ -177,8 +177,8 @@
       "start_address": "19, Центральная улица, Кашира-2, Кашира, городской округ Кашира, 142904, Россия",
       "start_lat": 54.8415134,
       "start_lon": 38.2407727,
-      "shift_start": "11:10",
-      "shift_end": "23:10",
+      "shift_start": "11:00",
+      "shift_end": "23:00",
       "skills": [
         "connection_orders",
         "emergency_works",
@@ -1154,7 +1154,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 52,
+      "reference_sequence": 53,
       "gigabit": false
     },
     {
@@ -1258,7 +1258,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 56,
+      "reference_sequence": 58,
       "gigabit": false
     },
     {
@@ -1388,7 +1388,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 72,
+      "reference_sequence": 74,
       "gigabit": false
     },
     {
@@ -2038,7 +2038,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 50,
+      "reference_sequence": 51,
       "gigabit": false
     },
     {
@@ -2064,7 +2064,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 51,
+      "reference_sequence": 52,
       "gigabit": false
     },
     {
@@ -2111,7 +2111,7 @@
       "window_end": "22:00",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
@@ -2137,12 +2137,12 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 74,
+      "reference_sequence": 73,
       "gigabit": false
     },
     {
@@ -2163,12 +2163,12 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 54,
+      "reference_sequence": 56,
       "gigabit": false
     },
     {
@@ -2189,12 +2189,12 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 57,
+      "reference_sequence": 54,
       "gigabit": false
     },
     {
@@ -2215,12 +2215,12 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 73,
+      "reference_sequence": 72,
       "gigabit": false
     },
     {
@@ -2241,12 +2241,12 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 58,
+      "reference_sequence": 55,
       "gigabit": false
     },
     {
@@ -2267,12 +2267,12 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 55,
+      "reference_sequence": 57,
       "gigabit": false
     },
     {
@@ -2293,7 +2293,7 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
@@ -2319,7 +2319,7 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Отправлена",
@@ -2345,12 +2345,12 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 53,
+      "reference_sequence": 50,
       "gigabit": false
     },
     {
@@ -2371,7 +2371,7 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Выполнена",
@@ -2397,7 +2397,7 @@
       "window_end": "23:59",
       "duration_min": 80,
       "time_norm_code": "emergency",
-      "priority": "normal",
+      "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
       "reference_status": "Выполнена",

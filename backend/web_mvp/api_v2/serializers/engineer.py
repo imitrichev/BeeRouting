@@ -47,7 +47,7 @@ class EngineerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Engineer
         fields = [
-            "id", "engineer_id", "territory", "name",
+            "id", "engineer_id", "territory", "name", "is_active",
             "start_lat", "start_lon", "shift_start", "shift_end",
             "skills", "vehicle_type", "available_equipment", "available_router_count", "start_address",
         ]
@@ -76,7 +76,7 @@ class EngineerCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Engineer
         fields = [
-            "engineer_id", "territory", "name",
+            "engineer_id", "territory", "name", "is_active",
             "start_lat", "start_lon", "shift_start", "shift_end",
             "skills", "vehicle_type", "available_equipment", "available_router_count", "start_address",
         ]

@@ -27,8 +27,7 @@ OSRM_URLS = {
     "bicycle": "https://routing.openstreetmap.de/routed-bike",
     "foot": "https://routing.openstreetmap.de/routed-foot",
 }
-# Статистический суррогат наземного ОТ Москвы. Эффективная скорость 15.69 км/ч.
-PT_WEIGHTS = {"car": 0.55, "bicycle": 0.30, "foot": 0.15}
+PUBLIC_TRANSPORT_TIME_MULTIPLIER = 2.0
 
 
 def hhmm_to_minutes(value: str) -> int:
@@ -112,30 +111,16 @@ class OsrmMatrixProvider:
 
     @property
     def identity(self) -> dict[str, Any]:
-        speed = 1 / sum(PT_WEIGHTS[m] / {"car": 40., "bicycle": 15., "foot": 5.}[m] for m in PT_WEIGHTS)
-        return {"provider": "osrm", "scope": "all_points_to_jobs_only", "block_size": self.block_size, "pair_cache": str(self.cache.path) if self.cache.path else None, "max_air_distance_km": self.max_air_distance_km, "public_transport": {"model": "moscow_weighted_proxy_v2", "weights": PT_WEIGHTS, "wait_min": self.pt_wait_min, "effective_speed_kph": round(speed, 3)}}
+        return {"provider": "osrm", "scope": "all_points_to_jobs_only", "block_size": self.block_size, "pair_cache": str(self.cache.path) if self.cache.path else None, "max_air_distance_km": self.max_air_distance_km, "public_transport": {"model": "car_time_multiplier", "time_multiplier": PUBLIC_TRANSPORT_TIME_MULTIPLIER, "effective_speed_kph": 15.0}}
 
     def close(self) -> None:
         self.cache.close()
 
     def build(self, points: Sequence[tuple[float, float]], mode: str, jobs: Sequence[int]) -> tuple[np.ndarray, np.ndarray]:
         if mode == "public_transport":
-            matrices = {m: self._native(points, m, jobs) for m in PT_WEIGHTS}
-            return self._mix(matrices)
+            distance, travel_time = self._native(points, "car", jobs)
+            return distance, travel_time * PUBLIC_TRANSPORT_TIME_MULTIPLIER
         return self._native(points, mode, jobs)
-
-    def _mix(self, matrices: Mapping[str, tuple[np.ndarray, np.ndarray]]) -> tuple[np.ndarray, np.ndarray]:
-        modes = tuple(PT_WEIGHTS)
-        ds = np.stack([matrices[m][0] for m in modes]); ts = np.stack([matrices[m][1] for m in modes])
-        w = np.array([PT_WEIGHTS[m] for m in modes])[:, None, None]
-        valid = np.isfinite(ds) & np.isfinite(ts)
-        weight = np.where(valid, w, 0).sum(axis=0)
-        d = np.divide(np.where(valid, ds * w, 0).sum(axis=0), weight, out=np.full_like(ds[0], np.inf), where=weight > 0)
-        t = np.divide(np.where(valid, ts * w, 0).sum(axis=0), weight, out=np.full_like(ts[0], np.inf), where=weight > 0)
-        diagonal = np.eye(d.shape[0], dtype=bool)
-        t[np.isfinite(t) & ~diagonal] += self.pt_wait_min
-        np.fill_diagonal(d, 0.); np.fill_diagonal(t, 0.)
-        return d, t
 
     def _native(self, points: Sequence[tuple[float, float]], mode: str, jobs: Sequence[int]) -> tuple[np.ndarray, np.ndarray]:
         if mode not in OSRM_URLS:

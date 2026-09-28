@@ -11,6 +11,7 @@ class Engineer(models.Model):
         "Territory", on_delete=models.CASCADE, related_name="engineers",
     )
     name = models.CharField(max_length=128)
+    is_active = models.BooleanField(default=True)
 
     start_lat = models.DecimalField(max_digits=9, decimal_places=6)
     start_lon = models.DecimalField(max_digits=9, decimal_places=6)

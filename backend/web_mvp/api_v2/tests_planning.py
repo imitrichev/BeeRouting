@@ -7,7 +7,7 @@ from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from backend.optimization import CoordinateRoutingProvider, TaskStatus
-from backend.web_mvp.api_v2.models import Territory
+from backend.web_mvp.api_v2.models import Engineer, Territory
 from backend.web_mvp.api_v2.services import import_dataset, restore, save
 from backend.web_mvp.api_v2.services.optimization import OptimizationWebService
 from backend.web_mvp.api_v2.services.planning import OFFICIAL_DATASET_PATH
@@ -639,6 +639,15 @@ class OptimizationApiTests(TestCase):
             for stop in route["stops"]
         }
         self.assertNotIn(task_id, planned_ids)
+        recalculated = self.client.post(
+            "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
+        )
+        recalculated_ids = {
+            stop["task_id"]
+            for route in recalculated.data["result"]["routes"]
+            for stop in route["stops"]
+        }
+        self.assertNotIn(task_id, recalculated_ids)
         after = {
             task["id"]: task["status"]
             for task in response.data["dataset"]["tasks"]
@@ -689,6 +698,12 @@ class OptimizationApiTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        unavailable_engineer = next(
+            item
+            for item in response.data["dataset"]["engineers"]
+            if item["id"] == engineer_id
+        )
+        self.assertFalse(unavailable_engineer["is_active"])
         route = next(
             item for item in response.data["result"]["routes"]
             if item["engineer_id"] == engineer_id
@@ -712,10 +727,24 @@ class OptimizationApiTests(TestCase):
         restored = restore(Territory.objects.get(pk=self.territory.pk))
         self.assertFalse(restored._problem.preserve_assigned_tasks)
         self.assertIn(engineer_id, restored._problem.unavailable_engineer_ids)
+        self.assertFalse(
+            Engineer.objects.get(
+                territory=self.territory, engineer_id=engineer_id
+            ).is_active
+        )
         self.assertEqual(
             restored._problem.fixed_task_engineer_by_id.get(protected_task_id),
             protected_engineer_id,
         )
+        recalculated = self.client.post(
+            "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
+        )
+        repeated_route = next(
+            item
+            for item in recalculated.data["result"]["routes"]
+            if item["engineer_id"] == engineer_id
+        )
+        self.assertEqual(repeated_route["stops"], [])
 
     def test_emergency_event_creates_urgent_emergency_task(self) -> None:
         """Авария создаётся как NOT_SENT и перестраивает только будущий план."""

@@ -515,7 +515,11 @@ class OptimizationProblem:
         маршруты и objective нового расчёта.
         """
         if self.ignore_task_statuses:
-            return self.tasks
+            # Отмена является окончательным бизнес-событием: даже полный
+            # утренний пересчёт не имеет права вернуть заявку в маршруты.
+            return tuple(
+                task for task in self.tasks if task.status != TaskStatus.CANCELLED
+            )
         return tuple(
             task
             for task in self.tasks

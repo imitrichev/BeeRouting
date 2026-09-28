@@ -977,7 +977,9 @@ def generate_dataset(
                 "window_end": _time(synthetic["Окончание"]),
                 "duration_min": int(norm["base_norm_min"]) - ROAD_MINUTES,
                 "time_norm_code": kind,
-                "priority": "normal",
+                # Авария всегда срочная уже в исходном dataset, а не только
+                # при создании через сценарий оперативного перепланирования.
+                "priority": "urgent" if kind == "emergency" else "normal",
                 "required_vehicle": None,
                 "required_router_count": _required_router_count(synthetic),
                 # Без контрольного распределения заявка ещё не назначена.

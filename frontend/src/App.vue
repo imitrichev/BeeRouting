@@ -1227,6 +1227,7 @@ onBeforeUnmount(() => {
                   <v-list-item-subtitle>
                     {{ engineer.vehicle_type }} · {{ engineer.available_from }}–{{ engineer.available_until }}
                     · роутеров: {{ engineer.available_router_count }}
+                    · {{ engineer.is_active ? 'Активен' : 'Не доступен' }}
                     <span v-if="result"> · {{ result.routes.find((route) => route.engineer_id === engineer.id)?.stops.length ?? 0 }} заявок</span>
                   </v-list-item-subtitle>
                 </v-list-item>

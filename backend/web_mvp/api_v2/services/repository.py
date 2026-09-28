@@ -17,6 +17,7 @@ def sync_entities(territory, service):
         ).first()
         engineer, _ = Engineer.objects.update_or_create(territory=territory, engineer_id=item.id, defaults={
             'name':item.name, 'vehicle_type':vehicle,
+            'is_active': item.id not in service._unavailable_engineer_ids,
             'start_lat':item.start_latitude, 'start_lon':item.start_longitude,
             # В domain Engineer пока нет отдельного адреса старта. Поэтому
             # повторное сохранение плана не должно затирать адрес, введённый
