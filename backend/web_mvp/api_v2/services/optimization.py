@@ -10,7 +10,9 @@ from dataclasses import replace
 from typing import Any
 from django.db import transaction
 from backend.optimization import (
+    Priority as DomainPriority,
     TaskStatus,
+    WorkType,
     create_osrm_provider_from_environment,
     load_json_scenario_data,
 )
@@ -110,6 +112,10 @@ class OptimizationWebService(PlanningService):
                 )
             )
         self._scenario = replace(scenario, tasks=tuple(tasks))
+        self._unavailable_engineer_ids = {
+            item.engineer_id
+            for item in Engineer.objects.filter(territory=territory, is_active=False)
+        }
         self._territory_code = territory.code
         self._source_name = territory.source_name or territory.code
         self._problem = None
@@ -270,6 +276,16 @@ def restore(territory):
     for name, value in territory.state.items():
         if name in STATE_FIELDS:
             setattr(service, name, decode(value))
+    if service._scenario is not None:
+        service._scenario = replace(
+            service._scenario,
+            tasks=tuple(
+                replace(task, priority=DomainPriority.URGENT)
+                if task.work_type == WorkType.EMERGENCY
+                else task
+                for task in service._scenario.tasks
+            ),
+        )
     # Поддерживаем снимки, сохранённые до разделения reference и operational
     # статусов: построенный маршрут является источником текущих назначений.
     if service._result is not None:
@@ -325,10 +341,17 @@ def public_dataset_response(territory):
     режима после запуска.
     """
     response = copy.deepcopy(territory.response or {})
+    dataset = response.get("dataset")
+    if isinstance(dataset, dict):
+        for task in dataset.get("tasks", []):
+            if (
+                isinstance(task, dict)
+                and task.get("required_skill") == "EMERGENCY_WORKS"
+            ):
+                task["priority"] = "URGENT"
     if response.get("result") is not None:
         return response
 
-    dataset = response.get("dataset")
     if not isinstance(dataset, dict):
         return response
 

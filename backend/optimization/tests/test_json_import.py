@@ -6,9 +6,11 @@ from pathlib import Path
 
 from backend.optimization import (
     InMemoryRoutingProvider,
+    Priority,
     Skill,
     TaskStatus,
     VehicleType,
+    WorkType,
     load_control_dataset,
     load_json_scenario,
     load_json_scenario_data,
@@ -215,6 +217,12 @@ def test_all_generated_datasets_with_unassigned_jobs_are_loadable() -> None:
         task.status == TaskStatus.NOT_SENT
         for scenario in scenarios
         for task in scenario.tasks
+    )
+    assert all(
+        task.priority == Priority.URGENT
+        for scenario in scenarios
+        for task in scenario.tasks
+        if task.work_type == WorkType.EMERGENCY
     )
 
 

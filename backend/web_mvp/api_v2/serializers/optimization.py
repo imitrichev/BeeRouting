@@ -292,6 +292,7 @@ class DatasetTaskSerializer(serializers.Serializer):
 class DatasetEngineerSerializer(serializers.Serializer):
     id = serializers.ReadOnlyField()
     name = serializers.CharField(read_only=True)
+    is_active = serializers.SerializerMethodField()
 
     qualifications = serializers.SerializerMethodField()
     vehicle_type = serializers.SerializerMethodField()
@@ -315,6 +316,11 @@ class DatasetEngineerSerializer(serializers.Serializer):
     @staticmethod
     def get_vehicle_type(engineer: Any) -> str:
         return engineer.vehicle_type.value
+
+    def get_is_active(self, engineer: Any) -> bool:
+        """Показывает сохранённую оперативную доступность инженера."""
+        unavailable_ids = self.context.get("unavailable_engineer_ids", ())
+        return engineer.id not in unavailable_ids
 
     def get_start_address(self, engineer: Any) -> str | None:
         """Возвращает адрес офиса из корневого JSON-сценария."""
