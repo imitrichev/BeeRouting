@@ -44,6 +44,102 @@ PYTHONPATH="$PWD" \
 Если Java или Python API Timefold недоступны, бенчмарк выводит причину и
 пропускает только Timefold. Baseline и OR-Tools продолжают выполняться.
 
+## Установка Timefold (Linux) для проведения полного бенчмарка всех решателей
+
+Выполните из корня проекта:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh \
+  -o /tmp/install-uv.sh
+
+sh /tmp/install-uv.sh
+
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Установите Python 3.12 внутрь `.tools`:
+
+```bash
+export UV_PYTHON_INSTALL_DIR="$PWD/.tools/python"
+
+uv python install 3.12
+uv python list
+```
+
+Создайте `.timefold-venv`:
+
+```bash
+UV_PYTHON_INSTALL_DIR="$PWD/.tools/python" \
+uv venv --python 3.12 .timefold-venv
+```
+
+Проверьте:
+
+```bash
+.timefold-venv/bin/python --version
+```
+
+Должно получиться примерно:
+
+```text
+Python 3.12.x
+```
+
+Установите зависимости:
+
+```bash
+uv pip install \
+  --python .timefold-venv/bin/python \
+  pip
+
+uv pip install \
+  --python .timefold-venv/bin/python \
+  -r backend/optimization/requirements-timefold.txt
+```
+
+Установите JDK 21.0.2:
+
+```bash
+mkdir -p .tools/jdk-21.0.2
+
+curl -fL \
+  "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.2%2B13/OpenJDK21U-jdk_x64_linux_hotspot_21.0.2_13.tar.gz" \
+  -o /tmp/temurin-jdk-21.0.2.tar.gz
+
+tar -xzf /tmp/temurin-jdk-21.0.2.tar.gz \
+  -C .tools/jdk-21.0.2 \
+  --strip-components=1
+```
+
+Проверьте установку Java:
+
+```bash
+.tools/jdk-21.0.2/bin/java -version
+```
+
+Ожидается версия `21.0.2`.
+
+Проверьте Java и Timefold:
+
+```bash
+JAVA_HOME="$PWD/.tools/jdk-21.0.2" \
+PATH="$JAVA_HOME/bin:$PATH" \
+.timefold-venv/bin/python -c \
+  "import timefold; print('Timefold установлен')"
+```
+
+Запуск бенчмарка:
+
+```bash
+JAVA_HOME="$PWD/.tools/jdk-21.0.2" \
+PATH="$JAVA_HOME/bin:$PATH" \
+PYTHONPATH="$PWD" \
+.timefold-venv/bin/python -m \
+  backend.optimization.benchmarks.benchmark_yugo_center \
+  --include-ico-de --include-timefold \
+  --routing-provider coordinate --iterations 1
+```
+
 ## Автоматические проверки
 
 Полный набор проверок состоит из тестов математического ядра, тестов Django
@@ -113,27 +209,21 @@ npm run build
 ```
 
 Скрипт загружает актуальный `Югоцентр.json`, строит маршрутные данные и
-сравнивает:
+сопоставляет результаты:
 
-1. контрольный план составителей из полей `reference_*` в JSON;
+1. контрольное распределение составителей из полей `reference_*` в JSON;
 2. `GreedyBaselineOptimizer`;
 3. `ORToolsOptimizer`;
 4. `ICOOptimizer`, если указан `--include-ico-de`;
 5. `TimefoldOptimizer`, если указан `--include-timefold` и доступна JVM.
 
-Контрольный план не является результатом работы решателя. JSON хранит для
-каждой заявки `reference_crew`, `reference_status` и `reference_sequence`;
-последнее поле задаёт точный порядок визитов. Бенчмарк восстанавливает маршруты
-по этим полям и передаёт их в `ManualAssignmentPlanner`. План проверяется без
-OR-Tools: последовательно рассчитываются дорога, прибытие, ожидание, начало и
-окончание каждой работы, после чего проверяются квалификация, транспорт,
-оборудование, временные окна, смены и конфликты ресурсов.
-
-Проверка использует те же матрицы и тот же режим оборудования, что и остальные
-участники сравнения. Если найдено хотя бы одно нарушение, контрольному плану
-не рассчитываются итоговые метрики: в таблице ставятся прочерки, а ниже
-выводятся коды и описания нарушений. Поэтому недопустимый ручной план не может
-быть представлен как корректный результат.
+Контрольное распределение не является результатом работы решателя. JSON хранит
+для каждой заявки `reference_crew` и `reference_status`. Эти данные задают пары
+«заявка — инженер», но не порядок посещения, поэтому бенчмарк загружает их для
+сопоставления и не выдаёт за готовый маршрут. Временные и маршрутные hard
+constraints проверяются только у планов, действительно построенных решателями.
+Для контрольного распределения маршрутные метрики в таблице отмечаются
+прочерками: без порядка посещения их нельзя рассчитать корректно.
 
 Запуск всех трёх районов на воспроизводимой coordinate-матрице без сети:
 
@@ -150,9 +240,8 @@ OR-Tools: последовательно рассчитываются дорог
 
 Файлы `* Контрольное распределение.csv` остаются входными данными генератора
 набора и используются в тестах импорта. Сам бенчмарк не читает CSV. Генератор
-переносит из него исполнителя, статус и номер строки в JSON; благодаря этому
-клиентское приложение, бенчмарк и математическое ядро используют единый
-контракт данных.
+переносит из него исполнителя и статус в JSON; порядок строк не трактуется как
+последовательность маршрута.
 
 Исторические версии сохранены как `*_old.csv` и `*_old.json`; при работе
 приложения они не используются. Актуальные JSON собраны из исправленных CSV с
@@ -160,7 +249,7 @@ OR-Tools: последовательно рассчитываются дорог
 
 Исторические JSON следует проверять через общую точку входа. Флаг
 `--ignore-task-statuses` снимает фиксацию старых рабочих статусов и позволяет
-проверить контрольный маршрут целиком, включая `COMPLETED` и `CANCELLED`:
+решателям заново планировать все заявки, включая `COMPLETED` и `CANCELLED`:
 
 ```bash
 .venv/bin/python -m backend.optimization.benchmarks.benchmark_region \
