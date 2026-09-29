@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 from uuid import uuid4
 from dataclasses import replace
@@ -20,6 +21,8 @@ from backend.optimization import (
     GreedyBaselineOptimizer,
     ORToolsOptimizer,
     OSRMRoutingProvider,
+    OTPRoutingClient,
+    create_otp_client_from_environment,
     create_osrm_provider_from_environment,
     ExplanationEngine,
     RoutingProvider,
@@ -34,6 +37,7 @@ from backend.optimization import (
     WorkType,
     load_json_scenario,
     load_json_scenario_data,
+    hhmm_to_minutes,
 )
 from backend.optimization.scripts.generate_dataset_json import NominatimGeocoder
 from backend.optimization.constraints import engineer_has_required_equipment
@@ -264,11 +268,161 @@ class PlanningService:
                 initial_routes_by_engineer=initial_routes_by_engineer,
                 reference_routes_by_engineer=reference_routes_by_engineer,
             )
+            problem, result = self._refine_public_transport_with_otp(
+                scenario=scenario,
+                problem=problem,
+                result=result,
+                config=config,
+                reference_routes_by_engineer=reference_routes_by_engineer,
+            )
         self._validate_late_day_engineer_activation(scenario, result)
         self._problem = problem
         self._result = result
         self._manual_reassignment_proposals.clear()
         return scenario, result
+
+    def _refine_public_transport_with_otp(
+        self,
+        *,
+        scenario: JsonScenario,
+        problem: OptimizationProblem,
+        result: OptimizationResult,
+        config: OptimizerConfig,
+        reference_routes_by_engineer: dict[str, tuple[str, ...]] | None,
+    ) -> tuple[OptimizationProblem, OptimizationResult]:
+        """Уточняет только фактические PUBLIC_TRANSPORT-дуги через OTP.
+
+        Первый план всегда строится по полной fallback-матрице OSRM ``car × 2``.
+        Затем OTP получает лишь дуги найденных маршрутов. После каждого
+        изменения матрицы OR-Tools запускается с предыдущим планом как initial
+        solution. Число уточняющих запусков ограничено переменной окружения.
+        """
+        if not isinstance(self.routing_provider, OSRMRoutingProvider):
+            return problem, result
+        if not any(
+            engineer.vehicle_type == VehicleType.PUBLIC_TRANSPORT
+            for engineer in problem.engineers
+        ):
+            return problem, result
+        otp_client = create_otp_client_from_environment()
+        if otp_client is None:
+            return problem, result
+        max_iterations = int(os.getenv("OTP_MAX_REFINEMENT_ITERATIONS", "2"))
+        if max_iterations < 0:
+            raise ValueError("OTP_MAX_REFINEMENT_ITERATIONS не может быть отрицательным")
+        refinement_time_limit = int(
+            os.getenv("OTP_REFINEMENT_SOLVER_TIME_LIMIT_SECONDS", "10")
+        )
+        if refinement_time_limit <= 0:
+            raise ValueError(
+                "OTP_REFINEMENT_SOLVER_TIME_LIMIT_SECONDS должен быть положительным"
+            )
+
+        for _ in range(max_iterations):
+            refined_problem, changed = self._refine_public_transport_arcs(
+                scenario,
+                problem,
+                result,
+                otp_client,
+            )
+            if not changed:
+                break
+            initial_routes = {
+                engineer_id: tuple(stop.task_id for stop in route.stops)
+                for engineer_id, route in result.routes.items()
+            }
+            result = ORToolsOptimizer(config).optimize(
+                refined_problem,
+                initial_routes_by_engineer=initial_routes,
+                reference_routes_by_engineer=reference_routes_by_engineer,
+                time_limit_seconds=refinement_time_limit,
+            )
+            problem = refined_problem
+        return problem, result
+
+    @staticmethod
+    def _refine_public_transport_arcs(
+        scenario: JsonScenario,
+        problem: OptimizationProblem,
+        result: OptimizationResult,
+        otp_client: OTPRoutingClient,
+    ) -> tuple[OptimizationProblem, bool]:
+        """Заменяет fallback только на дугах текущих маршрутов ОТ."""
+        public_times = problem.travel_time_matrices_by_vehicle.get(
+            VehicleType.PUBLIC_TRANSPORT
+        )
+        public_distances = problem.travel_distance_matrices_by_vehicle.get(
+            VehicleType.PUBLIC_TRANSPORT
+        )
+        if public_times is None or public_distances is None:
+            return problem, False
+
+        refined_times = {
+            source: dict(destinations)
+            for source, destinations in public_times.items()
+        }
+        refined_distances = {
+            source: dict(destinations)
+            for source, destinations in public_distances.items()
+        }
+        engineers_by_id = {engineer.id: engineer for engineer in problem.engineers}
+        tasks_by_id = {task.id: task for task in problem.tasks}
+        availabilities_by_id = {
+            availability.engineer_id: availability
+            for availability in problem.availabilities
+        }
+        coordinates = scenario.location_coordinates
+        changed = False
+
+        for engineer_id, route in result.routes.items():
+            engineer = engineers_by_id[engineer_id]
+            if engineer.vehicle_type != VehicleType.PUBLIC_TRANSPORT:
+                continue
+            previous_location = problem.route_start_location(engineer)
+            departure_minutes = problem.route_start_minutes(
+                availabilities_by_id[engineer_id]
+            )
+            for stop in route.stops:
+                task = tasks_by_id[stop.task_id]
+                current_location = task.location_id
+                otp_route = otp_client.get_route(
+                    coordinates[previous_location],
+                    coordinates[current_location],
+                    departure_minutes,
+                )
+                if otp_route is not None:
+                    if (
+                        refined_times[previous_location][current_location]
+                        != otp_route.duration_minutes
+                        or not math.isclose(
+                            refined_distances[previous_location][current_location],
+                            otp_route.distance_km,
+                        )
+                    ):
+                        refined_times[previous_location][current_location] = (
+                            otp_route.duration_minutes
+                        )
+                        refined_distances[previous_location][current_location] = (
+                            otp_route.distance_km
+                        )
+                        changed = True
+                previous_location = current_location
+                departure_minutes = hhmm_to_minutes(stop.service_end_time)
+
+        if not changed:
+            return problem, False
+        time_matrices = dict(problem.travel_time_matrices_by_vehicle)
+        distance_matrices = dict(problem.travel_distance_matrices_by_vehicle)
+        time_matrices[VehicleType.PUBLIC_TRANSPORT] = refined_times
+        distance_matrices[VehicleType.PUBLIC_TRANSPORT] = refined_distances
+        return (
+            replace(
+                problem,
+                travel_time_matrices_by_vehicle=time_matrices,
+                travel_distance_matrices_by_vehicle=distance_matrices,
+            ),
+            True,
+        )
 
     def _project_result_to_scenario(self) -> None:
         """Переносит фактические назначения из результата в текущий dataset.

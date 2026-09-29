@@ -6,7 +6,13 @@ from unittest.mock import patch
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from backend.optimization import CoordinateRoutingProvider, TaskStatus
+from backend.optimization import (
+    CoordinateRoutingProvider,
+    ORToolsOptimizer,
+    OSRMRoutingProvider,
+    OTPRoute,
+    TaskStatus,
+)
 from backend.web_mvp.api_v2.models import Engineer, Territory
 from backend.web_mvp.api_v2.services import import_dataset, restore, save
 from backend.web_mvp.api_v2.services.optimization import OptimizationWebService
@@ -24,6 +30,22 @@ class TerritoryApiClient(APIClient):
             separator = "&" if "?" in path else "?"
             path = f"{path}{separator}territory={self.territory_code}"
         return super().generic(method, path, *args, **kwargs)
+
+
+class _LocalOSRMProvider(OSRMRoutingProvider):
+    """OSRM-совместимый provider без сети для проверки OTP pipeline."""
+
+    def _get_table(self, location_ids, vehicle_type):
+        """Строит fallback теми же скоростями, не выполняя HTTP-запрос."""
+        provider = CoordinateRoutingProvider(self.coordinates)
+        return (
+            provider.get_travel_time_matrix(location_ids, vehicle_type),
+            provider.get_distance_matrix(location_ids, vehicle_type),
+        )
+
+    def get_route_geometry(self, location_ids, vehicle_type):
+        """Геометрия не нужна этому интеграционному тесту."""
+        return None
 
 
 class OptimizationApiTests(TestCase):
@@ -117,6 +139,63 @@ class OptimizationApiTests(TestCase):
                 for route in response.data["result"]["routes"]
             )
         )
+
+    def test_ortools_refines_only_public_route_arcs_with_otp(self) -> None:
+        """После fallback-плана OTP уточняет дуги ОТ и запускает второй solve."""
+        original_optimizer = ORToolsOptimizer
+
+        class CountingOptimizer:
+            calls = 0
+
+            def __init__(self, config):
+                self.delegate = original_optimizer(config)
+
+            def optimize(self, *args, **kwargs):
+                type(self).calls += 1
+                return self.delegate.optimize(*args, **kwargs)
+
+        class FakeOTPClient:
+            def __init__(self):
+                self.calls = []
+
+            def get_route(self, from_coordinates, to_coordinates, departure_minutes):
+                self.calls.append(
+                    (from_coordinates, to_coordinates, departure_minutes)
+                )
+                return OTPRoute(duration_minutes=1, distance_km=0.1)
+
+        otp_client = FakeOTPClient()
+        provider_factory = lambda coordinates, **kwargs: _LocalOSRMProvider(
+            coordinates=coordinates
+        )
+        with (
+            patch(
+                "backend.web_mvp.api_v2.services.planning.create_osrm_provider_from_environment",
+                side_effect=provider_factory,
+            ),
+            patch(
+                "backend.web_mvp.api_v2.services.planning.create_otp_client_from_environment",
+                return_value=otp_client,
+            ),
+            patch(
+                "backend.web_mvp.api_v2.services.planning.ORToolsOptimizer",
+                CountingOptimizer,
+            ),
+            patch.dict(
+                "os.environ",
+                {"OTP_MAX_REFINEMENT_ITERATIONS": "2"},
+            ),
+        ):
+            response = self.client.post(
+                "/api/v2/optimize/",
+                {"ignore_task_statuses": True},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertGreater(len(otp_client.calls), 0)
+        self.assertGreaterEqual(CountingOptimizer.calls, 2)
+        self.assertLessEqual(CountingOptimizer.calls, 3)
 
     def test_baseline_solver_is_available_through_the_planning_api(self) -> None:
         """Baseline строит тот же результат через API, что и основной solver."""

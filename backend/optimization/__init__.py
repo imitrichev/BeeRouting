@@ -45,6 +45,12 @@ from .routing_provider import (
     RoutingProviderError,
     RoutingProvider,
 )
+from .otp_routing import (
+    OTPRoute,
+    OTPRouteCache,
+    OTPRoutingClient,
+    create_otp_client_from_environment,
+)
 from .json_import import (
     JsonScenario,
     load_json_scenario,
@@ -83,6 +89,10 @@ __all__ = [
     "InMemoryRoutingProvider",
     "CoordinateRoutingProvider",
     "OSRMRoutingProvider",
+    "OTPRoute",
+    "OTPRouteCache",
+    "OTPRoutingClient",
+    "create_otp_client_from_environment",
     "create_osrm_provider_from_environment",
     "RoutingProviderError",
     "RoutingProvider",

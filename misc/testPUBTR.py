@@ -61,9 +61,7 @@ def test_public_transport():
             { transportMode: bus }
             { transportMode: metro }
             { transportMode: tram }
-            { transportMode: trolleybus }
             { transportMode: rail }
-            { transportMode: monorail }
           ]
         }
       ) {
