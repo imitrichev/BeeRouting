@@ -8,3 +8,4 @@ drf-spectacular-extras==0.1.0
 requests>=2.31,<3
 python-dotenv>=1.0,<2
 django-filter==26.1
+django-cors-headers
