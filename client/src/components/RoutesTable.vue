@@ -110,7 +110,7 @@ const selected = computed({
  *
  * @param item Маршрут.
  */
-function toggleSelect(item: EngineerRoute) {
+const toggleSelect = (item: EngineerRoute) => {
   districtDataStore.toggleRouteSelection(item.engineer_id)
 }
 
@@ -120,7 +120,7 @@ function toggleSelect(item: EngineerRoute) {
  * @param item Маршрут.
  * @returns `true`, если маршрут выделен.
  */
-function isSelected(item: EngineerRoute) {
+const isSelected = (item: EngineerRoute) => {
   return districtDataStore.isRouteSelected(item.engineer_id)
 }
 
