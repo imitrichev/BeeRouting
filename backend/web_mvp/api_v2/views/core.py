@@ -86,6 +86,16 @@ def optimize_view(request: Request) -> Response:
             {"error": "ignore_task_statuses должен быть bool."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+    if ignore_task_statuses and preserve_assigned_tasks:
+        return Response(
+            {
+                "error": (
+                    "preserve_assigned_tasks не может быть true, когда "
+                    "ignore_task_statuses=true."
+                )
+            },
+            status=status.HTTP_400_BAD_REQUEST,
+        )
     if not isinstance(consider_equipment, bool):
         return Response(
             {"error": "consider_equipment должен быть bool."},

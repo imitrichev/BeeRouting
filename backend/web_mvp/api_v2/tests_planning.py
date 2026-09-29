@@ -197,6 +197,53 @@ class OptimizationApiTests(TestCase):
         self.assertGreaterEqual(CountingOptimizer.calls, 2)
         self.assertLessEqual(CountingOptimizer.calls, 3)
 
+    def test_failed_otp_refinement_keeps_fallback_plan(self) -> None:
+        """Ошибка повторного solve не отменяет допустимый fallback-план."""
+        original_optimizer = ORToolsOptimizer
+
+        class FailingRefinementOptimizer:
+            calls = 0
+
+            def __init__(self, config):
+                self.delegate = original_optimizer(config)
+
+            def optimize(self, *args, **kwargs):
+                type(self).calls += 1
+                if type(self).calls > 1:
+                    raise ValueError("Повторный solve не нашёл решение")
+                return self.delegate.optimize(*args, **kwargs)
+
+        class FakeOTPClient:
+            def get_route(self, from_coordinates, to_coordinates, departure_minutes):
+                return OTPRoute(duration_minutes=1, distance_km=0.1)
+
+        provider_factory = lambda coordinates, **kwargs: _LocalOSRMProvider(
+            coordinates=coordinates
+        )
+        with (
+            patch(
+                "backend.web_mvp.api_v2.services.planning.create_osrm_provider_from_environment",
+                side_effect=provider_factory,
+            ),
+            patch(
+                "backend.web_mvp.api_v2.services.planning.create_otp_client_from_environment",
+                return_value=FakeOTPClient(),
+            ),
+            patch(
+                "backend.web_mvp.api_v2.services.planning.ORToolsOptimizer",
+                FailingRefinementOptimizer,
+            ),
+        ):
+            response = self.client.post(
+                "/api/v2/optimize/",
+                {"ignore_task_statuses": True},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(FailingRefinementOptimizer.calls, 2)
+        self.assertEqual(response.data["result"]["metrics"]["assigned_task_count"], 56)
+
     def test_baseline_solver_is_available_through_the_planning_api(self) -> None:
         """Baseline строит тот же результат через API, что и основной solver."""
         response = self.client.post(
@@ -514,6 +561,20 @@ class OptimizationApiTests(TestCase):
                 for task in assigned_tasks
             )
         )
+
+    def test_full_mode_rejects_preserving_assigned_tasks(self) -> None:
+        """Полный режим не принимает противоречивую фиксацию назначений."""
+        response = self.client.post(
+            "/api/v2/optimize/",
+            {
+                "ignore_task_statuses": True,
+                "preserve_assigned_tasks": True,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400, response.data)
+        self.assertIn("preserve_assigned_tasks", response.data["error"])
 
     def test_ignore_statuses_builds_a_new_plan_for_all_tasks(self) -> None:
         """Полный режим frontend включает даже исторические статусы в новый план."""

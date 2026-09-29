@@ -331,12 +331,20 @@ class PlanningService:
                 engineer_id: tuple(stop.task_id for stop in route.stops)
                 for engineer_id, route in result.routes.items()
             }
-            result = ORToolsOptimizer(config).optimize(
-                refined_problem,
-                initial_routes_by_engineer=initial_routes,
-                reference_routes_by_engineer=reference_routes_by_engineer,
-                time_limit_seconds=refinement_time_limit,
-            )
+            try:
+                refined_result = ORToolsOptimizer(config).optimize(
+                    refined_problem,
+                    initial_routes_by_engineer=initial_routes,
+                    reference_routes_by_engineer=reference_routes_by_engineer,
+                    time_limit_seconds=refinement_time_limit,
+                )
+            except ValueError:
+                # OTP-уточнение является улучшением базового расчёта. Если
+                # повторный короткий solve не нашёл допустимого решения,
+                # сохраняем последний корректный fallback-план, а не
+                # отменяем весь пользовательский запрос.
+                break
+            result = refined_result
             problem = refined_problem
         return problem, result
 
