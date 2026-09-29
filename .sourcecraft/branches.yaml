@@ -1,0 +1,6 @@
+branch_protection:
+  policies:
+    - target: branch
+      rules:
+        - prevent_update
+      matches: '*'
