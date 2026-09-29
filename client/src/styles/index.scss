@@ -1,0 +1,171 @@
+/**
+ * Глобальные стили приложения: кастомный скроллбар, скроллируемые списки,
+ * тематические переменные границ и стили картографических маркеров
+ * (задача и депо).
+ */
+
+/**
+ * Контейнер с вертикальной прокруткой для списков.
+ * Высота ограничена относительно вьюпорта с минимумом 292px.
+ */
+.overflow-list {
+  overflow-y: auto;
+  width: 100% !important;
+  min-height: 292px !important;
+  max-height: min(100vh - 550px, 100vw) !important;
+}
+
+/**
+ * Тонкий кастомный скроллбар, адаптированный под светлую и тёмную темы.
+ * Цвет берётся из тематической переменной Vuetify `--v-theme-on-surface`.
+ */
+.default-scrollbar {
+  // Firefox
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--v-theme-on-surface), 0.2) transparent;
+
+  // WebKit (Chrome, Edge, Safari)
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--v-theme-on-surface), 0.2);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+    transition: background-color 0.2s ease;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(var(--v-theme-on-surface), 0.4);
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/**
+ * Цвет границ по умолчанию (светлая тема).
+ */
+:root {
+  --app-border-color: #d3d3d3;
+}
+
+/**
+ * Цвет границ для тёмной темы Vuetify.
+ */
+.v-theme--dark {
+  --app-border-color: #444;
+}
+
+/** Утилита: нижняя граница толщиной 1px. */
+.border-bottom {
+  border-bottom: 1px solid var(--app-border-color);
+}
+
+/** Утилита: левая граница толщиной 1px. */
+.border-left {
+  border-left: 1px solid var(--app-border-color);
+}
+
+/** Утилита: правая граница толщиной 1px. */
+.border-right {
+  border-right: 1px solid var(--app-border-color);
+}
+
+/** Утилита: верхняя граница толщиной 1px. */
+.border-top {
+  border-top: 1px solid var(--app-border-color);
+}
+
+/**
+ * Контейнер маркера задачи на карте.
+ */
+.task-marker {
+  align-items: center;
+  display: flex;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+/**
+ * Форма маркера задачи: «капля» (круг с углом), повёрнутая на -45°.
+ * Цвет задаётся снаружи через CSS-переменную `--marker-color`.
+ */
+.task-marker-shape {
+  align-items: center;
+  background: var(--marker-color);
+  border: 2px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 40%);
+  color: #fff;
+  display: flex;
+  font-size: 12px;
+  font-weight: 700;
+  height: 24px;
+  justify-content: center;
+  transform: rotate(-45deg);
+  width: 24px;
+}
+
+/** Возврат содержимого маркера задачи в нормальную ориентацию после поворота. */
+.task-marker-shape span {
+  transform: rotate(45deg);
+}
+
+/**
+ * Контейнер маркера депо (склада) на карте.
+ */
+.depot-marker {
+  align-items: center;
+  display: flex;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+
+/**
+ * Форма маркера депо: «капля», повёрнутая на -45°.
+ */
+.depot-marker-shape {
+  align-items: center;
+  background: #fff;
+  border: 2px solid #37474f;
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 40%);
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  transform: rotate(-45deg);
+  width: 32px;
+}
+
+/** Иконка внутри маркера депо; возвращается в нормальную ориентацию. */
+.depot-marker-shape svg {
+  fill: #37474f;
+  height: 20px;
+  transform: rotate(45deg);
+  width: 20px;
+}
+
+/** Деталь иконки депо — контур двери. */
+.depot-marker .depot-door {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.5;
+}
