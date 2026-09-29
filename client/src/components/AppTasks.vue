@@ -121,7 +121,7 @@ const getPriorityColor = (priority: string): string => {
  * @param task Задача.
  * @returns Метка статуса.
  */
-function taskStatusLabel(task: Task): string {
+const taskStatusLabel = (task: Task): string => {
   if (result.value && task.is_plannable) {
     if (['COMPLETED', 'CANCELLED', 'EN_ROUTE', 'IN_PROGRESS', 'OVERDUE'].includes(task.status)) {
       return getTaskStatusLabel(task.status)
@@ -141,7 +141,7 @@ function taskStatusLabel(task: Task): string {
  * @param task Задача.
  * @returns Токен цвета Vuetify.
  */
-function taskStatusColor(task: Task): string {
+const taskStatusColor = (task: Task): string => {
   if (result.value && task.is_plannable && !assignedTaskIds.value.has(task.id)) return 'error'
   return (
     {
@@ -171,7 +171,7 @@ const engineerNameById = computed<Record<string, string>>(() => {
  * @param task Задача.
  * @returns Имя инженера или `'-'`.
  */
-function engineerLabel(task: Task): string {
+const engineerLabel = (task: Task): string => {
   if (!task.current_engineer_id) return '-'
   return engineerNameById.value[task.current_engineer_id] ?? task.current_engineer_id
 }
@@ -182,7 +182,7 @@ function engineerLabel(task: Task): string {
  * @param taskId Идентификатор задачи.
  * @returns Объект `{ stop, route }` или `null`, если задача не в маршрутах.
  */
-function findStopAndRoute(taskId: string): { stop: RouteStop; route: EngineerRoute } | null {
+const findStopAndRoute = (taskId: string): { stop: RouteStop; route: EngineerRoute } | null => {
   for (const route of routes.value) {
     const stop = route.stops.find((s) => s.task_id === taskId)
     if (stop) return { stop, route }

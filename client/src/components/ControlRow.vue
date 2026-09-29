@@ -42,10 +42,18 @@ const { mdAndUp } = useDisplay()
 /** `true`, если для текущего района есть результат оптимизации. */
 const isOptimized = computed(() => districtDataStore.isOptimized)
 
-/** Кнопка назначения нужна до первого расчёта или при наличии неназначенных заявок. */
-const canOptimize = computed(
-  () => !isOptimized.value || districtDataStore.getUnassigned.length > 0,
+/**
+ * `true`, если в датасете района есть задачи со статусом «не назначена».
+ */
+const hasUnassignedTasks = computed(() =>
+  districtDataStore.getDistrictTasks.some((task) => task.status === 'NOT_SENT'),
 )
+
+/**
+ * Кнопка «Назначить заявки» нужна до первого расчёта
+ * либо при наличии неназначенных заявок в датасете.
+ */
+const canOptimize = computed(() => !isOptimized.value || hasUnassignedTasks.value)
 
 /** Список территорий для селектора. */
 const territoriesSelectorItems = computed(() => selectorsStore.territories)
@@ -204,6 +212,7 @@ const closeReplanInfoDialog = () => {
           @click="openResetDatasetsDialog"
         />
         <icon-button
+          v-if="isOptimized"
           tooltip-text="Перепланирование"
           icon="autorenew"
           color="warning"
