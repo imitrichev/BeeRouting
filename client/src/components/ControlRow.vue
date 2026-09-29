@@ -42,6 +42,11 @@ const { mdAndUp } = useDisplay()
 /** `true`, если для текущего района есть результат оптимизации. */
 const isOptimized = computed(() => districtDataStore.isOptimized)
 
+/** Кнопка назначения нужна до первого расчёта или при наличии неназначенных заявок. */
+const canOptimize = computed(
+  () => !isOptimized.value || districtDataStore.getUnassigned.length > 0,
+)
+
 /** Список территорий для селектора. */
 const territoriesSelectorItems = computed(() => selectorsStore.territories)
 /** Текущее выбранное значение территории. */
@@ -177,6 +182,7 @@ const closeReplanInfoDialog = () => {
           Перепланирование
         </v-btn>
         <v-btn
+          v-if="canOptimize"
           variant="text"
           :loading="loadingDistrictData"
           prepend-icon="alt_route"
@@ -205,6 +211,7 @@ const closeReplanInfoDialog = () => {
           @click="openReplanDialog"
         />
         <icon-button
+          v-if="canOptimize"
           tooltip-text="Назначить заявки"
           icon="alt_route"
           :loading="loadingDistrictData"

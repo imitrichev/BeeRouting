@@ -196,6 +196,20 @@ class PlanningService:
         if solver not in {"ortools", "baseline"}:
             raise ValueError("solver должен быть 'ortools' или 'baseline'.")
         scenario = self.current_dataset()
+        if (
+            self._result is not None
+            and not self._result.unassigned_task_ids
+            and not ignore_task_statuses
+            and preserve_assigned_tasks
+            and planning_time is None
+            and not operational_states
+            and initial_routes_by_engineer is None
+            and reference_routes_by_engineer is None
+        ):
+            # В статусном режиме полностью распределённый сохранённый план
+            # уже является требуемым результатом. Не строим заново дорожные
+            # матрицы и не запускаем OR-Tools/OTP без новых заявок.
+            return scenario, self._result
         current_routes: dict[str, tuple[str, ...]] | None = None
         if not ignore_task_statuses and self._result is not None:
             plannable_task_ids = {

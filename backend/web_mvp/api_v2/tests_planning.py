@@ -140,6 +140,28 @@ class OptimizationApiTests(TestCase):
             )
         )
 
+    def test_status_aware_optimize_skips_solver_without_unassigned_tasks(self) -> None:
+        """Повторный запрос мгновенно возвращает полностью готовый план."""
+        initial = self.client.post(
+            "/api/v2/optimize/",
+            {"ignore_task_statuses": False},
+            format="json",
+        )
+        self.assertEqual(initial.status_code, 200, initial.data)
+        self.assertEqual(initial.data["result"]["metrics"]["unassigned_task_count"], 0)
+
+        with patch(
+            "backend.web_mvp.api_v2.services.planning.ORToolsOptimizer"
+        ) as optimizer:
+            repeated = self.client.post(
+                "/api/v2/optimize/",
+                {"ignore_task_statuses": False},
+                format="json",
+            )
+
+        self.assertEqual(repeated.status_code, 200, repeated.data)
+        optimizer.assert_not_called()
+
     def test_ortools_refines_only_public_route_arcs_with_otp(self) -> None:
         """После fallback-плана OTP уточняет дуги ОТ и запускает второй solve."""
         original_optimizer = ORToolsOptimizer
