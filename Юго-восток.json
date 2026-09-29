@@ -270,7 +270,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Каушнян",
-      "reference_sequence": 6,
+      "reference_sequence": 52,
       "gigabit": false
     },
     {
@@ -296,7 +296,7 @@
       "required_router_count": 2,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 13,
+      "reference_sequence": 67,
       "gigabit": false
     },
     {
@@ -322,7 +322,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 11,
+      "reference_sequence": 66,
       "gigabit": false
     },
     {
@@ -348,7 +348,7 @@
       "required_router_count": 1,
       "reference_status": "В пути",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 21,
+      "reference_sequence": 19,
       "gigabit": false
     },
     {
@@ -374,7 +374,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
-      "reference_sequence": 2,
+      "reference_sequence": 48,
       "gigabit": false
     },
     {
@@ -398,9 +398,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 1,
-      "reference_status": "Отменена",
+      "reference_status": "Не отправлена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 78,
+      "reference_sequence": 57,
       "gigabit": false
     },
     {
@@ -426,7 +426,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 44,
+      "reference_sequence": 27,
       "gigabit": false
     },
     {
@@ -452,7 +452,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 81,
+      "reference_sequence": 29,
       "gigabit": false
     },
     {
@@ -478,7 +478,7 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 82,
+      "reference_sequence": 28,
       "gigabit": false
     },
     {
@@ -504,7 +504,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 79,
+      "reference_sequence": 34,
       "gigabit": false
     },
     {
@@ -530,7 +530,7 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 80,
+      "reference_sequence": 64,
       "gigabit": false
     },
     {
@@ -556,7 +556,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 1,
+      "reference_sequence": 8,
       "gigabit": false
     },
     {
@@ -582,7 +582,7 @@
       "required_router_count": 2,
       "reference_status": "Отменена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 27,
+      "reference_sequence": 10,
       "gigabit": false
     },
     {
@@ -608,7 +608,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Царьков",
-      "reference_sequence": 29,
+      "reference_sequence": 36,
       "gigabit": false
     },
     {
@@ -634,7 +634,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
-      "reference_sequence": 3,
+      "reference_sequence": 49,
       "gigabit": false
     },
     {
@@ -660,7 +660,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
-      "reference_sequence": 5,
+      "reference_sequence": 51,
       "gigabit": false
     },
     {
@@ -684,9 +684,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 1,
-      "reference_status": "Отменена",
-      "reference_crew": "Бригада Паршин",
-      "reference_sequence": 83,
+      "reference_status": "Не отправлена",
+      "reference_crew": "Бригада Каушнян",
+      "reference_sequence": 58,
       "gigabit": false
     },
     {
@@ -712,7 +712,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 31,
+      "reference_sequence": 21,
       "gigabit": false
     },
     {
@@ -738,7 +738,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 30,
+      "reference_sequence": 22,
       "gigabit": false
     },
     {
@@ -764,7 +764,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 45,
+      "reference_sequence": 30,
       "gigabit": false
     },
     {
@@ -788,9 +788,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отменена",
+      "reference_status": "Не отправлена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 76,
+      "reference_sequence": 59,
       "gigabit": false
     },
     {
@@ -816,7 +816,7 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 48,
+      "reference_sequence": 37,
       "gigabit": false
     },
     {
@@ -842,7 +842,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 49,
+      "reference_sequence": 38,
       "gigabit": false
     },
     {
@@ -868,7 +868,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
-      "reference_sequence": 60,
+      "reference_sequence": 47,
       "gigabit": false
     },
     {
@@ -894,7 +894,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
-      "reference_sequence": 59,
+      "reference_sequence": 44,
       "gigabit": false
     },
     {
@@ -920,7 +920,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Макаров",
-      "reference_sequence": 26,
+      "reference_sequence": 45,
       "gigabit": false
     },
     {
@@ -944,9 +944,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 1,
-      "reference_status": "Выполнена",
+      "reference_status": "Не отправлена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 62,
+      "reference_sequence": 60,
       "gigabit": false
     },
     {
@@ -972,7 +972,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 63,
+      "reference_sequence": 33,
       "gigabit": false
     },
     {
@@ -998,7 +998,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 14,
+      "reference_sequence": 12,
       "gigabit": false
     },
     {
@@ -1024,7 +1024,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 17,
+      "reference_sequence": 15,
       "gigabit": false
     },
     {
@@ -1050,7 +1050,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 15,
+      "reference_sequence": 13,
       "gigabit": false
     },
     {
@@ -1074,9 +1074,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 2,
-      "reference_status": "Выполнена",
+      "reference_status": "Не отправлена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 7,
+      "reference_sequence": 61,
       "gigabit": false
     },
     {
@@ -1102,7 +1102,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 23,
+      "reference_sequence": 7,
       "gigabit": false
     },
     {
@@ -1128,7 +1128,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Каушнян",
-      "reference_sequence": 4,
+      "reference_sequence": 50,
       "gigabit": false
     },
     {
@@ -1154,7 +1154,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 53,
+      "reference_sequence": 41,
       "gigabit": false
     },
     {
@@ -1180,7 +1180,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 10,
+      "reference_sequence": 65,
       "gigabit": false
     },
     {
@@ -1206,7 +1206,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 46,
+      "reference_sequence": 32,
       "gigabit": false
     },
     {
@@ -1232,7 +1232,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 61,
+      "reference_sequence": 46,
       "gigabit": false
     },
     {
@@ -1258,7 +1258,7 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 58,
+      "reference_sequence": 82,
       "gigabit": false
     },
     {
@@ -1284,7 +1284,7 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 34,
+      "reference_sequence": 25,
       "gigabit": false
     },
     {
@@ -1310,7 +1310,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Демин",
-      "reference_sequence": 68,
+      "reference_sequence": 55,
       "gigabit": false
     },
     {
@@ -1336,7 +1336,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Демин",
-      "reference_sequence": 69,
+      "reference_sequence": 56,
       "gigabit": false
     },
     {
@@ -1362,7 +1362,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 28,
+      "reference_sequence": 11,
       "gigabit": false
     },
     {
@@ -1388,7 +1388,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 74,
+      "reference_sequence": 5,
       "gigabit": false
     },
     {
@@ -1414,7 +1414,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 22,
+      "reference_sequence": 20,
       "gigabit": false
     },
     {
@@ -1440,7 +1440,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 42,
+      "reference_sequence": 76,
       "gigabit": false
     },
     {
@@ -1466,7 +1466,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 47,
+      "reference_sequence": 31,
       "gigabit": false
     },
     {
@@ -1492,7 +1492,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 9,
+      "reference_sequence": 63,
       "gigabit": false
     },
     {
@@ -1516,9 +1516,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отменена",
+      "reference_status": "Не отправлена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 41,
+      "reference_sequence": 69,
       "gigabit": false
     },
     {
@@ -1542,7 +1542,7 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отменена",
+      "reference_status": "Не отправлена",
       "reference_crew": "Бригада Козырь",
       "reference_sequence": 77,
       "gigabit": false
@@ -1570,7 +1570,7 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Бригада Демин",
-      "reference_sequence": 67,
+      "reference_sequence": 54,
       "gigabit": false
     },
     {
@@ -1596,7 +1596,7 @@
       "required_router_count": 1,
       "reference_status": "В работе",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 36,
+      "reference_sequence": 72,
       "gigabit": false
     },
     {
@@ -1622,7 +1622,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Демин",
-      "reference_sequence": 66,
+      "reference_sequence": 53,
       "gigabit": false
     },
     {
@@ -1648,7 +1648,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 40,
+      "reference_sequence": 74,
       "gigabit": false
     },
     {
@@ -1674,7 +1674,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 32,
+      "reference_sequence": 23,
       "gigabit": false
     },
     {
@@ -1700,7 +1700,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 75,
+      "reference_sequence": 70,
       "gigabit": false
     },
     {
@@ -1726,7 +1726,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 37,
+      "reference_sequence": 73,
       "gigabit": false
     },
     {
@@ -1752,7 +1752,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 39,
+      "reference_sequence": 75,
       "gigabit": false
     },
     {
@@ -1778,7 +1778,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Бузань",
-      "reference_sequence": 43,
+      "reference_sequence": 26,
       "gigabit": false
     },
     {
@@ -1804,7 +1804,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 19,
+      "reference_sequence": 18,
       "gigabit": false
     },
     {
@@ -1830,7 +1830,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 18,
+      "reference_sequence": 16,
       "gigabit": false
     },
     {
@@ -1856,7 +1856,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 16,
+      "reference_sequence": 14,
       "gigabit": false
     },
     {
@@ -1882,7 +1882,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Рыбин",
-      "reference_sequence": 20,
+      "reference_sequence": 17,
       "gigabit": false
     },
     {
@@ -1908,7 +1908,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 8,
+      "reference_sequence": 62,
       "gigabit": false
     },
     {
@@ -1934,7 +1934,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Андреев",
-      "reference_sequence": 12,
+      "reference_sequence": 68,
       "gigabit": false
     },
     {
@@ -1960,7 +1960,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 33,
+      "reference_sequence": 24,
       "gigabit": false
     },
     {
@@ -1986,7 +1986,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 24,
+      "reference_sequence": 6,
       "gigabit": false
     },
     {
@@ -2010,9 +2010,9 @@
       "priority": "normal",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Просрочена",
+      "reference_status": "Не отправлена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 64,
+      "reference_sequence": 78,
       "gigabit": false
     },
     {
@@ -2038,7 +2038,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 51,
+      "reference_sequence": 39,
       "gigabit": false
     },
     {
@@ -2064,7 +2064,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 52,
+      "reference_sequence": 40,
       "gigabit": false
     },
     {
@@ -2090,7 +2090,7 @@
       "required_router_count": 0,
       "reference_status": "Просрочена",
       "reference_crew": "Бригада Белоновский",
-      "reference_sequence": 25,
+      "reference_sequence": 9,
       "gigabit": false
     },
     {
@@ -2116,7 +2116,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Козырь",
-      "reference_sequence": 65,
+      "reference_sequence": 35,
       "gigabit": false
     },
     {
@@ -2142,7 +2142,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 73,
+      "reference_sequence": 3,
       "gigabit": false
     },
     {
@@ -2166,9 +2166,9 @@
       "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Отправлена",
+      "reference_status": "Не отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 56,
+      "reference_sequence": 79,
       "gigabit": false
     },
     {
@@ -2194,7 +2194,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 54,
+      "reference_sequence": 81,
       "gigabit": false
     },
     {
@@ -2220,7 +2220,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 72,
+      "reference_sequence": 4,
       "gigabit": false
     },
     {
@@ -2246,7 +2246,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 55,
+      "reference_sequence": 42,
       "gigabit": false
     },
     {
@@ -2272,7 +2272,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 57,
+      "reference_sequence": 80,
       "gigabit": false
     },
     {
@@ -2298,7 +2298,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 70,
+      "reference_sequence": 2,
       "gigabit": false
     },
     {
@@ -2324,7 +2324,7 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Бригада Паршин",
-      "reference_sequence": 71,
+      "reference_sequence": 1,
       "gigabit": false
     },
     {
@@ -2350,7 +2350,7 @@
       "required_router_count": 0,
       "reference_status": "В пути",
       "reference_crew": "Бригада Саламатин",
-      "reference_sequence": 50,
+      "reference_sequence": 43,
       "gigabit": false
     },
     {
@@ -2376,7 +2376,7 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 38,
+      "reference_sequence": 71,
       "gigabit": false
     },
     {
@@ -2400,9 +2400,9 @@
       "priority": "urgent",
       "required_vehicle": null,
       "required_router_count": 0,
-      "reference_status": "Выполнена",
+      "reference_status": "Не отправлена",
       "reference_crew": "Бригада Горбанев",
-      "reference_sequence": 35,
+      "reference_sequence": 83,
       "gigabit": false
     }
   ],

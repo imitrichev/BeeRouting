@@ -247,7 +247,6 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Капитанчук Александр",
-      "reference_sequence": 1,
       "gigabit": false
     },
     {
@@ -273,7 +272,6 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Капитанчук Александр",
-      "reference_sequence": 2,
       "gigabit": false
     },
     {
@@ -299,7 +297,6 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Исхаков Денис",
-      "reference_sequence": 3,
       "gigabit": false
     },
     {
@@ -325,7 +322,6 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Брюзгин Ярослав",
-      "reference_sequence": 4,
       "gigabit": false
     },
     {
@@ -351,7 +347,6 @@
       "required_router_count": 1,
       "reference_status": "Отправлена",
       "reference_crew": "Бахарев Андрей",
-      "reference_sequence": 5,
       "gigabit": false
     },
     {
@@ -377,7 +372,6 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Прокопенко Вячеслав",
-      "reference_sequence": 6,
       "gigabit": false
     },
     {
@@ -403,7 +397,6 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Выговский Сергей",
-      "reference_sequence": 7,
       "gigabit": false
     },
     {
@@ -429,7 +422,6 @@
       "required_router_count": 0,
       "reference_status": "Отменена",
       "reference_crew": "Бахарев Андрей",
-      "reference_sequence": 8,
       "gigabit": false
     },
     {
@@ -455,7 +447,6 @@
       "required_router_count": 1,
       "reference_status": "Отменена",
       "reference_crew": "Данилов Даниил",
-      "reference_sequence": 9,
       "gigabit": false
     },
     {
@@ -481,7 +472,6 @@
       "required_router_count": 2,
       "reference_status": "В работе",
       "reference_crew": "Выговский Сергей",
-      "reference_sequence": 10,
       "gigabit": false
     },
     {
@@ -507,7 +497,6 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Переладов Алексей",
-      "reference_sequence": 11,
       "gigabit": false
     },
     {
@@ -533,7 +522,6 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Сакур Тимофей",
-      "reference_sequence": 12,
       "gigabit": false
     },
     {
@@ -559,7 +547,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Прокопенко Вячеслав",
-      "reference_sequence": 13,
       "gigabit": false
     },
     {
@@ -585,7 +572,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
-      "reference_sequence": 14,
       "gigabit": false
     },
     {
@@ -611,7 +597,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
-      "reference_sequence": 15,
       "gigabit": false
     },
     {
@@ -637,7 +622,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
-      "reference_sequence": 16,
       "gigabit": false
     },
     {
@@ -663,7 +647,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
-      "reference_sequence": 17,
       "gigabit": false
     },
     {
@@ -689,7 +672,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
-      "reference_sequence": 18,
       "gigabit": false
     },
     {
@@ -715,7 +697,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
-      "reference_sequence": 19,
       "gigabit": false
     },
     {
@@ -741,7 +722,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
-      "reference_sequence": 20,
       "gigabit": false
     },
     {
@@ -767,7 +747,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
-      "reference_sequence": 21,
       "gigabit": false
     },
     {
@@ -793,7 +772,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
-      "reference_sequence": 22,
       "gigabit": false
     },
     {
@@ -819,7 +797,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
-      "reference_sequence": 23,
       "gigabit": false
     },
     {
@@ -845,7 +822,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
-      "reference_sequence": 24,
       "gigabit": false
     },
     {
@@ -871,7 +847,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Сакур Тимофей",
-      "reference_sequence": 25,
       "gigabit": false
     },
     {
@@ -897,7 +872,6 @@
       "required_router_count": 2,
       "reference_status": "Выполнена",
       "reference_crew": "Сакур Тимофей",
-      "reference_sequence": 26,
       "gigabit": false
     },
     {
@@ -923,7 +897,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Данилов Даниил",
-      "reference_sequence": 27,
       "gigabit": false
     },
     {
@@ -949,7 +922,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Данилов Даниил",
-      "reference_sequence": 28,
       "gigabit": false
     },
     {
@@ -975,7 +947,6 @@
       "required_router_count": 2,
       "reference_status": "Отправлена",
       "reference_crew": "Брюзгин Ярослав",
-      "reference_sequence": 29,
       "gigabit": false
     },
     {
@@ -1001,7 +972,6 @@
       "required_router_count": 2,
       "reference_status": "Отменена",
       "reference_crew": "Бахарев Андрей",
-      "reference_sequence": 30,
       "gigabit": false
     },
     {
@@ -1027,7 +997,6 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Выговский Сергей",
-      "reference_sequence": 31,
       "gigabit": false
     },
     {
@@ -1053,7 +1022,6 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Рыбалкин Егор",
-      "reference_sequence": 32,
       "gigabit": false
     },
     {
@@ -1079,7 +1047,6 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Брюзгин Ярослав",
-      "reference_sequence": 33,
       "gigabit": false
     },
     {
@@ -1105,7 +1072,6 @@
       "required_router_count": 0,
       "reference_status": "Отправлена",
       "reference_crew": "Переладов Алексей",
-      "reference_sequence": 34,
       "gigabit": false
     },
     {
@@ -1131,7 +1097,6 @@
       "required_router_count": 0,
       "reference_status": "В работе",
       "reference_crew": "Прокопенко Вячеслав",
-      "reference_sequence": 35,
       "gigabit": false
     },
     {
@@ -1157,7 +1122,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Прокопенко Вячеслав",
-      "reference_sequence": 36,
       "gigabit": false
     },
     {
@@ -1183,7 +1147,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Капитанчук Александр",
-      "reference_sequence": 37,
       "gigabit": false
     },
     {
@@ -1209,7 +1172,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
-      "reference_sequence": 38,
       "gigabit": false
     },
     {
@@ -1235,7 +1197,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Рыбалкин Егор",
-      "reference_sequence": 39,
       "gigabit": false
     },
     {
@@ -1261,7 +1222,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
-      "reference_sequence": 40,
       "gigabit": false
     },
     {
@@ -1287,7 +1247,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Ионов Геннадий",
-      "reference_sequence": 41,
       "gigabit": false
     },
     {
@@ -1313,7 +1272,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
-      "reference_sequence": 42,
       "gigabit": false
     },
     {
@@ -1339,7 +1297,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
-      "reference_sequence": 43,
       "gigabit": false
     },
     {
@@ -1365,7 +1322,6 @@
       "required_router_count": 1,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
-      "reference_sequence": 44,
       "gigabit": false
     },
     {
@@ -1391,7 +1347,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
-      "reference_sequence": 45,
       "gigabit": false
     },
     {
@@ -1417,7 +1372,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
-      "reference_sequence": 46,
       "gigabit": false
     },
     {
@@ -1443,7 +1397,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Исхаков Денис",
-      "reference_sequence": 47,
       "gigabit": false
     },
     {
@@ -1469,7 +1422,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
-      "reference_sequence": 48,
       "gigabit": false
     },
     {
@@ -1495,7 +1447,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
-      "reference_sequence": 49,
       "gigabit": false
     },
     {
@@ -1521,7 +1472,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Брюзгин Ярослав",
-      "reference_sequence": 50,
       "gigabit": false
     },
     {
@@ -1547,7 +1497,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
-      "reference_sequence": 51,
       "gigabit": false
     },
     {
@@ -1573,7 +1522,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
-      "reference_sequence": 52,
       "gigabit": false
     },
     {
@@ -1599,7 +1547,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
-      "reference_sequence": 53,
       "gigabit": false
     },
     {
@@ -1625,7 +1572,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Бахарев Андрей",
-      "reference_sequence": 54,
       "gigabit": false
     },
     {
@@ -1651,7 +1597,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Переладов Алексей",
-      "reference_sequence": 55,
       "gigabit": false
     },
     {
@@ -1677,7 +1622,6 @@
       "required_router_count": 0,
       "reference_status": "Выполнена",
       "reference_crew": "Выговский Сергей",
-      "reference_sequence": 56,
       "gigabit": false
     }
   ],
