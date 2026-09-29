@@ -128,3 +128,14 @@ export const getTaskStatusColor = (status: string | null | undefined): string =>
     }[status] ?? 'grey'
   )
 }
+
+/**
+ * Проверяет, отменена ли задача.
+ * Для отменённых задач действия недоступны.
+ *
+ * @param status Статус задачи (может быть `null`/`undefined`).
+ * @returns `true`, если задача отменена.
+ */
+export const isCancelledStatus = (status: string | null | undefined): boolean => {
+  return status === 'CANCELLED'
+}

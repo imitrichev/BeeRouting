@@ -11,6 +11,7 @@
  *   и «изменить статус»;
  * - статус задач пересчитывается относительно плана (назначена / не назначена).
  *
+ * Для отменённых задач действия скрыты.
  * В шапке карточки доступна кнопка создания заявки.
  */
 
@@ -27,7 +28,7 @@ import { useTheme } from 'vuetify'
 import TaskCreateDialog from '@/components/modals/TaskCreateDialog.vue'
 import type { TaskStatus } from '@/types/utils.ts'
 import TaskStatusDialog from '@/components/modals/TaskStatusDialog.vue'
-import { isTerminalStatus } from '@/utils/task.ts'
+import { isCancelledStatus, isTerminalStatus } from '@/utils/task.ts'
 import { getTaskStatusLabel } from '@/utils/task.ts'
 
 /**
@@ -192,13 +193,15 @@ const findStopAndRoute = (taskId: string): { stop: RouteStop; route: EngineerRou
 
 /**
  * Проверяет, доступны ли действия для задачи.
- * Действия доступны только после оптимизации и только для назначенных задач.
+ * Действия доступны только после оптимизации, только для назначенных задач
+ * и только если задача не отменена.
  *
  * @param task Задача.
  * @returns `true`, если для задачи можно открывать диалоги действий.
  */
 const canOpenDialogs = (task: Task): boolean => {
   if (!isOptimized.value) return false
+  if (isCancelledStatus(task.status)) return false
   return assignedTaskIds.value.has(task.id)
 }
 
@@ -339,7 +342,7 @@ const closeStatusDialog = () => {
         {{ engineerLabel(item) }}
       </template>
 
-      <!-- Действия: доступны только для назначенных задач после оптимизации -->
+      <!-- Действия: доступны только для неотменённых назначенных задач после оптимизации -->
       <template #item.actions="{ item }">
         <v-row v-if="canOpenDialogs(item)" no-gutters class="text-no-wrap justify-center">
           <icon-button

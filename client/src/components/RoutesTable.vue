@@ -9,7 +9,7 @@
  *
  * При раскрытии строки показывается вложенная таблица остановок с адресом,
  * временем прибытия/работы, статусом и действиями (объяснение, переназначение,
- * изменение статуса).
+ * изменение статуса). Для отменённых задач действия скрыты.
  */
 
 import BasicCard from '@/templates/BasicCard.vue'
@@ -18,7 +18,12 @@ import { computed, ref } from 'vue'
 import type { Engineer, EngineerRoute, RouteStop } from '@/types/entities.ts'
 import { getVehicleTypeTranslation } from '@/utils/translations.ts'
 import { getEngineerColor } from '@/utils/map.ts'
-import { getTaskStatusColor, getTaskStatusLabel, isTerminalStatus } from '@/utils/task.ts'
+import {
+  getTaskStatusColor,
+  getTaskStatusLabel,
+  isCancelledStatus,
+  isTerminalStatus,
+} from '@/utils/task.ts'
 import IconButton from '@/templates/IconButton.vue'
 import TaskExplanationDialog from '@/components/modals/TaskExplanationDialog.vue'
 import ReasignmentDialog from '@/components/modals/ReasignmentDialog.vue'
@@ -97,6 +102,17 @@ const canChangeStatus = (stop: RouteStop): boolean => {
   const status = getStopStatus(stop)
   if (!status) return false
   return !isTerminalStatus(status as TaskStatus)
+}
+
+/**
+ * Проверяет, нужно ли показывать действия для остановки.
+ * Для отменённых задач действия скрыты.
+ *
+ * @param stop Остановка маршрута.
+ * @returns `true`, если действия доступны.
+ */
+const canShowActions = (stop: RouteStop): boolean => {
+  return !isCancelledStatus(getStopStatus(stop))
 }
 
 /** Двусторонняя привязка выбранных маршрутов к `districtDataStore.selectedRoutes`. */
@@ -328,8 +344,13 @@ const closeStatusDialog = () => {
                   </v-chip>
                 </template>
 
+                <!-- Действия: скрыты для отменённых задач -->
                 <template #item.actions="props">
-                  <v-row no-gutters class="text-no-wrap justify-center">
+                  <v-row
+                    v-if="canShowActions(props.item)"
+                    no-gutters
+                    class="text-no-wrap justify-center"
+                  >
                     <icon-button
                       icon="info"
                       color="blue"
