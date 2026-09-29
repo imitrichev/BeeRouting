@@ -1,7 +1,8 @@
 # BeeRouting web MVP
 
-Web-слой состоит из Django/DRF API v2 и Vue 3 + TypeScript + Vite + Vuetify
-frontend с MapLibre. Optimization Engine остаётся независимым от Django.
+Web-слой состоит из Django/DRF API v2 и клиентского приложения на Vue 3,
+TypeScript, Vite и Vuetify с MapLibre. Optimization Engine остаётся
+независимым от Django.
 
 ## Запуск
 
@@ -16,21 +17,21 @@ frontend с MapLibre. Optimization Engine остаётся независимы�
 В отдельном терминале:
 
 ```bash
-cd frontend
+cd client
 npm install
 npm run dev
 ```
 
 Откройте <http://127.0.0.1:5173>.
 
-Для production-сборки frontend:
+Для production-сборки клиентского приложения:
 
 ```bash
 npm run build
 ```
 
 Текущий `runserver` предназначен для локальной демонстрации. Для сервера
-нужно отдавать `frontend/dist` через web-сервер, а Django запускать через
+нужно отдавать `client/dist` через web-сервер, а Django запускать через
 WSGI/ASGI-сервер.
 
 ## Сценарий интерфейса
