@@ -808,11 +808,21 @@ class PlanningService:
             route_engineer_id: tuple(stop.task_id for stop in route.stops)
             for route_engineer_id, route in self._result.routes.items()
         }
+        # Обычный запуск frontend сохраняет все будущие ASSIGNED. Для ручного
+        # переназначения выбранную заявку требуется освободить от этой общей
+        # фиксации; иначе forced assignment противоречит старому исполнителю.
+        # EN_ROUTE и IN_PROGRESS по-прежнему фиксируются по статусу внутри
+        # OptimizationProblem, а изменения остальных будущих маршрутов
+        # штрафуются относительно reference_routes.
+        candidate_problem = replace(
+            self._problem,
+            preserve_assigned_tasks=False,
+        )
         try:
             candidate_result = ORToolsOptimizer(
                 OptimizerConfig(time_limit_minutes=1)
             ).optimize(
-                self._problem,
+                candidate_problem,
                 forced_task_engineer_by_id={task_id: engineer_id},
                 initial_routes_by_engineer=current_routes,
                 reference_routes_by_engineer=current_routes,

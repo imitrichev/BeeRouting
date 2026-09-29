@@ -1041,8 +1041,9 @@ class OptimizationApiTests(TestCase):
     def test_manual_reassignment_requires_preview_and_confirmation(self) -> None:
         """Preview показывает метрики, а план меняется только после подтверждения."""
         initial = self.client.post(
-            "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
+            "/api/v2/optimize/", {}, format="json"
         )
+        self.assertTrue(initial.data["planning_options"]["preserve_assigned_tasks"])
         # Фиксированная допустимая пара текущего набора: заявка из маршрута
         # E01 сохраняет окно и смену после переноса к E02.
         task_id = "yugo_tsentr-J46513"
