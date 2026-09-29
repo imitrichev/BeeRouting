@@ -43,6 +43,7 @@ def _problem(
     tasks: tuple[Task, ...],
     *,
     preserve_assigned_tasks: bool = False,
+    ignore_task_statuses: bool = False,
 ) -> OptimizationProblem:
     """Создаёт двух инженеров; первому всегда ближе тестовая заявка."""
     engineers = (
@@ -91,6 +92,7 @@ def _problem(
         travel_time_matrix=time_matrix,
         travel_distance_matrix=distance_matrix,
         preserve_assigned_tasks=preserve_assigned_tasks,
+        ignore_task_statuses=ignore_task_statuses,
     )
 
 
@@ -112,6 +114,28 @@ def test_cancelled_and_completed_tasks_are_not_planned(optimizer) -> None:
     }
     assert route_task_ids == {"open"}
     assert result.assigned_task_count == 1
+    assert result.unassigned_task_count == 0
+
+
+@pytest.mark.parametrize("optimizer", [GreedyBaselineOptimizer(), ORToolsOptimizer()])
+def test_ignore_statuses_plans_cancelled_and_completed_tasks(optimizer) -> None:
+    """Полный режим включает заявки независимо от их исходного статуса."""
+    problem = _problem(
+        (
+            _task("cancelled", TaskStatus.CANCELLED, current_engineer_id="e1"),
+            _task("completed", TaskStatus.COMPLETED, current_engineer_id="e1"),
+            _task("open", TaskStatus.NOT_SENT),
+        ),
+        ignore_task_statuses=True,
+    )
+
+    result = optimizer.optimize(problem)
+
+    route_task_ids = {
+        stop.task_id for route in result.routes.values() for stop in route.stops
+    }
+    assert route_task_ids == {"cancelled", "completed", "open"}
+    assert result.assigned_task_count == 3
     assert result.unassigned_task_count == 0
 
 

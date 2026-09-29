@@ -744,7 +744,7 @@ class OptimizationApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_cancelled_task_is_removed_by_dynamic_replanning(self) -> None:
-        """Сценарий отмены исключает заявку из продолжения плана."""
+        """Отмена исключает заявку из статусного, но не из полного расчёта."""
         initial = self.client.post(
             "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
         )
@@ -778,15 +778,15 @@ class OptimizationApiTests(TestCase):
             for stop in route["stops"]
         }
         self.assertNotIn(task_id, planned_ids)
-        recalculated = self.client.post(
+        full_recalculation = self.client.post(
             "/api/v2/optimize/", {"ignore_task_statuses": True}, format="json"
         )
-        recalculated_ids = {
+        full_recalculation_ids = {
             stop["task_id"]
-            for route in recalculated.data["result"]["routes"]
+            for route in full_recalculation.data["result"]["routes"]
             for stop in route["stops"]
         }
-        self.assertNotIn(task_id, recalculated_ids)
+        self.assertIn(task_id, full_recalculation_ids)
         after = {
             task["id"]: task["status"]
             for task in response.data["dataset"]["tasks"]

@@ -24,7 +24,7 @@ window_end]`, а `service_end` не может быть позже конца с
 Стартовая точка инженера — первая точка его маршрута. В заявках с одинаковым
 адресом всё равно могут быть разные узлы, потому что это разные работы.
 
-Основные hard constraints:
+Основные жёсткие ограничения:
 
 1. все `required_skills` заявки входят в `Engineer.qualifications`;
 2. при наличии `required_vehicle_type` он совпадает с типом инженера;
@@ -43,7 +43,7 @@ Hard constraint не превращается в штраф. Если допус
 `missing_vehicle_type`, `impossible_time_window`,
 `outside_working_hours`.
 
-## Domain-модели
+## Предметные модели
 
 ```python
 OptimizationProblem(
@@ -57,7 +57,8 @@ OptimizationProblem(
 )
 ```
 
-Время на границе модели — `HH:MM`, длительность и travel time — целые минуты,
+Время на границе модели задаётся в формате `HH:MM`, длительность работ и время
+в пути — в целых минутах,
 расстояние — километры. Профильные матрицы являются важной частью модели:
 `problem.travel_time_between(..., engineer.vehicle_type)` выбирает матрицу
 конкретного инженера. Поэтому один общий `RoutingModel` может содержать
@@ -80,9 +81,9 @@ OptimizationProblem(
 `constraint_solver`. Классы ниже являются встроенными классами Google
 OR-Tools:
 
-- [`RoutingIndexManager`](https://developers.google.com/optimization/reference/constraint_solver/routing_index_manager/RoutingIndexManager) — переводит логические номера узлов в внутренние индексы solver;
+- [`RoutingIndexManager`](https://developers.google.com/optimization/reference/constraint_solver/routing_index_manager/RoutingIndexManager) — переводит логические номера узлов во внутренние индексы решателя;
 - [`RoutingModel`](https://developers.google.com/optimization/reference/constraint_solver/routing/RoutingModel) — хранит VRP-модель, переменные маршрутов и ограничения;
-- [`RoutingDimension`](https://developers.google.com/optimization/reference/constraint_solver/routing/RoutingDimension) — накопленное время или расход ресурса;
+- [`RoutingDimension`](https://developers.google.com/optimization/reference/constraint_solver/routing/RoutingDimension) — описывает накопленное время или расход ресурса;
 - [`RoutingSearchParameters`](https://developers.google.com/optimization/routing/routing_options) — параметры поиска и лимит времени;
 - [задачи маршрутизации OR-Tools](https://developers.google.com/optimization/routing/routing_tasks?hl=ru) — официальные примеры API.
 
@@ -123,9 +124,9 @@ manager = pywrapcp.RoutingIndexManager(
 принадлежит инженеру. Это не отдельное транспортное средство и не означает,
 что приложение распределяет один автомобиль между инженерами.
 
-### 3. Callback времени
+### 3. Функция расчёта времени перехода
 
-Для каждого инженера регистрируется свой callback:
+Для каждого инженера регистрируется своя функция обратного вызова:
 
 ```python
 return problem.travel_time_between(
@@ -135,13 +136,13 @@ return problem.travel_time_between(
 ) + service_duration
 ```
 
-`RegisterTransitCallback` ([документация](https://developers.google.com/optimization/reference/constraint_solver/routing/RoutingModel#RegisterTransitCallback)) регистрирует функцию стоимости перехода. В callback
-передаются внутренние индексы, поэтому сначала выполняется
+`RegisterTransitCallback` ([документация](https://developers.google.com/optimization/reference/constraint_solver/routing/RoutingModel#RegisterTransitCallback)) регистрирует функцию стоимости перехода. Функция обратного вызова
+получает внутренние индексы, поэтому сначала выполняется
 `manager.IndexToNode(index)`. Время перехода включает дорогу от предыдущей
-точки и обслуживание заявки в исходной точке. Так накопленная величина
-временного измерения на следующем узле означает начало обслуживания.
+точки и обслуживание заявки в исходной точке. Поэтому накопленное значение
+времени в следующем узле соответствует началу обслуживания.
 
-### 4. Временное измерение
+### 4. Измерение времени
 
 ```python
 routing.AddDimensionWithVehicleTransits(
@@ -154,8 +155,9 @@ routing.AddDimensionWithVehicleTransits(
 time_dimension = routing.GetDimensionOrDie("Time")
 ```
 
-`AddDimensionWithVehicleTransits` создаёт накопленное измерение, причём для
-каждого маршрута может использовать свой callback. Официальное описание:
+`AddDimensionWithVehicleTransits` создаёт накопительный показатель времени;
+для каждого маршрута можно использовать свою функцию обратного вызова.
+Официальное описание:
 [`AddDimensionWithVehicleTransits`](https://developers.google.com/optimization/reference/constraint_solver/routing/RoutingModel#AddDimensionWithVehicleTransits).
 
 Далее через `CumulVar` задаются интервалы:
@@ -178,10 +180,10 @@ time_dimension.CumulVar(end_index).SetRange(
 Свободный slack между прибытием и окном — это ожидание. Окно относится к
 началу работы, а не к прибытию.
 
-### 5. Arc cost и число инженеров
+### 5. Стоимость перехода и число инженеров
 
-`SetArcCostEvaluatorOfVehicle` назначает callback стоимости дуг каждому
-маршруту. Стоимость дуги состоит из:
+`SetArcCostEvaluatorOfVehicle` назначает каждому маршруту функцию расчёта
+стоимости перехода. Эта стоимость состоит из:
 
 ```text
 travel_time_minutes * travel_time_penalty_per_minute
@@ -189,11 +191,11 @@ travel_time_minutes * travel_time_penalty_per_minute
 ```
 
 Округление расстояния до целой стоимости нужно потому, что внутренняя
-целочисленная objective OR-Tools не принимает дробный километраж.
+целевая функция OR-Tools принимает только целочисленные значения.
 
 `SetFixedCostOfVehicle` ([документация](https://developers.google.com/optimization/reference/constraint_solver/routing/RoutingModel#SetFixedCostOfVehicle)) добавляет `used_engineers_penalty` за
-непустой маршрут. Поэтому solver предпочитает объединять заявки у уже
-задействованных инженеров, если это не нарушает hard constraints и не создаёт
+непустой маршрут. Поэтому решатель предпочитает объединять заявки у уже
+задействованных инженеров, если это не нарушает жёстких ограничений и не создаёт
 более дорогого допустимого плана.
 
 ### 6. Неназначенная заявка
@@ -206,7 +208,7 @@ routing.AddDisjunction(
 ```
 
 [`AddDisjunction`](https://developers.google.com/optimization/reference/constraint_solver/routing/RoutingModel#AddDisjunction) разрешает оставить узел вне маршрутов и
-штрафует это решение. Несовместимые vehicle удаляются через
+штрафует это решение. Несовместимые маршруты удаляются через
 `routing.VehicleVar(task_index).RemoveValue(vehicle_index)`, поэтому штраф не
 превращает нарушение навыка, транспорта или окна в допустимое назначение.
 Квалификационно, транспортно или оборудовательно невозможные заявки
@@ -220,7 +222,7 @@ routing.AddDisjunction(
 - дозаказ — `equipment_order_unassigned_multiplier`.
 
 Дополнительно применяется множитель `URGENT` относительно `NORMAL`. Это
-приоритет objective, а не обязательное правило «подключение всегда раньше
+приоритет целевой функции, а не обязательное правило «подключение всегда раньше
 ремонта».
 
 ### 7. Оборудование и отдельные ресурсы
@@ -228,8 +230,9 @@ routing.AddDisjunction(
 При `consider_equipment=True` вызываются
 `RegisterUnaryTransitCallback` и
 [`AddDimensionWithVehicleCapacity`](https://developers.google.com/optimization/reference/constraint_solver/routing/RoutingModel#AddDimensionWithVehicleCapacity).
-Callback возвращает расход роутеров в узле заявки, а capacity маршрута равна
-утреннему запасу инженера. Slack равен нулю: пополнения по ходу дня нет.
+Функция обратного вызова возвращает расход роутеров в узле заявки, а ёмкость
+маршрута равна утреннему запасу инженера. Резерв равен нулю: пополнения по
+ходу дня нет.
 
 Если в `OptimizationProblem` заданы отдельные экземпляры оборудования или
 транспорта, дополнительная проверка временных интервалов запрещает пересечение
@@ -238,16 +241,16 @@ Callback возвращает расход роутеров в узле заяв
 
 ### 8. Фиксация начатых работ
 
-Для `EN_ROUTE` и `IN_PROGRESS` solver получает `VehicleVar.SetValue`, а
+Для `EN_ROUTE` и `IN_PROGRESS` решатель получает `VehicleVar.SetValue`, а
 `ActiveVar.SetValue(1)`. Для первой начатой заявки дополнительно фиксируется
 `NextVar` от стартового узла. Это не позволяет вставить перед уже начатой
-работой новую заявку. В обычном status-aware режиме `COMPLETED` и `CANCELLED`
-вообще не передаются в новый маршрут.
+работой новую заявку. В обычном режиме, учитывающем статусы, `COMPLETED` и
+`CANCELLED` вообще не передаются в новый маршрут.
 
 `ASSIGNED` переносим по умолчанию. Режим `preserve_assigned_tasks=True`
 добавляет эти заявки в фиксированные назначения. `ignore_task_statuses=True`
 строит новый план по всем заявкам и нужен для полного утреннего
-перераспределения или сравнения solver’ов.
+перераспределения или сравнения решателей.
 
 ### 9. Запуск поиска
 
@@ -264,22 +267,22 @@ solution = routing.SolveWithParameters(search_parameters)
 `PATH_CHEAPEST_ARC` строит первое решение по дешёвым доступным дугам, а
 `SolveWithParameters` запускает поиск. Лимит OR-Tools задаётся
 `OptimizerConfig.time_limit_minutes`; в API MVP он установлен сервисом в одну
-минуту. При отсутствии допустимого решения возвращается ошибка solver, а не
+минуту. Если допустимое решение не найдено, возвращается ошибка решателя, а не
 фальшивый маршрут.
 
-При counterfactual-проверке объяснения передаются текущие маршруты как
-исходный вариант, фиксируется проверяемое назначение, а для найденного плана
+При контрфактической проверке текущие маршруты передаются как исходный вариант,
+проверяемое назначение фиксируется, а для найденного плана
 считается число переносов и изменений предшественников. Компонент
-`plan_disruption_penalty` входит в ту же objective, что и основной расчёт.
+`plan_disruption_penalty` входит в ту же целевую функцию, что и основной расчёт.
 
-## Остальные solver’ы
+## Остальные решатели
 
 ### GreedyBaselineOptimizer
 
 Baseline реализует точное правило из ТЗ: заявки обрабатываются в порядке
 входных данных, инженеры — в порядке входных данных, назначается первая
 допустимая бригада, а порядок визитов равен порядку назначения. Он использует
-те же hard constraints, routing data и формат `OptimizationResult`, но не
+те же жёсткие ограничения, маршрутные данные и формат `OptimizationResult`, но не
 делает глобального поиска. Поэтому его результат — контрольная нижняя планка,
 а не эталон математического оптимума.
 
@@ -288,7 +291,7 @@ Baseline реализует точное правило из ТЗ: заявки 
 ICO-DE кодирует каждую заявку random keys. Один ключ выбирает инженера или
 неназначение, второй задаёт порядок внутри маршрута. Декодер проверяет тот же
 набор ограничений и начинает с результата Baseline. Это исследовательский
-solver для сравнения и возможной будущей improvement-фазы; основной OR-Tools
+решатель для сравнения и возможного будущего этапа улучшения; основной OR-Tools
 им не заменяется.
 
 ### TimefoldOptimizer
@@ -297,22 +300,22 @@ Timefold создаёт planning list variable: у каждого инженер
 а задача может остаться неназначенной. Constraint streams разделяют hard,
 medium и soft уровни: совместимость, временные окна, смена, фиксированные
 статусы и ресурсы находятся в hard-части; выполнение заявок, число инженеров,
-расстояние и travel time — в objective. Solver получает уже построенные
+расстояние и время в пути — в целевой функции. Решатель получает уже построенные
 матрицы и не зависит от OSRM напрямую.
 
 Timefold запускается в отдельном Python-окружении с совместимым Python и JDK
-17+. В проекте подготовлен JDK 21. Если Java недоступна, benchmark пропускает
+17+. В проекте подготовлен JDK 21. Если Java недоступна, бенчмарк пропускает
 Timefold и продолжает Baseline/OR-Tools.
 
 ## RoutingProvider
 
-Для `PUBLIC_TRANSPORT` применяется двухэтапный расчёт. Сначала solver получает
+Для `PUBLIC_TRANSPORT` применяется двухэтапный расчёт. Сначала решатель получает
 полную статическую матрицу OSRM `driving × 2`. Затем только дуги найденных
 маршрутов общественного транспорта уточняются через OTP на расчётное время
 отправления: начало смены для первой дуги и `service_end_time` предыдущей
 заявки для последующих. При изменении матрицы OR-Tools получает первый план как
-initial solution и запускается повторно. HTTP-запросы никогда не выполняются
-внутри transit callback solver.
+начальное решение и запускается повторно. HTTP-запросы никогда не выполняются
+внутри функции обратного вызова решателя.
 
 Если OTP не нашёл маршрут или недоступен, значение пары не меняется. Благодаря
 этому ограниченное Москвой GTFS-покрытие не делает областные заявки
@@ -349,8 +352,8 @@ initial solution и запускается повторно. HTTP-запросы
 
 1. детерминированно отбрасывает несовместимых инженеров и пробует вставку в
    текущий маршрут;
-2. для оставшихся кандидатов запускает короткий counterfactual OR-Tools с
-   текущим планом, обязательным кандидатом и той же objective.
+2. для оставшихся кандидатов запускает короткий контрфактический расчёт
+   OR-Tools с текущим планом, обязательным кандидатом и той же целевой функцией.
 
 В результат попадают причины по навыку, транспорту, оборудованию, расписанию,
 изменение пробега, времени, числа инженеров и плановых переносов. Важные
@@ -365,7 +368,7 @@ initial solution и запускается повторно. HTTP-запросы
   backend.web_mvp.api_v2.tests backend.web_mvp.api_v2.tests_planning -v 1
 ```
 
-Тесты проверяют hard constraints, несколько заявок у одного инженера,
+Тесты проверяют жёсткие ограничения, несколько заявок у одного инженера,
 разные транспортные матрицы, статусы, перепланирование, оборудование,
-объяснения и API v2. Для карт и реальных дорог отдельно запускается benchmark,
+объяснения и API v2. Для карт и реальных дорог отдельно запускается бенчмарк,
 описанный в [benchmarks.md](benchmarks.md).
