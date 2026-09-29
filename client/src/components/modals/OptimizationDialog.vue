@@ -36,7 +36,7 @@ const props = defineProps<IProps>()
 /** Значения формы по умолчанию. */
 const defaultFormData: OptimizationRequestData = {
   consider_equipment: true,
-  ignore_task_statuses: true,
+  ignore_task_statuses: false,
   planning_time: null,
   solver: 'ortools',
 }

@@ -247,8 +247,8 @@ export type RouteStopExplanationObject = {
 export type OptimizationRequestData = {
   /** Учитывать требуемое оборудование. */
   consider_equipment: boolean
-  /** Всегда игнорировать статусы задач. */
-  ignore_task_statuses: true
+  /** Учитывать рабочие статусы и сохранять существующие назначения. */
+  ignore_task_statuses: false
   /** Время планирования всегда null (текущее время). */
   planning_time: null
   /** Используемый решатель. */
