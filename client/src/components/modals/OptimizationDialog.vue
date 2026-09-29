@@ -56,7 +56,7 @@ const solverSelectorItems = [
     value: 'ortools',
   },
   {
-    title: 'Жёсткий (baseline)',
+    title: 'Жадный (baseline)',
     value: 'baseline',
   },
 ]

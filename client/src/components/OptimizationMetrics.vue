@@ -69,7 +69,7 @@ const metrics = computed(() => districtDataStore.getMetrics)
       <v-col cols="6" lg="3" class="fill-height">
         <v-card color="purple-lighten-4 fill-height" class="rounded-0 elevation-0" variant="flat">
           <v-card-text class="px-3 py-2">
-            Objective: <br />
+            Целевая функция: <br />
             <strong>{{ metrics.total_objective }}</strong>
           </v-card-text>
         </v-card>
